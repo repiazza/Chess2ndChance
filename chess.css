@@ -1,0 +1,10 @@
+.board{
+    height: 640px;
+    width: 640px;
+    margin-top: 100px;
+    margin-left: 450px;
+}
+
+.squarehl{
+    border: purple solid 0.5px;
+}
