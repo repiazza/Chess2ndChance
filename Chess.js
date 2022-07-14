@@ -198,6 +198,27 @@ function hasFullFilledRanged(movementType, pieceRange){
                 true : false;  
     }
 }
+// Alcance do movimento da peca
+function getMovementRange(pieceType){
+    let pieceNdx = pieceType.indexOf(piece[1]);
+    return pieceMovementRange[pieceNdx];
+}
+// Direcoes que a peca anda
+function getMovementType(pieceType){
+    let pieceNdx = pieceType.indexOf(piece[1]);
+    return pieceMovementType[pieceNdx];
+}
+function matchMovementDirection(pieceMovementType, direction){
+    return (pieceMovementType & direction) ? true : false;
+}
+function getPieceLocation(piece){
+    for ( let i = 0; i < LINE_SQUARE_COUNT; i++ ){
+        for( let j = 0; j < COLUMN_SQUARE_ROW; j++ ){
+            document.getElementById(toString(piece));
+        }
+    }
+    return  
+}
 function scanMovementDirections(movementType, movingFrom, piece, scanType){
     // const DIRECTION_COLUMN   = 0x01;
     // const DIRECTION_LINE     = 0x02;
@@ -443,14 +464,14 @@ function pieceMovementIsPossible(piece, movingFrom){
     // }
     return false;
 }
-function isSquareOnMovementRange(pieceSelected, squareId){
-
+function isSquareOnMovementRange(squareId){
+    pieceSelected
 }
 function selectEmptySquare(squareId){
     if ( pieceSelected == 0 )
         return;
     
-    if ( isSquareOnMovementRange(pieceSelected, squareId) == false ){
+    if ( isSquareOnMovementRange(squareId) == false ){
 
     }
 }
