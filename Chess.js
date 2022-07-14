@@ -33,8 +33,8 @@ const DIRECTION_COLUMN   = 0x01;
 const DIRECTION_LINE     = 0x02;
 const DIRECTION_DIAGONAL = 0x04;
 const DIRECTION_L        = 0x08;
-const SQUARE_RANGE       = 2;
-const DOUBLE_SQUARE_RANGE= 3;
+const SQUARE_RANGE       = 1;
+const DOUBLE_SQUARE_RANGE= 2;
 const L_RANGE            = 4;
 const LINE_OF_SIGHT      = 8;
 const PIECE_TYPE_ROOK    = 'R';
@@ -212,10 +212,10 @@ function matchMovementDirection(pieceMovementType, direction){
     return (pieceMovementType & direction) ? true : false;
 }
 function getPieceLocation(piece){
-    for ( let i = 0; i < LINE_SQUARE_COUNT; i++ ){
+    for ( let i = 1; i <= LINE_SQUARE_COUNT; i++ ){
         for( let j = 0; j < columnArray.length; j++ ){
             divId = "" + columnArray[j] + i; 
-            alert(divId);
+            // alert(divId);
             div = document.getElementById(divId)
             if ( div.innerHTML.includes(piece) )
                 return divId;
@@ -231,6 +231,7 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
     let myColor = piece[0];
     let pieceNdx = pieceType.indexOf(piece[1]);
     let myLineIndex = Number(movingFrom[1]);
+    let myFirstLineNdx = myLineIndex;
     let myMovType = movementType;
     let myColumnIndex = columnArray.indexOf(movingFrom[0]);
     let nextTopLineAdder     = (myColor == 'W') ? 1 : -1;
@@ -250,10 +251,12 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
         hasLeftDirections = false
         if ( myMovType & DIRECTION_COLUMN ){
             hasLeftDirections = true;
+            
             let nextTopLine  = myLineIndex + nextTopLineAdder;
             let nextBottomLine = myLineIndex + nextBottomLineAdder;
             let movingTop    = movingFrom[0] + nextTopLine;
             let movingBottom =  movingFrom[0] + nextBottomLine;
+            let hadBlankSpaces = false;
             if ( scanType == FULL_SCAN ){
                 let hasLeftMovements = false;
                 if ( Number(columnMovementRange[0]) == -1 )
@@ -268,19 +271,32 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
                 // alert(piece[1] + " " + hasBlankSpace(movingTop) + " "+ myColor + " " + myLineIndex);
                 
                 if ( hasBlankSpace(movingTop) ){
-                    if ( piece[1] != 'P' && myColor == 'W' && myLineIndex == 2 ){
-                        pieceMovementRange[pieceNdx] = DOUBLE_SQUARE_RANGE;   
-                    }
-                    else if ( piece[1] != 'P' && myColor == 'B' && myLineIndex == 7 ){
+                    if ( piece[1] == 'P' && myColor == 'W' && myFirstLineNdx == 2 ){
                         pieceMovementRange[pieceNdx] = DOUBLE_SQUARE_RANGE;
+                        myFirstLineNdx++;
+                        alert("DEUTOP");
+                    }
+                    else if ( piece[1] == 'P' && myColor == 'B' && myFirstLineNdx == 7 ){
+                        pieceMovementRange[pieceNdx] = DOUBLE_SQUARE_RANGE;
+                        myFirstLineNdx++;
+                        alert("DEUTOP");
                     }
                     hasLeftMovements = true;
                     columnMovementRange[1] = movingTop;
                     nextTopLineAdder++;
+                    hadBlankSpaces = true;
                 }
                 if ( hasFullFilledRanged(DIRECTION_COLUMN, pieceMovementRange[pieceNdx]) ){
                     myMovType = myMovType ^ DIRECTION_COLUMN;
                     continue;
+                }
+                else if ( (piece[1] == 'P' && myColor == 'W'
+                          || piece[1] == 'P' && myColor == 'B') 
+                          && movingTop && hadBlankSpaces == true
+                        ){
+                    alert(pieceMovementRange[pieceNdx]);
+                    pieceMovementRange[pieceNdx] = SQUARE_RANGE;
+                    hadBlankSpaces = false;
                 }
                 
                 if ( hasLeftMovements == false ){
