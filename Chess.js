@@ -80,12 +80,12 @@ function initPieceMovements(){
                 pieceMovementType[i] |= DIRECTION_COLUMN;
                 pieceMovementType[i] |= DIRECTION_LINE;
                 pieceMovementType[i] |= DIRECTION_DIAGONAL;
-                pieceMovementRange[i] |= SQUARE;
+                pieceMovementRange[i] |= SQUARE_RANGE;
                 break;
             case PIECE_PAWN:
                 pieceMovementType[i] |= DIRECTION_COLUMN;
                 pieceMovementType[i] |= DIRECTION_DIAGONAL;
-                pieceMovementRange[i] |= SQUARE;
+                pieceMovementRange[i] |= SQUARE_RANGE;
                 break;
         }
     }
@@ -231,6 +231,7 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
                 let hasLeftMovements = false;
                 if ( Number(columnMovementRange[0]) == -1 )
                     columnMovementRange[0] = movingFrom;
+
                 if ( piece[1] != 'P' && hasBlankSpace(movingBottom) ){
                     hasLeftMovements = true;
                     columnMovementRange[0] = movingBottom;
@@ -247,6 +248,10 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
                     columnMovementRange[1] = movingTop;
                     nextTopLineAdder++;
                 }
+                if ( hasFullFilledRanged(DIRECTION_COLUMN, pieceMovementRange[piece[pieceNdx]]) ){
+                    
+                }
+                
                 if ( hasLeftMovements == false ){
                     myMovType = myMovType ^ DIRECTION_COLUMN;
                     continue;
