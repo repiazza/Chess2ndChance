@@ -170,7 +170,7 @@ function colorMovementPath(movementType){
             }
         });
     }
-    if ( movementType & DIRECTION_L){
+    if ( movementType & DIRECTION_L ){
 
     }
 }
@@ -213,11 +213,14 @@ function matchMovementDirection(pieceMovementType, direction){
 }
 function getPieceLocation(piece){
     for ( let i = 0; i < LINE_SQUARE_COUNT; i++ ){
-        for( let j = 0; j < COLUMN_SQUARE_ROW; j++ ){
-            document.getElementById(toString(piece));
+        for( let j = 0; j < columnArray.length; j++ ){
+            divId = "" + columnArray[j] + i; 
+            div = document.getElementById(divId)
+            if ( div.innerHTML.includes(piece) )
+                return divId;
         }
     }
-    return  
+    return false; 
 }
 function scanMovementDirections(movementType, movingFrom, piece, scanType){
     // const DIRECTION_COLUMN   = 0x01;
@@ -465,7 +468,9 @@ function pieceMovementIsPossible(piece, movingFrom){
     return false;
 }
 function isSquareOnMovementRange(squareId){
-    pieceSelected
+    let divSquare = document.querySelector('#'+squareId);
+    return divSquare.getAttribute("class").includes('squarehl') ? 
+            true : false;
 }
 function selectEmptySquare(squareId){
     if ( pieceSelected == 0 )
@@ -476,7 +481,18 @@ function selectEmptySquare(squareId){
     }
 }
 function selectSquare(content, squareName){
-    if ( content != ""){
+    if ( pieceSelected ){
+        if ( isSquareOnMovementRange(squareName) == false ){
+            var removalDivs = document.getElementsByClassName('squarehl');
+            for ( i = 0; i < removalDivs.length ; i++){
+                removalDivs[i].classList.remove('squarehl');
+                i = -1;
+            }
+            pieceSelected = 0;
+            return;
+        }
+    }
+    if ( content != "" ){
         return selectPiece(content, squareName)
     }
 
