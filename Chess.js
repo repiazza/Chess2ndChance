@@ -33,10 +33,10 @@ const DIRECTION_COLUMN   = 0x01;
 const DIRECTION_LINE     = 0x02;
 const DIRECTION_DIAGONAL = 0x04;
 const DIRECTION_L        = 0x08;
-const LINE_OF_SIGHT      = 1;
 const SQUARE_RANGE       = 2;
 const DOUBLE_SQUARE_RANGE= 3;
 const L_RANGE            = 4;
+const LINE_OF_SIGHT      = 8;
 const PIECE_ROOK         = 'R';
 const PIECE_KNIGHT       = 'N';
 const PIECE_BISHOP       = 'B';
@@ -60,21 +60,21 @@ function initPieceMovements(){
             case PIECE_ROOK:
                 pieceMovementType[i]  |= DIRECTION_COLUMN;
                 pieceMovementType[i]  |= DIRECTION_LINE;
-                pieceMovementRange[i] |= LINE_OF_SIGHT;
+                pieceMovementRange[i] = LINE_OF_SIGHT;
                 break;     
             case PIECE_KNIGHT:
                 pieceMovementType[i]  |= DIRECTION_L;
-                pieceMovementRange[i] |= L_RANGE; // 2 movements 4way expressed
+                pieceMovementRange[i] = L_RANGE; // 2 movements 4way expressed
                 break;
             case PIECE_BISHOP:
                 pieceMovementType[i] |= DIRECTION_DIAGONAL;
-                pieceMovementRange[i] |= LINE_OF_SIGHT;
+                pieceMovementRange[i] = LINE_OF_SIGHT;
                 break;
             case PIECE_QUEEN:
                 pieceMovementType[i] |= DIRECTION_COLUMN;
                 pieceMovementType[i] |= DIRECTION_LINE;
                 pieceMovementType[i] |= DIRECTION_DIAGONAL;
-                pieceMovementRange[i] |= LINE_OF_SIGHT;
+                pieceMovementRange[i] = LINE_OF_SIGHT;
                 break;
             case PIECE_KING:
                 pieceMovementType[i] |= DIRECTION_COLUMN;
@@ -85,7 +85,7 @@ function initPieceMovements(){
             case PIECE_PAWN:
                 pieceMovementType[i] |= DIRECTION_COLUMN;
                 pieceMovementType[i] |= DIRECTION_DIAGONAL;
-                pieceMovementRange[i] |= SQUARE_RANGE;
+                pieceMovementRange[i] = SQUARE_RANGE;
                 break;
         }
     }
@@ -175,24 +175,26 @@ function colorMovementPath(movementType){
     }
 }
 function hasFullFilledRanged(movementType, pieceRange){
+    let myRange = 0;
     if ( pieceRange == SQUARE_RANGE )
-        myRange = 2;
+        myRange = SQUARE_RANGE;
     else if ( pieceRange == DOUBLE_SQUARE_RANGE )
-        myRange = 3;
+        myRange = DOUBLE_SQUARE_RANGE;
     else if ( pieceRange == LINE_OF_SIGHT )
         myRange = 8;
 
     if ( movementType & DIRECTION_COLUMN ){
+        // alert(columnMovementRange + " " + myRange);
         let lineNdx0 = Number(columnMovementRange[0][1]);
         let lineNdx1 = Number(columnMovementRange[1][1]);
-        return  (Math.abs(lineNdx0-lineNdx1) >= Number(pieceRange)) ?
+        return  (Math.abs(lineNdx0-lineNdx1) >= Number(myRange)) ?
                 true : false;
     }
     if ( movementType & DIRECTION_LINE ){
         let charNdx0 = columnArray.indexOf(lineMovementRange[0][0]);
         let charNdx1 = columnArray.indexOf(lineMovementRange[1][0]);
         let columnInterval = columnArray.slice(charNdx0, charNdx1);
-        return (columnInterval.length >= Number(pieceRange)) ?
+        return (columnInterval.length >= Number(myRange)) ?
                 true : false;  
     }
 }
@@ -231,25 +233,29 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
                 let hasLeftMovements = false;
                 if ( Number(columnMovementRange[0]) == -1 )
                     columnMovementRange[0] = movingFrom;
-
+                
+                
                 if ( piece[1] != 'P' && hasBlankSpace(movingBottom) ){
                     hasLeftMovements = true;
                     columnMovementRange[0] = movingBottom;
                     nextBottomLineAdder++;
                 }
+                // alert(piece[1] + " " + hasBlankSpace(movingTop) + " "+ myColor + " " + myLineIndex);
+                
                 if ( hasBlankSpace(movingTop) ){
                     if ( piece[1] != 'P' && myColor == 'W' && myLineIndex == 2 ){
-                        pieceMovementRange[piece[pieceNdx]] == DOUBLE_SQUARE_RANGE;   
+                        pieceMovementRange[pieceNdx] = DOUBLE_SQUARE_RANGE;   
                     }
                     else if ( piece[1] != 'P' && myColor == 'B' && myLineIndex == 7 ){
-                        pieceMovementRange[piece[pieceNdx]] == DOUBLE_SQUARE_RANGE;
+                        pieceMovementRange[pieceNdx] = DOUBLE_SQUARE_RANGE;
                     }
                     hasLeftMovements = true;
                     columnMovementRange[1] = movingTop;
                     nextTopLineAdder++;
                 }
-                if ( hasFullFilledRanged(DIRECTION_COLUMN, pieceMovementRange[piece[pieceNdx]]) ){
-                    
+                if ( hasFullFilledRanged(DIRECTION_COLUMN, pieceMovementRange[pieceNdx]) ){
+                    myMovType = myMovType ^ DIRECTION_COLUMN;
+                    continue;
                 }
                 
                 if ( hasLeftMovements == false ){
@@ -290,7 +296,7 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
                 if ( hasLeftMovements == false ){
                     myMovType = myMovType ^ DIRECTION_LINE;
                 }
-                alert("line:" + lineMovementRange);
+                // alert("line:" + lineMovementRange);
             }
             else if ( hasBlankSpace(movingLeft)
                       || hasBlankSpace(movingRight) ){
