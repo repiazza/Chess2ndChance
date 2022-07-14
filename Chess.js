@@ -37,12 +37,12 @@ const SQUARE_RANGE       = 2;
 const DOUBLE_SQUARE_RANGE= 3;
 const L_RANGE            = 4;
 const LINE_OF_SIGHT      = 8;
-const PIECE_ROOK         = 'R';
-const PIECE_KNIGHT       = 'N';
-const PIECE_BISHOP       = 'B';
-const PIECE_QUEEN        = 'Q';
-const PIECE_KING         = 'K';
-const PIECE_PAWN         = 'P';
+const PIECE_TYPE_ROOK    = 'R';
+const PIECE_TYPE_KNIGHT  = 'N';
+const PIECE_TYPE_BISHOP  = 'B';
+const PIECE_TYPE_QUEEN   = 'Q';
+const PIECE_TYPE_KING    = 'K';
+const PIECE_TYPE_PAWN    = 'P';
 
 
 function togglePlayerColor(){
@@ -57,32 +57,32 @@ function togglePlayerColor(){
 function initPieceMovements(){
     for ( i = 0; i < pieceType.length; i++ ){
         switch(pieceType[i]){
-            case PIECE_ROOK:
+            case PIECE_TYPE_ROOK:
                 pieceMovementType[i]  |= DIRECTION_COLUMN;
                 pieceMovementType[i]  |= DIRECTION_LINE;
                 pieceMovementRange[i] = LINE_OF_SIGHT;
                 break;     
-            case PIECE_KNIGHT:
+            case PIECE_TYPE_KNIGHT:
                 pieceMovementType[i]  |= DIRECTION_L;
                 pieceMovementRange[i] = L_RANGE; // 2 movements 4way expressed
                 break;
-            case PIECE_BISHOP:
+            case PIECE_TYPE_BISHOP:
                 pieceMovementType[i] |= DIRECTION_DIAGONAL;
                 pieceMovementRange[i] = LINE_OF_SIGHT;
                 break;
-            case PIECE_QUEEN:
+            case PIECE_TYPE_QUEEN:
                 pieceMovementType[i] |= DIRECTION_COLUMN;
                 pieceMovementType[i] |= DIRECTION_LINE;
                 pieceMovementType[i] |= DIRECTION_DIAGONAL;
                 pieceMovementRange[i] = LINE_OF_SIGHT;
                 break;
-            case PIECE_KING:
+            case PIECE_TYPE_KING:
                 pieceMovementType[i] |= DIRECTION_COLUMN;
                 pieceMovementType[i] |= DIRECTION_LINE;
                 pieceMovementType[i] |= DIRECTION_DIAGONAL;
                 pieceMovementRange[i] |= SQUARE_RANGE;
                 break;
-            case PIECE_PAWN:
+            case PIECE_TYPE_PAWN:
                 pieceMovementType[i] |= DIRECTION_COLUMN;
                 pieceMovementType[i] |= DIRECTION_DIAGONAL;
                 pieceMovementRange[i] = SQUARE_RANGE;
@@ -93,17 +93,17 @@ function initPieceMovements(){
 
 function movePiece(piece, movingFrom, movingTo){
     switch(piece){
-        case PIECE_ROOK:
+        case PIECE_TYPE_ROOK:
             break;     
-        case PIECE_KNIGHT:
+        case PIECE_TYPE_KNIGHT:
             break;
-        case PIECE_BISHOP:
+        case PIECE_TYPE_BISHOP:
             break;
-        case PIECE_QUEEN:
+        case PIECE_TYPE_QUEEN:
             break;
-        case PIECE_KING:
+        case PIECE_TYPE_KING:
             break;
-        case PIECE_PAWN:
+        case PIECE_TYPE_PAWN:
             break;
     }
 }
@@ -449,17 +449,17 @@ function pieceMovementIsPossible(piece, movingFrom){
     // alert("MovType: " + pieceMovementType[movementNdx] + " Origin: " + movingFrom + " Piece:" + piece);
     return scanMovementDirections(pieceMovementType[movementNdx], movingFrom, piece, SQUARE_SCAN);
     // switch(piece){
-    //     case PIECE_ROOK:
+    //     case PIECE_TYPE_ROOK:
     //         return scanMovementDirections(pieceMovementType[movementNdx], movingFrom);
-    //     case PIECE_KNIGHT:
+    //     case PIECE_TYPE_KNIGHT:
     //         return scanMovementDirections(
-    //     case PIECE_BISHOP:
+    //     case PIECE_TYPE_BISHOP:
     //         return scanMovementDirections(
-    //     case PIECE_QUEEN:
+    //     case PIECE_TYPE_QUEEN:
     //         return scanMovementDirections(
-    //     case PIECE_KING:
+    //     case PIECE_TYPE_KING:
     //         return scanMovementDirections(
-    //     case PIECE_PAWN:
+    //     case PIECE_TYPE_PAWN:
     //         return scanMovementDirections(
     // }
     return false;
@@ -494,21 +494,21 @@ function selectPiece(piece, movingFrom){
     colorMovementPath(pieceMovementType[movementNdx]);
 
     // switch(piece[1]){
-    //     case PIECE_ROOK:
+    //     case PIECE_TYPE_ROOK:
     //         if ( pieceMovementIsPossible(piece, movingFrom) == false )
     //             return;
             
     //         document.getElementById(movingFrom).classList.add("squarehl");
     //         break;     
-    //     case PIECE_KNIGHT:
+    //     case PIECE_TYPE_KNIGHT:
     //         break;
-    //     case PIECE_BISHOP:
+    //     case PIECE_TYPE_BISHOP:
     //         break;
-    //     case PIECE_QUEEN:
+    //     case PIECE_TYPE_QUEEN:
     //         break;
-    //     case PIECE_KING:
+    //     case PIECE_TYPE_KING:
     //         break;
-    //     case PIECE_PAWN:
+    //     case PIECE_TYPE_PAWN:
     //         if ( pieceMovementIsPossible(piece, movingFrom) == false )
     //             return;
             
