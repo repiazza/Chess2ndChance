@@ -84,7 +84,7 @@ function initPieceMovements(){
                 break;
             case PIECE_TYPE_PAWN:
                 pieceMovementType[i] |= DIRECTION_COLUMN;
-                pieceMovementType[i] |= DIRECTION_DIAGONAL;
+                // pieceMovementType[i] |= DIRECTION_DIAGONAL;
                 pieceMovementRange[i] = SQUARE_RANGE;
                 break;
         }
@@ -182,13 +182,15 @@ function hasFullFilledRanged(movementType, pieceRange){
         myRange = DOUBLE_SQUARE_RANGE;
     else if ( pieceRange == LINE_OF_SIGHT )
         myRange = 8;
-
+        
     if ( movementType & DIRECTION_COLUMN ){
         // alert(columnMovementRange + " " + myRange);
         let lineNdx0 = Number(columnMovementRange[0][1]);
         let lineNdx1 = Number(columnMovementRange[1][1]);
-        return  (Math.abs(lineNdx0-lineNdx1) >= Number(myRange)) ?
-                true : false;
+
+        // alert(lineNdx0 + " " + lineNdx1 + " " + Math.abs(lineNdx0-lineNdx1) + " " +  Number(myRange))
+        
+        return  ( Number(myRange) >= Math.abs(lineNdx0-lineNdx1) ) ? true : false;
     }
     if ( movementType & DIRECTION_LINE ){
         let charNdx0 = columnArray.indexOf(lineMovementRange[0][0]);
@@ -199,12 +201,12 @@ function hasFullFilledRanged(movementType, pieceRange){
     }
 }
 // Alcance do movimento da peca
-function getMovementRange(pieceType){
+function getMovementRange(piece){
     let pieceNdx = pieceType.indexOf(piece[1]);
     return pieceMovementRange[pieceNdx];
 }
 // Direcoes que a peca anda
-function getMovementType(pieceType){
+function getMovementType(piece){
     let pieceNdx = pieceType.indexOf(piece[1]);
     return pieceMovementType[pieceNdx];
 }
@@ -222,6 +224,20 @@ function getPieceLocation(piece){
         }
     }
     return false; 
+}
+function hasAnyMovementRange(piece){
+    movType = getMovementType(piece);
+    if ( matchMovementDirection(movType, DIRECTION_COLUMN) ){
+        let lineNdx0 = Math.abs(Number(columnMovementRange[0][1]));
+        let lineNdx1 = Math.abs(Number(columnMovementRange[1][1]));
+        if ( Math.abs(lineNdx0-lineNdx1) > 0 ){
+            return true;
+        }
+        // let lineMovementRange = [];
+        // let diagonalMovementRange = [];
+        // let LMovementSquares = [];
+    }
+    return false;
 }
 function scanMovementDirections(movementType, movingFrom, piece, scanType){
     // const DIRECTION_COLUMN   = 0x01;
@@ -261,6 +277,8 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
                 let hasLeftMovements = false;
                 if ( Number(columnMovementRange[0]) == -1 )
                     columnMovementRange[0] = movingFrom;
+                if ( Number(columnMovementRange[1]) == -1 )
+                    columnMovementRange[1] = movingFrom;
                 
                 
                 if ( piece[1] != 'P' && hasBlankSpace(movingBottom) ){
@@ -268,34 +286,38 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
                     columnMovementRange[0] = movingBottom;
                     nextBottomLineAdder++;
                 }
-                // alert(piece[1] + " " + hasBlankSpace(movingTop) + " "+ myColor + " " + myLineIndex);
+                alert(piece[1] + " " + hasBlankSpace(movingTop) + " "+ myColor + " " + myLineIndex);
                 
                 if ( hasBlankSpace(movingTop) ){
                     if ( piece[1] == 'P' && myColor == 'W' && myFirstLineNdx == 2 ){
                         pieceMovementRange[pieceNdx] = DOUBLE_SQUARE_RANGE;
+                        movingTop = movingFrom[0] + (Number(nextTopLine) + Number(nextTopLineAdder));
                         myFirstLineNdx++;
-                        alert("DEUTOP");
                     }
                     else if ( piece[1] == 'P' && myColor == 'B' && myFirstLineNdx == 7 ){
                         pieceMovementRange[pieceNdx] = DOUBLE_SQUARE_RANGE;
-                        myFirstLineNdx++;
-                        alert("DEUTOP");
+                        movingTop = movingFrom[0] + (Number(nextTopLine) + Number(nextTopLineAdder));
+                        myFirstLineNdx++;  
                     }
                     hasLeftMovements = true;
                     columnMovementRange[1] = movingTop;
                     nextTopLineAdder++;
                     hadBlankSpaces = true;
                 }
+                
                 if ( hasFullFilledRanged(DIRECTION_COLUMN, pieceMovementRange[pieceNdx]) ){
                     myMovType = myMovType ^ DIRECTION_COLUMN;
+                    alert(myMovType);
                     continue;
                 }
                 else if ( (piece[1] == 'P' && myColor == 'W'
                           || piece[1] == 'P' && myColor == 'B') 
                           && movingTop && hadBlankSpaces == true
                         ){
-                    alert(pieceMovementRange[pieceNdx]);
+                    // alert(pieceMovementRange[pieceNdx]);
                     pieceMovementRange[pieceNdx] = SQUARE_RANGE;
+                    // alert(pieceMovementRange[pieceNdx]);
+                    // alert("1");
                     hadBlankSpaces = false;
                 }
                 
@@ -457,8 +479,13 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
             }
         }
     } while( scanType == FULL_SCAN && hasLeftDirections == true );
-    if ( scanType == FULL_SCAN )
+
+    if ( scanType == FULL_SCAN ){
+        if ( hasAnyMovementRange(piece) == false )
+            return false;
+
         return true;
+    }
 
     return false;
 }
