@@ -215,6 +215,7 @@ function getPieceLocation(piece){
     for ( let i = 0; i < LINE_SQUARE_COUNT; i++ ){
         for( let j = 0; j < columnArray.length; j++ ){
             divId = "" + columnArray[j] + i; 
+            alert(divId);
             div = document.getElementById(divId)
             if ( div.innerHTML.includes(piece) )
                 return divId;
@@ -447,9 +448,8 @@ function scanMovementDirections(movementType, movingFrom, piece, scanType){
 }
 
 function pieceMovementIsPossible(piece, movingFrom){
-    // alert(piece[1]);
     let movementNdx = pieceType.indexOf(piece[1]);
-    // alert("MovType: " + pieceMovementType[movementNdx] + " Origin: " + movingFrom + " Piece:" + piece);
+
     return scanMovementDirections(pieceMovementType[movementNdx], movingFrom, piece, SQUARE_SCAN);
     // switch(piece){
     //     case PIECE_TYPE_ROOK:
@@ -468,26 +468,34 @@ function pieceMovementIsPossible(piece, movingFrom){
     return false;
 }
 function isSquareOnMovementRange(squareId){
-    let divSquare = document.querySelector('#'+squareId);
+    let divSquare = document.querySelector('#' + squareId);
     return divSquare.getAttribute("class").includes('squarehl') ? 
             true : false;
+}
+function doMovePiece(piece, squareDestinationId){
+    var squareOriginId =  getPieceLocation(piece);
+    document.getElementById(squareOriginId).innerHTML = "";
+    document.getElementById(squareDestinationId).innerHTML = piece;
 }
 function selectEmptySquare(squareId){
     if ( pieceSelected == 0 )
         return;
     
     if ( isSquareOnMovementRange(squareId) == false ){
-
+        $(".squarehl").removeClass("squarehl");
+        pieceSelected = 0;
+        return;
     }
+
+    doMovePiece(pieceSelected, squareId);
+    $(".squarehl").removeClass("squarehl");
+    pieceSelected = 0;
+    
 }
 function selectSquare(content, squareName){
     if ( pieceSelected ){
         if ( isSquareOnMovementRange(squareName) == false ){
-            var removalDivs = document.getElementsByClassName('squarehl');
-            for ( i = 0; i < removalDivs.length ; i++){
-                removalDivs[i].classList.remove('squarehl');
-                i = -1;
-            }
+            $(".squarehl").removeClass("squarehl");
             pieceSelected = 0;
             return;
         }
@@ -599,6 +607,7 @@ function drawBoard() {
         rowColorToggle = !rowColorToggle;
     }
 }
+
 // function drawPieces(){
 //     if ( playerColor[playerColorStatus] == 'white' )
 //         drawWhite();
@@ -614,6 +623,7 @@ function drawBoard() {
 //         }
 //     }
 // }
+
 function drawSinglePiece(squareName){
     // if 
     // (
