@@ -454,12 +454,12 @@ function selectEmptySquare(squareId){
 
     }
 }
-function selectSquare(piece, movingFrom){
-    if ( piece != ""){
-        return selectPiece(piece, movingFrom)
+function selectSquare(content, squareName){
+    if ( content != ""){
+        return selectPiece(content, squareName)
     }
 
-    return selectEmptySquare(movingFrom);
+    return selectEmptySquare(squareName);
 }
 //background-blend-mode: screen;
 //                         column+index
