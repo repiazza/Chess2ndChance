@@ -134,7 +134,7 @@ function movePiece(piece, originSquare, destinationSquare){
 
 function isValidSquareIndex(squareName){
     let squareIndex = Number(squareName[SQUARE_NUMERIC_NDX]);
-    if ( squareIndex < 1 || squareIndex > 8 )
+    if ( squareIndex < 1 || squareIndex > 8 || isNaN(squareIndex) )
         return false;
     
     return true;
@@ -206,7 +206,10 @@ function colorMovementPath(movementType){
         
     }
     if ( movementType & DIRECTION_L ){
-
+        LMovementSquares.map(function(value){
+            if ( isValidSquareIndex(value))
+                document.getElementById(value).classList.add("squarehl");
+        });
     }
 }
 function hasFullFilledRange(movementType, pieceRange){
@@ -287,6 +290,37 @@ function hasAnyMovementRange(piece){
             return true;
         }
     }
+    if ( matchMovementDirection(movType, DIRECTION_LINE) ){
+        let originColumn = columnArray.indexOf(lineMovementRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_ALPHABETICAL_NDX]);
+        let destColumn = columnArray.indexOf(lineMovementRange[MOVEMENT_RANGE_END_SQUARE][SQUARE_ALPHABETICAL_NDX]);
+        let columnInterval = ( originColumn <= destColumn ) ? 
+                              columnArray.slice(originColumn, destColumn+1) :
+                              columnArray.slice(destColumn, originColumn+1) ;
+        if ( columnInterval.length > 1 ){
+            return true;
+        }
+    }
+    if ( matchMovementDirection(movType, DIRECTION_DIAGONAL) ){
+        let originColumn = columnArray.indexOf(mainDiagonalRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_ALPHABETICAL_NDX]);
+        let destColumn = columnArray.indexOf(mainDiagonalRange[MOVEMENT_RANGE_END_SQUARE][SQUARE_ALPHABETICAL_NDX]);
+        let mainDiagonalInterval = ( originColumn <= destColumn ) ? 
+                              columnArray.slice(originColumn, destColumn+1) :
+                              columnArray.slice(destColumn, originColumn+1) ;
+        if ( mainDiagonalInterval.length > 1 ){
+            return true;
+        }
+        originColumn = columnArray.indexOf(otherDiagonalRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_ALPHABETICAL_NDX]);
+        destColumn = columnArray.indexOf(otherDiagonalRange[MOVEMENT_RANGE_END_SQUARE][SQUARE_ALPHABETICAL_NDX]);
+        let otherDiagonalInterval = ( originColumn <= destColumn ) ? 
+                              columnArray.slice(originColumn, destColumn+1) :
+                              columnArray.slice(destColumn, originColumn+1) ;
+        if ( otherDiagonalInterval.length > 1 ){
+            return true;
+        }
+    }
+    if ( matchMovementDirection(movType, DIRECTION_L) ){
+        return (LMovementSquares[0] != -1) ? true : false;
+    }
     return false;
 }
 function resetAllDirectionMovementRange(){
@@ -344,10 +378,7 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
     
     resetAllDirectionMovementRange();
     
-    // alert("scanType:" + scanType);
-
     do {
-        // alert("myMovType:" + myMovType);
         if ( matchMovementDirection(myMovType, DIRECTION_COLUMN) ){
             let nextTopLine    = myLineIndex + nextTopLineOffset;
             let nextBottomLine = myLineIndex + nextBottomLineOffset;
@@ -539,15 +570,7 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
                 else{
                     otherDiagonalRange[MOVEMENT_RANGE_END_SQUARE] += '#';
                 }
-                if ( hasFullFilledRange(DIRECTION_DIAGONAL, pieceMovementRange[pieceNdx]) ){
-                    myMovType = myMovType ^ DIRECTION_DIAGONAL;
-                    nextTopLineOffset     = setMovOffset(TOP_OFFSET, myColor);
-                    nextBottomLineOffset  = setMovOffset(BOT_OFFSET, myColor);
-                    nextLeftColumnOffset  = setMovOffset(LFT_OFFSET, myColor);
-                    nextRightColumnOffset = setMovOffset(RGT_OFFSET, myColor);
-                    continue;
-                }
-                if ( stillHasMovements == false ){
+                if ( hasFullFilledRange(DIRECTION_DIAGONAL, pieceMovementRange[pieceNdx]) || stillHasMovements == false ){
                     myMovType = myMovType ^ DIRECTION_DIAGONAL;
                     nextTopLineOffset     = setMovOffset(TOP_OFFSET, myColor);
                     nextBottomLineOffset  = setMovOffset(BOT_OFFSET, myColor);
@@ -564,6 +587,10 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
             }
             else{
                 myMovType = myMovType ^ DIRECTION_DIAGONAL;
+                nextTopLineOffset     = setMovOffset(TOP_OFFSET, myColor);
+                nextBottomLineOffset  = setMovOffset(BOT_OFFSET, myColor);
+                nextLeftColumnOffset  = setMovOffset(LFT_OFFSET, myColor);
+                nextRightColumnOffset = setMovOffset(RGT_OFFSET, myColor);
                 continue;
             }
         }    
@@ -584,31 +611,83 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
             let turnMovementBottom = nextBottomLine;
             let turnMovementLeft = nextLeftColumn;
             let turnMovementRight = nextRightColumn;
+            
+            LMovementSquares = [];
+            LMovementSquares[0] = -1;
+            
             // Quadrante Left
             let sprintMovement     = nextLeftColumn + nextLeftColumnOffset;
-            let leftZoneMoveTop    = columnArray[sprintMovement] + turnMovementTop
-            let leftZoneMoveBottom = columnArray[sprintMovement] + turnMovementBottom
+            let leftZoneMoveTop    = (columnArray[sprintMovement] !== undefined) ?
+                                      columnArray[sprintMovement] + turnMovementTop:
+                                      -1;
+            let leftZoneMoveBottom = (columnArray[sprintMovement] !== undefined) ?
+                                      columnArray[sprintMovement] + turnMovementBottom:
+                                      -1;
             // Quadrante Right
-                sprintMovement     = nextRightColumn + nextRightColumnOffset;
-            let rightZoneMoveTop    = columnArray[sprintMovement] + turnMovementTop
-            let rightZoneMoveBottom = columnArray[sprintMovement] + turnMovementBottom
+                sprintMovement      = nextRightColumn + nextRightColumnOffset;
+            let rightZoneMoveTop    = (columnArray[sprintMovement] !== undefined) ?
+                                       columnArray[sprintMovement] + turnMovementTop:
+                                       -1;
+            let rightZoneMoveBottom = (columnArray[sprintMovement] !== undefined) ?
+                                       columnArray[sprintMovement] + turnMovementBottom:
+                                       -1;
             // Quadrante Top
                 sprintMovement     = nextTopLine + nextTopLineOffset;
-            let topZoneMoveLeft    = columnArray[turnMovementLeft] + sprintMovement
-            let topZoneMoveRight   = columnArray[turnMovementRight] + sprintMovement
+            let topZoneMoveLeft    = (columnArray[turnMovementLeft] !== undefined) ?
+                                      columnArray[turnMovementLeft] + sprintMovement:
+                                      -1;
+            let topZoneMoveRight   = (columnArray[turnMovementRight] !== undefined) ?
+                                      columnArray[turnMovementRight] + sprintMovement:
+                                      -1;
             // Quadrante Bottom
             sprintMovement            = nextBottomLine + nextBottomLineOffset;
-            let bottomZoneMoveLeft    = columnArray[turnMovementLeft] + sprintMovement
-            let bottomZoneMoveRight   = columnArray[turnMovementRight] + sprintMovement
-            if (   hasBlankSpace(leftZoneMoveTop)
-                || hasBlankSpace(leftZoneMoveBottom)
-                || hasBlankSpace(rightZoneMoveTop)
-                || hasBlankSpace(rightZoneMoveBottom)
-                || hasBlankSpace(topZoneMoveLeft)
-                || hasBlankSpace(topZoneMoveRight)
-                || hasBlankSpace(bottomZoneMoveLeft)
-                || hasBlankSpace(bottomZoneMoveRight) 
-            ){
+            let bottomZoneMoveLeft    = (columnArray[turnMovementLeft] !== undefined) ?
+                                         columnArray[turnMovementLeft] + sprintMovement:
+                                         -1;
+            let bottomZoneMoveRight   = (columnArray[turnMovementRight] !== undefined) ?
+                                         columnArray[turnMovementRight] + sprintMovement:
+                                         -1;
+
+            // alert("LzmT:" + leftZoneMoveTop + " LzmB:" + leftZoneMoveBottom);
+            // alert("RzmT:" + rightZoneMoveTop + " RzmB:" + rightZoneMoveBottom);
+            // alert("TzmL:" + topZoneMoveLeft + " TzmR:" + topZoneMoveRight);
+            // alert("BzmL:" + bottomZoneMoveLeft + " BzmR:" + bottomZoneMoveRight);
+
+            if ( scanType == FULL_SCAN ){
+                let LSquareMovementCtr = 0;             
+                if ( hasBlankSpace(leftZoneMoveTop) )
+                    LMovementSquares[LSquareMovementCtr++] = leftZoneMoveTop;
+                if ( hasBlankSpace(leftZoneMoveBottom) )
+                    LMovementSquares[LSquareMovementCtr++] = leftZoneMoveBottom;    
+                if ( hasBlankSpace(rightZoneMoveTop) )
+                    LMovementSquares[LSquareMovementCtr++] = rightZoneMoveTop;
+                if ( hasBlankSpace(rightZoneMoveBottom) )
+                    LMovementSquares[LSquareMovementCtr++] = rightZoneMoveBottom;
+                if ( hasBlankSpace(topZoneMoveLeft) )
+                    LMovementSquares[LSquareMovementCtr++] = topZoneMoveLeft;
+                if ( hasBlankSpace(topZoneMoveRight) )
+                    LMovementSquares[LSquareMovementCtr++] = topZoneMoveRight;
+                if ( hasBlankSpace(bottomZoneMoveLeft) )
+                    LMovementSquares[LSquareMovementCtr++] = bottomZoneMoveLeft;
+                if ( hasBlankSpace(bottomZoneMoveRight) )
+                    LMovementSquares[LSquareMovementCtr++] = bottomZoneMoveRight;
+
+                myMovType = myMovType ^ DIRECTION_L;
+                nextTopLineOffset     = setMovOffset(TOP_OFFSET, myColor);
+                nextBottomLineOffset  = setMovOffset(BOT_OFFSET, myColor);
+                nextLeftColumnOffset  = setMovOffset(LFT_OFFSET, myColor);
+                nextRightColumnOffset = setMovOffset(RGT_OFFSET, myColor);
+
+                // alert(LMovementSquares);
+            }
+            else if ( hasBlankSpace(leftZoneMoveTop)
+                      || hasBlankSpace(leftZoneMoveBottom)
+                      || hasBlankSpace(rightZoneMoveTop)
+                      || hasBlankSpace(rightZoneMoveBottom)
+                      || hasBlankSpace(topZoneMoveLeft)
+                      || hasBlankSpace(topZoneMoveRight)
+                      || hasBlankSpace(bottomZoneMoveLeft)
+                      || hasBlankSpace(bottomZoneMoveRight) ){
                 return true;
             }
         }
