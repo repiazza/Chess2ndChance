@@ -8,3 +8,33 @@
 .squarehl{
     border: purple solid 0.5px;
 }
+.linemovhldark{
+    background-color: rgba(240, 128, 128, 0.6);
+}
+.linemovhl{
+    background-color: rgba(240, 128, 128, 0.3);
+}
+.columnmovhldark{
+    background-color: rgba(127, 255, 212, 0.8);
+}
+.columnmovhl{
+    background-color: rgba(127, 255, 212, 0.2);
+}
+.diagonalmovhldark{
+    background-color: rgba(100, 149, 237, 0.6);
+}
+.diagonalmovhl{
+    background-color: rgba(100, 149, 237, 0.3);
+}
+.knightmovhldark{
+    background-color: rgba(255, 250, 205, 0.8);
+}
+.knightmovhl{
+    background-color: rgba(255, 250, 205, 0.4);
+}
+.darksquarecolor{
+    background-color: rgba(128,0,128, 0.3);
+}
+.lightsquarecolor{
+    background-color: rgba(221,160,221,0.5);
+}

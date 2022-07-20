@@ -2,6 +2,22 @@
 const LINE_SQUARE_COUNT = 8;
 const COLUMN_SQUARE_ROW = 8;
 
+const highlightClasses = [
+                            "linemovhl", 
+                            "columnmovhl", 
+                            "diagonalmovhl",
+                            "knightmovhl",
+                            "linemovhldark", 
+                            "columnmovhldark", 
+                            "diagonalmovhldark",
+                            "knightmovhldark"
+];
+
+const TOP_OFFSET = 1;
+const BOT_OFFSET = 2;
+const LFT_OFFSET = 3;
+const RGT_OFFSET = 4;
+
 const COLOR_NONE  = -1;
 const COLOR_WHITE = 0;
 const COLOR_BLACK = 1;
@@ -16,7 +32,7 @@ const SQUARE_ALPHABETICAL_NDX = 0;
 const SQUARE_NUMERIC_NDX      = 1;
 
 const PIECE_COLOR_INDEX = 0; // B or W
-const PIECE_TYPE_INDEX = 1;  // R N B Q K P
+const PIECE_TYPE_INDEX = 1;  // R N B Q K or P
 const PIECE_COMPLEMENT_IDENTIFIER_INDEX = 2; // Column or Sequence 
 
 const DIRECTION_COLUMN   = 0x01;
@@ -24,6 +40,7 @@ const DIRECTION_LINE     = 0x02;
 const DIRECTION_DIAGONAL = 0x04;
 const DIRECTION_L        = 0x08;
 const DIRECTION_ALL      = DIRECTION_COLUMN | DIRECTION_LINE | DIRECTION_DIAGONAL | DIRECTION_L;
+
 const SQUARE_RANGE       = 1;
 const DOUBLE_SQUARE_RANGE= 2;
 const L_RANGE            = 4;
@@ -40,8 +57,8 @@ const PIECE_COLOR_WHITE = 'W';
 const PIECE_COLOR_BLACK = 'B';
 
 let pieceSelected = 0;
-let playerColor = ['white', 'black'];
 let playerColorStatus = 0;
+let playerColor = ['white', 'black'];
 let columnArray = ['a','b','c','d','e','f','g','h'];
 let initialRows = [1, 2, 7, 8];
 //                             0    1    2    3   4   5    6    7
@@ -76,7 +93,6 @@ function redrawBoard(){
     deleteBoard();
     drawBoard();
 }
-
 // const DIRECTION_COLUMN   = 0x01;
 // const DIRECTION_LINE     = 0x02;
 // const DIRECTION_DIAGONAL = 0x04;
@@ -116,24 +132,6 @@ function initPieceMovements(){
         }
     }
 }
-
-function movePiece(piece, originSquare, destinationSquare){
-    switch(piece){
-        case PIECE_TYPE_ROOK:
-            break;     
-        case PIECE_TYPE_KNIGHT:
-            break;
-        case PIECE_TYPE_BISHOP:
-            break;
-        case PIECE_TYPE_QUEEN:
-            break;
-        case PIECE_TYPE_KING:
-            break;
-        case PIECE_TYPE_PAWN:
-            break;
-    }
-}
-
 function isValidSquareIndex(squareName){
     let squareIndex = Number(squareName[SQUARE_NUMERIC_NDX]);
     if ( squareIndex < 1 || squareIndex > 8 || isNaN(squareIndex) )
@@ -141,7 +139,6 @@ function isValidSquareIndex(squareName){
     
     return true;
 }
-
 function hasBlankSpace(squareName){
     if ( squareName == -1 )
         return false
@@ -150,6 +147,13 @@ function hasBlankSpace(squareName){
         return false
 
     return (document.getElementById(squareName).innerHTML == "") ? true : false;
+}
+function setColorByBGAttr(className, bgcAttr, squareId){
+    if ( bgcAttr.includes('dark') ){
+        className += 'dark';
+    }
+    
+    document.getElementById(squareId).classList.add(className);
 }
 function colorMovementPath(movementType){
     if ( movementType & DIRECTION_LINE ){
@@ -163,7 +167,8 @@ function colorMovementPath(movementType){
         
         columnInterval.map(function(value){
             let squareId = "" + value + lineNdx;
-            document.getElementById(squareId).classList.add("squarehl");
+            let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
+            setColorByBGAttr("linemovhl", bgcAttr, squareId);
         });
     }
     if ( movementType & DIRECTION_COLUMN ){
@@ -176,7 +181,8 @@ function colorMovementPath(movementType){
 
         for ( ; i <= greaterLineVal; i++ ){
             let squareId = "" + columnChar + i;
-            document.getElementById(squareId).classList.add("squarehl");
+            let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
+            setColorByBGAttr("columnmovhl", bgcAttr, squareId);
         }
     }
     if ( movementType & DIRECTION_DIAGONAL ){
@@ -189,7 +195,8 @@ function colorMovementPath(movementType){
 
         mainDiagColumnInterval.map(function(value){
             let squareId = "" + value + mainDiagLineNdx;
-            document.getElementById(squareId).classList.add("squarehl");
+            let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
+            setColorByBGAttr("diagonalmovhl", bgcAttr, squareId);
             mainDiagLineNdx--;
         });
 
@@ -202,18 +209,34 @@ function colorMovementPath(movementType){
         
         otherDiagColumnInterval.map(function(value){
             let squareId = "" + value + otherDiagLineNdx;
-            document.getElementById(squareId).classList.add("squarehl");
+            let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
+            setColorByBGAttr("diagonalmovhl", bgcAttr, squareId);
             otherDiagLineNdx++;
         });
         
     }
     if ( movementType & DIRECTION_L ){
-        LMovementSquares.map(function(value){
-            if ( isValidSquareIndex(value))
-                document.getElementById(value).classList.add("squarehl");
+        LMovementSquares.map(function(squareId){
+            if ( isValidSquareIndex(squareId)){
+                let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
+                setColorByBGAttr("knightmovhl", bgcAttr, squareId);
+            }
         });
     }
 }
+function setBGColorAsDOMAttributeAndRemove(elemId){
+    let myClassName = "darksquarecolor";
+    let myElem = document.getElementById(elemId);
+    if ( !myElem.classList.contains(myClassName) )
+        myClassName = "lightsquarecolor";
+
+    if ( myElem.classList.contains(myClassName) ) {
+        myElem.setAttribute("bgc", myClassName);
+        myElem.classList.remove(myClassName);
+    }
+    return myClassName;
+}
+// Peça estimou todo movimento possivel, baseado em seu alcance?
 function hasFullFilledRange(movementType, pieceRange){
     let myRange = 0;
     if ( pieceRange == SQUARE_RANGE )
@@ -258,24 +281,25 @@ function hasFullFilledRange(movementType, pieceRange){
         return (hasFullFilledMain && hasFullFilledOther) ? true : false;
     }
 }
-// Alcance do movimento da peca
+// Obter alcance do movimento da peca
 function getMovementRange(piece){
     let pieceNdx = pieceType.indexOf(piece[PIECE_TYPE_INDEX]);
     return pieceMovementRange[pieceNdx];
 }
-// Direcoes que a peca anda
+// Obter direcoes que a peca anda
 function getMovementType(piece){
     let pieceNdx = pieceType.indexOf(piece[PIECE_TYPE_INDEX]);
     return pieceMovementType[pieceNdx];
 }
+// Este conjunto de movimentos possui esta direcao(direction) especifica?
 function matchMovementDirection(pieceMovementType, direction){
     return (pieceMovementType & direction) ? true : false;
 }
+// Obter 'casa' da peça (Ex.: a2, h1, f7, etc.)
 function getPieceLocation(piece){
     for ( let i = 1; i <= LINE_SQUARE_COUNT; i++ ){
         for( let j = 0; j < columnArray.length; j++ ){
             divId = "" + columnArray[j] + i; 
-            // alert(divId);
             div = document.getElementById(divId)
             if ( div.innerHTML.includes(piece) )
                 return divId;
@@ -283,7 +307,8 @@ function getPieceLocation(piece){
     }
     return false; 
 }
-function hasAnyMovementRange(piece){
+// Esta peça possui algum movimento ja calculado a realizar ?
+function hasAnyMovementOnRange(piece){
     movType = getMovementType(piece);
     if ( matchMovementDirection(movType, DIRECTION_COLUMN) ){
         let lineNdx0 = Math.abs(Number(columnMovementRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_NUMERIC_NDX]));
@@ -338,12 +363,6 @@ function resetAllDirectionMovementRange(){
     otherDiagonalRange[MOVEMENT_RANGE_BEGIN_SQUARE]  = -1;
     otherDiagonalRange[MOVEMENT_RANGE_END_SQUARE]    = -1;
 }
-
-const TOP_OFFSET = 1;
-const BOT_OFFSET = 2;
-const LFT_OFFSET = 3;
-const RGT_OFFSET = 4;
-
 function setMovOffset(movementOrientation, pieceColor){
     switch ( movementOrientation ){
         case TOP_OFFSET:
@@ -357,11 +376,9 @@ function setMovOffset(movementOrientation, pieceColor){
     }
     return 0;
 }
-
 function movementMatchesAnyDirection(movementType){
     return (movementType & DIRECTION_ALL) ? true : false;
 }
-
 function scanMovementDirections(movementType, originSquare, piece, scanType){
     // const DIRECTION_COLUMN   = 0x01;
     // const DIRECTION_LINE     = 0x02;
@@ -696,7 +713,7 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
     } while( movementMatchesAnyDirection(myMovType) );
 
     if ( scanType == FULL_SCAN ){
-        if ( hasAnyMovementRange(piece) == false )
+        if ( hasAnyMovementOnRange(piece) == false )
             return false;
 
         return true;
@@ -704,38 +721,38 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
 
     return false;
 }
-
-// piece has possible movement on any of its own directions?
+// Calcular e avaliar se existe algum movimento possivel em qualquer direção desta peça.
 function pieceMovementIsPossible(piece, originSquare){
     return scanMovementDirections(getMovementType(piece), originSquare, piece, SQUARE_SCAN);
 }
-// set full movement range array 
+// Calcular todos os movimentos possiveis em todas as direção.
 function evaluatePieceMovementRange(piece, originSquare){
     return scanMovementDirections(getMovementType(piece), originSquare, piece, FULL_SCAN);
 }
+function contentsClass(myClass) { 
+    return highlightClasses.includes(myClass) 
+}
+// Esta casa encontra-se nas casas já calculadas para movimento?  
 function isSquareOnMovementRange(squareId){
     let divSquare = document.querySelector('#' + squareId);
-    return divSquare.getAttribute("class").includes('squarehl') ? 
-            true : false;
+    let classAttr = divSquare.getAttribute("class").split(" ");
+    return classAttr.some(contentsClass);
 }
+// Mover peça de seu local atual para destinationSquare.
 function doMovePiece(piece, destinationSquare){
     var originSquare = getPieceLocation(piece);
     document.getElementById(originSquare).innerHTML = "";
     document.getElementById(destinationSquare).innerHTML = piece;
 }
-
 function selectEmptySquare(squareId){
     if ( pieceSelected == 0 )
         return;
     
-    if ( isSquareOnMovementRange(squareId) == false ){
-        $(".squarehl").removeClass("squarehl");
-        pieceSelected = 0;
-        return;
+    if ( isSquareOnMovementRange(squareId) ){
+        doMovePiece(pieceSelected, squareId);
     }
 
-    doMovePiece(pieceSelected, squareId);
-    $(".squarehl").removeClass("squarehl");
+    clearActiveSelection();
     pieceSelected = 0;
     
     return;
@@ -744,28 +761,37 @@ function selectSquare(content, squareName){
     if ( content == "" ){
         return selectEmptySquare(squareName);
     }
+
     return selectPiece(content, squareName);
 }
 function selectPiece(piece, originSquare){
+    // Se estamos selecionando uma peça, ela precisa estar "solta",
+    // ou seja, ter algum movimento possivel.
     if ( pieceMovementIsPossible(piece, originSquare) == false )
         return;
 
     clearActiveSelection();
     evaluatePieceMovementRange(piece, originSquare);
-    document.getElementById(originSquare).classList.add("squarehl");
     pieceSelected = piece;
     colorMovementPath(getMovementType(piece));
 }
 function clearActiveSelection(){
-    $(".squarehl").removeClass("squarehl");
+    highlightClasses.map(function(value){
+        let className = "." + value;
+        $(className).each(function(){
+            let bgclass = $(this).attr("bgc");
+            if ( bgclass !== undefined ){
+                $(this).addClass(bgclass);
+            }
+            $(this).removeClass(value);
+        });        
+    });
     pieceSelected = 0;
     return;
 }
-
 function deleteBoard(){
     $(".pieceSquare").remove();
 }
-
 function drawBoard() {
     let board = document.querySelector('.board');
     let style = getComputedStyle(board);
@@ -782,9 +808,9 @@ function drawBoard() {
         for( let j = 0; j < COLUMN_SQUARE_ROW; j++ ){
             var divSquare = document.createElement('div');
             if ( j%2 != rowColorToggle ) 
-                divSquare.style.backgroundColor = 'rgba(221,160,221,0.5)';
+                divSquare.classList.add('lightsquarecolor');
             else
-                divSquare.style.backgroundColor = 'rgba(128,0,128, 0.3)';
+                divSquare.classList.add('darksquarecolor');
                 
             divSquare.style.width  = iSquareWidth;
             divSquare.style.height = iSquareHeight;
@@ -820,7 +846,6 @@ function drawBoard() {
         rowColorToggle = !rowColorToggle;
     }
 }
-
 function drawSinglePiece(squareName){
     let pawnColumn = columnArray[columnArray.indexOf(squareName[SQUARE_ALPHABETICAL_NDX])];
     if ( squareName.includes("2") ){
@@ -844,6 +869,7 @@ function drawSinglePiece(squareName){
     }
     return COLOR_NONE;
 }
+
 $(document).ready(function () {
     initPieceMovements();
     drawBoard();
