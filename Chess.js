@@ -62,11 +62,13 @@ let lineMovementRange     = [];
 let diagonalMovementRange = [];
 let LMovementSquares      = [];
 
-
 function togglePlayerColor(){
     playerColorStatus = playerColorStatus ? 0 : 1;
 }
 function togglePlayerColorAndRedrawBoard(){
+    if ( !confirm('ATENÇÃO! Inverter as cores? (todo progresso será perdido)') )
+        return;
+
     playerColorStatus = playerColorStatus ? 0 : 1;
     redrawBoard();
 }
