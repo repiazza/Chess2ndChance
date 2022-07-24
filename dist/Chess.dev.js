@@ -118,18 +118,43 @@ function getLineIndexFromPiece(piece) {
 
 function getLineIndexFromSquare(squareName) {
   if (!isValidSquareIndex(squareName)) return INVALID_SQUARE;
-  return squareName[SQUARE_NUMERIC_NDX];
-} // function getAnyMainDiagonalFromBegin(beginSquareName, color){
-//     let myLineIndex    = getLineIndexFromSquare(beginSquareName);
-//     if ( myLineIndex == -1 )
-//         return -1;
-//     let nextTopLine    = myLineIndex + nextTopLineOffset;
-//     let nextBottomLine = myLineIndex + nextBottomLineOffset;
-//     let nextTopSquareName    = originSquare[SQUARE_ALPHABETICAL_NDX] + nextTopLine;
-//     let nextBottomSquareName = originSquare[SQUARE_ALPHABETICAL_NDX] + nextBottomLine;
-// }
-// function getAnyMainDiagonalFromEnd();
-// function getAnyOppositeDiagonalFromBegin();
+  return Number(squareName[SQUARE_NUMERIC_NDX]);
+}
+
+function getColumnIndexFromSquare(squareName) {
+  if (!isValidSquareIndex(squareName)) return INVALID_SQUARE;
+  return columnArray.indexOf(squareName[SQUARE_ALPHABETICAL_NDX]);
+}
+
+function getAnyMainDiagonalFromBegin(beginSquareName, color) {
+  var myColumnIndex = getColumnIndexFromSquare(beginSquareName);
+  var myLineIndex = getLineIndexFromSquare(beginSquareName);
+  var mainDiagonal = [beginSquareName];
+  if (myLineIndex == -1) return -1;
+  var nextRightColumnOffset = getMovementOffset(RGT_OFFSET, color);
+  var nextBottomLineOffset = getMovementOffset(BOT_OFFSET, color);
+  var nextBottomLine = myLineIndex + nextBottomLineOffset;
+  var nextRightColumn = myColumnIndex + nextRightColumnOffset;
+  var nextBottomRightSquareName = columnArray[nextRightColumn] !== undefined ? columnArray[nextRightColumn] + nextBottomLine : -1; // alert(myColumnIndex);
+  // alert(myLineIndex);
+  // alert(nextRightColumn);
+  // alert(nextBottomLine);
+
+  alert(nextBottomRightSquareName);
+
+  while (nextBottomRightSquareName != -1) {
+    mainDiagonal.push(nextBottomRightSquareName);
+    nextRightColumnOffset = nextRightColumnOffset + getMovementOffset(RGT_OFFSET, color);
+    nextBottomLineOffset = nextBottomLineOffset + getMovementOffset(BOT_OFFSET, color);
+    nextBottomLine = myLineIndex + nextBottomLineOffset;
+    nextRightColumn = myColumnIndex + nextRightColumnOffset;
+    nextBottomRightSquareName = columnArray[nextRightColumn] !== undefined ? columnArray[nextRightColumn] + nextBottomLine : -1;
+  }
+
+  return mainDiagonal;
+}
+
+function getAnyMainDiagonalFromEnd() {} // function getAnyOppositeDiagonalFromBegin();
 // function getAnyOppositeDiagonalFromEnd();
 
 
@@ -251,6 +276,13 @@ function setColorByBGAttr(className, bgcAttr, squareId) {
   }
 
   document.getElementById(squareId).classList.add(className);
+}
+
+function colorDiscreteMovementPath(movementDiscreteArray) {
+  movementDiscreteArray.map(function (squareId) {
+    var bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
+    setColorByBGAttr("orangehl", bgcAttr, squareId);
+  });
 }
 
 function colorMovementPath(movementType) {
@@ -389,7 +421,7 @@ function colorMovementPath(movementType) {
   if (matchMovementDirection(movementType, MOVEMENT_DIRECTION_L)) {
     LMovementSquares.map(function (squareId) {
       if (isValidSquareIndex(squareId)) {
-        alert(setBGColorAsDOMAttributeAndRemove(squareId));
+        setBGColorAsDOMAttributeAndRemove(squareId);
 
         var _bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
 
@@ -1221,5 +1253,7 @@ function drawSinglePiece(squareName) {
 
 $(document).ready(function () {
   initPieceMovements();
-  drawBoard();
+  drawBoard(); // alert(getAnyMainDiagonalFromBegin('a8', colorNotation[playerColorStatus]));
+  // let movPath = getAnyMainDiagonalFromBegin('a8', colorNotation[playerColorStatus]);
+  // colorDiscreteMovementPath(movPath);
 });

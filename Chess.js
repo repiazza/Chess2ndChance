@@ -143,6 +143,8 @@ let highValuePieceNotation = ['R1','N1','B1','Q','K','B2','N2','R2'];
 let lowValuePieceNotation  = ['Pa', 'Pb', 'Pc', 'Pd', 'Pe', 'Pf', 'Pg', 'Ph'];
 let pieceType              = ['R', 'N', 'B', 'Q', 'K', 'P'];
 
+
+
 //                        R N B Q K P
 let pieceMovementType  = [0,0,0,0,0,0];
 //                        R N B Q K P
@@ -166,20 +168,51 @@ function getLineIndexFromSquare(squareName){
     if ( !isValidSquareIndex(squareName) )
         return INVALID_SQUARE;
 
-    return squareName[SQUARE_NUMERIC_NDX];
+    return Number(squareName[SQUARE_NUMERIC_NDX]);
 }
 
-// function getAnyMainDiagonalFromBegin(beginSquareName, color){
-//     let myLineIndex    = getLineIndexFromSquare(beginSquareName);
-//     if ( myLineIndex == -1 )
-//         return -1;
+function getColumnIndexFromSquare(squareName){
+    if ( !isValidSquareIndex(squareName) )
+        return INVALID_SQUARE;
 
-//     let nextTopLine    = myLineIndex + nextTopLineOffset;
-//     let nextBottomLine = myLineIndex + nextBottomLineOffset;
-//     let nextTopSquareName    = originSquare[SQUARE_ALPHABETICAL_NDX] + nextTopLine;
-//     let nextBottomSquareName = originSquare[SQUARE_ALPHABETICAL_NDX] + nextBottomLine;
-// }
-// function getAnyMainDiagonalFromEnd();
+    return columnArray.indexOf(squareName[SQUARE_ALPHABETICAL_NDX]);
+}
+function getAnyMainDiagonalFromBegin(beginSquareName, color){
+    let myColumnIndex  = getColumnIndexFromSquare(beginSquareName);
+    let myLineIndex    = getLineIndexFromSquare(beginSquareName);
+    let mainDiagonal = [beginSquareName];
+    if ( myLineIndex == -1 )
+        return -1;
+
+
+    
+    let nextRightColumnOffset = getMovementOffset(RGT_OFFSET, color);
+    let nextBottomLineOffset = getMovementOffset(BOT_OFFSET, color);
+    let nextBottomLine = myLineIndex + nextBottomLineOffset;
+    let nextRightColumn = myColumnIndex + nextRightColumnOffset;
+    let nextBottomRightSquareName = (columnArray[nextRightColumn] !== undefined) ?
+                                     columnArray[nextRightColumn] + nextBottomLine:
+                                    -1;
+                                    // alert(myColumnIndex);
+                                    // alert(myLineIndex);
+                                    // alert(nextRightColumn);
+                                    // alert(nextBottomLine);
+    alert(nextBottomRightSquareName);
+    while ( nextBottomRightSquareName != -1 ){
+        mainDiagonal.push(nextBottomRightSquareName);
+        nextRightColumnOffset = nextRightColumnOffset + getMovementOffset(RGT_OFFSET, color);
+        nextBottomLineOffset  = nextBottomLineOffset  + getMovementOffset(BOT_OFFSET, color);
+        nextBottomLine  = myLineIndex + nextBottomLineOffset;
+        nextRightColumn = myColumnIndex + nextRightColumnOffset;
+        nextBottomRightSquareName = (columnArray[nextRightColumn] !== undefined) ?
+                                     columnArray[nextRightColumn] + nextBottomLine:
+                                     -1;
+    }
+    return mainDiagonal;
+}
+function getAnyMainDiagonalFromEnd(){
+    
+}
 // function getAnyOppositeDiagonalFromBegin();
 // function getAnyOppositeDiagonalFromEnd();
 
@@ -312,6 +345,12 @@ function setColorByBGAttr(className, bgcAttr, squareId){
     }
     
     document.getElementById(squareId).classList.add(className);
+}
+function colorDiscreteMovementPath(movementDiscreteArray){
+    movementDiscreteArray.map(function(squareId){
+        let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
+        setColorByBGAttr("orangehl", bgcAttr, squareId);
+    })
 }
 function colorMovementPath(movementType){
     if ( matchMovementDirection(movementType,MOVEMENT_DIRECTION_LINE) ){
@@ -463,7 +502,7 @@ function colorMovementPath(movementType){
     if ( matchMovementDirection(movementType,MOVEMENT_DIRECTION_L) ){
         LMovementSquares.map(function(squareId){
             if ( isValidSquareIndex(squareId)){
-                alert(setBGColorAsDOMAttributeAndRemove(squareId));
+                setBGColorAsDOMAttributeAndRemove(squareId);
                 let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
                 setColorByBGAttr("knightmovhl", bgcAttr, squareId);
             }
@@ -1376,4 +1415,7 @@ function drawSinglePiece(squareName){
 $(document).ready(function () {
     initPieceMovements();
     drawBoard();
+    // alert(getAnyMainDiagonalFromBegin('a8', colorNotation[playerColorStatus]));
+    // let movPath = getAnyMainDiagonalFromBegin('a8', colorNotation[playerColorStatus]);
+    // colorDiscreteMovementPath(movPath);
 });
