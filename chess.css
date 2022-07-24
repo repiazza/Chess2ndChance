@@ -47,7 +47,8 @@
 .pblack{
     background-color: black;
     color: white;
-    height: 20px;
+    height: 40px;
+    width: 300px;
 }
 .pwhite{
     background-color: white;
