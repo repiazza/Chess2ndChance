@@ -44,6 +44,12 @@
 .capturehldark{
     background-color: rgba(70,0,130,1);
 }
+.orangehl{
+    background-color: rgba(255, 115, 0, 0.4);
+}
+.orangehldark{
+    background-color: rgba(130, 59, 0, 0.8);
+}
 .pblack{
     background-color: black;
     color: white;
