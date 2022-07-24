@@ -7,15 +7,5 @@
 // Square attributes:
 // pn = PieceName
 // pc = PieceColor
-// 
-function getSquareStatus(){
-    // isPieceSquare();
-    // isEmptySquare();
-    // isOnBoardSquare();
-}
-function isPieceSquare(squareId){
-    return (document.getElementById(squareId).getAttribute('pn') != null);
-}
-function isEmptySquare(squareId){
-    return (document.getElementById(squareId).getAttribute('pn') == null);
-}
+//  
+//

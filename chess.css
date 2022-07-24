@@ -1,7 +1,7 @@
 .board{
     height: 640px;
     width: 640px;
-    margin-top: 100px;
+    margin-top: 50px;
     margin-left: 450px;
 }
 
@@ -38,3 +38,26 @@
 .lightsquarecolor{
     background-color: rgba(221,160,221,0.5);
 }
+.capturehl{
+    background-color: rgba(70,0,130,0.5);
+}
+.capturehldark{
+    background-color: rgba(70,0,130,1);
+}
+.pblack{
+    background-color: black;
+    color: white;
+    height: 20px;
+}
+.pwhite{
+    background-color: white;
+    color: black;
+}
+.pfont{
+    font: 20px;
+    font-weight: bold;
+}
+.buttons{
+    margin-left: 450px;
+}
+
