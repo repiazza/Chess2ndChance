@@ -22,14 +22,14 @@
 // let gameBoard = [[a8],[],[],[],[],[],[],[]];
 
 
-var GRID = [['a8'] ['b8'] ['c8'] ['d8'] ['e8'] ['f8'] ['g8'] ['h8']
-           ['a7'] ['b7'] ['c7'] ['d7'] ['e7'] ['f7'] ['g7'] ['h7']
-           ['a6'] ['b6'] ['c6'] ['d6'] ['e6'] ['f6'] ['g6'] ['h6']
-           ['a5'] ['b5'] ['c5'] ['d5'] ['e5'] ['f5'] ['g5'] ['h5']
-           ['a4'] ['b4'] ['c4'] ['d4'] ['e4'] ['f4'] ['g4'] ['h4']
-           ['a3'] ['b3'] ['c3'] ['d3'] ['e3'] ['f3'] ['g3'] ['h3']
-           ['a2'] ['b2'] ['c2'] ['d2'] ['e2'] ['f2'] ['g2'] ['h2']
-           ['a1'] ['b1'] ['c1'] ['d1'] ['e1'] ['f1'] ['g1'] ['h1']]
+var boardGrid = [['a8'], ['b8'], ['c8'], ['d8'], ['e8'], ['f8'], ['g8'], ['h8'],
+                 ['a7'], ['b7'], ['c7'], ['d7'], ['e7'], ['f7'], ['g7'], ['h7'],
+                 ['a6'], ['b6'], ['c6'], ['d6'], ['e6'], ['f6'], ['g6'], ['h6'],
+                 ['a5'], ['b5'], ['c5'], ['d5'], ['e5'], ['f5'], ['g5'], ['h5'],
+                 ['a4'], ['b4'], ['c4'], ['d4'], ['e4'], ['f4'], ['g4'], ['h4'],
+                 ['a3'], ['b3'], ['c3'], ['d3'], ['e3'], ['f3'], ['g3'], ['h3'],
+                 ['a2'], ['b2'], ['c2'], ['d2'], ['e2'], ['f2'], ['g2'], ['h2'],
+                 ['a1'], ['b1'], ['c1'], ['d1'], ['e1'], ['f1'], ['g1'], ['h1']]
 
 const TOTAL_PIECE_COUNT = 16;
 const PLAYER_PIECE_COUNT = TOTAL_PIECE_COUNT / 2;
@@ -193,11 +193,13 @@ function getAnyMainDiagonalFromBegin(beginSquareName, color){
     let mainDiagonal = [beginSquareName];
     if ( myLineIndex == -1 )
         return -1;
-
-
     
     let nextRightColumnOffset = getMovementOffset(RGT_OFFSET, color);
-    let nextBottomLineOffset = getMovementOffset(BOT_OFFSET, color);
+    let nextBottomLineOffset =0;
+    if ( color == 'B')
+          nextBottomLineOffset = getMovementOffset(BOT_OFFSET, 'W');
+    else
+         nextBottomLineOffset = getMovementOffset(BOT_OFFSET, color);
     let nextBottomLine = myLineIndex + nextBottomLineOffset;
     let nextRightColumn = myColumnIndex + nextRightColumnOffset;
     let nextBottomRightSquareName = (columnArray[nextRightColumn] !== undefined) ?
@@ -207,24 +209,30 @@ function getAnyMainDiagonalFromBegin(beginSquareName, color){
                                     // alert(myLineIndex);
                                     // alert(nextRightColumn);
                                     // alert(nextBottomLine);
-    alert(nextBottomRightSquareName);
+
     while ( nextBottomRightSquareName != -1 ){
         mainDiagonal.push(nextBottomRightSquareName);
+        if ( color == 'B')
+            nextBottomLineOffset = nextBottomLineOffset + getMovementOffset(BOT_OFFSET, 'W');
+         else
+            nextBottomLineOffset = nextBottomLineOffset + getMovementOffset(BOT_OFFSET, color);
+            
         nextRightColumnOffset = nextRightColumnOffset + getMovementOffset(RGT_OFFSET, color);
-        nextBottomLineOffset  = nextBottomLineOffset  + getMovementOffset(BOT_OFFSET, color);
+    
         nextBottomLine  = myLineIndex + nextBottomLineOffset;
         nextRightColumn = myColumnIndex + nextRightColumnOffset;
         nextBottomRightSquareName = (columnArray[nextRightColumn] !== undefined) ?
                                      columnArray[nextRightColumn] + nextBottomLine:
                                      -1;
+                                     
+
     }
+    // alert(mainDiagonal);
     return mainDiagonal;
 }
-function getAnyMainDiagonalFromEnd(){
-    
+function getAnyOppositeDiagonalFromEnd(beginSquareName){
+    return getAnyMainDiagonalFromBegin(beginSquareName, 'B')
 }
-// function getAnyOppositeDiagonalFromBegin();
-// function getAnyOppositeDiagonalFromEnd();
 
 function togglePlayerColor(){
     playerColorStatus = playerColorStatus ? 0 : 1;
@@ -300,9 +308,20 @@ function initPieceMovements(){
         }
     }
 }
+
 function isValidSquareIndex(squareName){
     let squareIndex = Number(squareName[SQUARE_NUMERIC_NDX]);
     if ( squareIndex < 1 || squareIndex > 8 || isNaN(squareIndex) )
+        return false;
+    
+    return true;
+}
+function isLetter(letter) {
+    return letter.length === 1 && letter.match(/[a-z]/i);
+}
+function isValidSquareAlpha(squareName){
+    let squareAlpha = squareName[SQUARE_ALPHABETICAL_NDX];
+    if ( /*isLetter(squareAlpha) ||*/ columnArray.indexOf(squareAlpha) === -1 )
         return false;
     
     return true;
@@ -332,7 +351,7 @@ function getSquareStatus(squareName){
     
     // Tem uma peça nessa casa..
 
-    if ( mySquareContent[0] == colorNotation[playerColorStatus] )
+    if ( mySquareContent[0] == getPlayerColorNotation() )
         return PLAYER_PIECE_SQUARE;
         
     else if ( mySquareContent[0] == colorNotation[(playerColorStatus ? 0 : 1)] )
@@ -349,17 +368,28 @@ function hasBlankSpace(squareName){
 
     return (document.getElementById(squareName).innerHTML == "") ? true : false;
 }
-function setColorByBGAttr(className, bgcAttr, squareId){
+function setClassByBGAttr(className, bgcAttr, squareId){
     if ( bgcAttr.includes('dark') ){
         className += 'dark';
     }
     
     document.getElementById(squareId).classList.add(className);
 }
-function colorDiscreteMovementPath(movementDiscreteArray){
+
+function getClassNameFromMovementDirection(baseMovementDirection){
+    let i = 0;
+    for ( ; baseMovementDirection > 0 ; i++ ){
+        baseMovementDirection = baseMovementDirection >> i;
+    }
+    // alert(i)
+    return highlightClasses[i-1];
+}
+
+function colorDiscreteMovementPath(movementDiscreteArray, baseMovementDirection){
+    let myClassName = getClassNameFromMovementDirection(baseMovementDirection);
     movementDiscreteArray.map(function(squareId){
         let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-        setColorByBGAttr("orangehl", bgcAttr, squareId);
+        setClassByBGAttr(myClassName, bgcAttr, squareId);
     })
 }
 function colorMovementPath(movementType){
@@ -379,7 +409,7 @@ function colorMovementPath(movementType){
         columnInterval.map(function(value){
             let squareId = "" + value + lineNdx;
             let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-            setColorByBGAttr("linemovhl", bgcAttr, squareId);
+            setClassByBGAttr("linemovhl", bgcAttr, squareId);
         });
     }
     if ( matchMovementDirection(movementType,MOVEMENT_DIRECTION_COLUMN)  ){
@@ -393,7 +423,7 @@ function colorMovementPath(movementType){
         for ( ; i <= greaterLineVal; i++ ){
             let squareId = "" + columnChar + i;
             let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-            setColorByBGAttr("columnmovhl", bgcAttr, squareId);
+            setClassByBGAttr("columnmovhl", bgcAttr, squareId);
         }
     }
     if ( matchMovementDirection(movementType,MOVEMENT_DIRECTION_DIAGONAL)  ){
@@ -414,7 +444,7 @@ function colorMovementPath(movementType){
             subTypeMainBeginInterval.map(function(value){
                 let squareId = "" + value + mainDiagLineNdx;
                 let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-                setColorByBGAttr("diagonalmovhl", bgcAttr, squareId);
+                setClassByBGAttr("diagonalmovhl", bgcAttr, squareId);
                 mainDiagLineNdx--;
              });
         }
@@ -432,7 +462,7 @@ function colorMovementPath(movementType){
             subTypeMainEndInterval.map(function(value){
                 let squareId = "" + value + mainDiagLineNdx;
                 let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-                setColorByBGAttr("diagonalmovhl", bgcAttr, squareId);
+                setClassByBGAttr("diagonalmovhl", bgcAttr, squareId);
                 mainDiagLineNdx--;
             });
         }
@@ -450,7 +480,7 @@ function colorMovementPath(movementType){
             subTypeOppositeBeginInterval.map(function(value){
                 let squareId = "" + value + oppositeDiagLineNdx;
                 let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-                setColorByBGAttr("diagonalmovhl", bgcAttr, squareId);
+                setClassByBGAttr("diagonalmovhl", bgcAttr, squareId);
                 oppositeDiagLineNdx++;
             });
         }
@@ -468,45 +498,12 @@ function colorMovementPath(movementType){
             subTypeOppositeEndInterval.map(function(value){
                 let squareId = "" + value + oppositeDiagLineNdx;
                 let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-                setColorByBGAttr("diagonalmovhl", bgcAttr, squareId);
+                setClassByBGAttr("diagonalmovhl", bgcAttr, squareId);
                 oppositeDiagLineNdx++;
             });
                     
 
 
-        // 
-        // let originColumn = columnArray.indexOf(mainDiagonalRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_ALPHABETICAL_NDX]);
-        // let destColumn = columnArray.indexOf(mainDiagonalRange[MOVEMENT_RANGE_END_SQUARE][SQUARE_ALPHABETICAL_NDX]);
-        // let comparisonColumn = (pieceSelected[0] == colorNotation[COLOR_WHITE]) ? 
-        //                         (originColumn <= destColumn) :
-        //                         (originColumn >= destColumn);
-        // // alert(pieceSelected[0])
-        // let mainDiagColumnInterval = ( comparisonColumn ) ? 
-        //     columnArray.slice(originColumn, destColumn+1) :
-        //     columnArray.slice(destColumn, originColumn+1) ;
-        // let mainDiagLineNdx = mainDiagonalRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_NUMERIC_NDX];
-        // // alert(mainDiagColumnInterval);
-        // mainDiagColumnInterval.map(function(value){
-        //     let squareId = "" + value + mainDiagLineNdx;
-        //     let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-        //     setColorByBGAttr("diagonalmovhl", bgcAttr, squareId);
-        //     mainDiagLineNdx--;
-        // });
-
-        // originColumn = columnArray.indexOf(oppositeDiagonalRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_ALPHABETICAL_NDX]);
-        // destColumn = columnArray.indexOf(oppositeDiagonalRange[MOVEMENT_RANGE_END_SQUARE][SQUARE_ALPHABETICAL_NDX]);
-        // // alert(oppositeDiagonalRange)
-        // let oppositeDiagColumnInterval = ( comparisonColumn ) ? 
-        //                        columnArray.slice(originColumn, destColumn+1) :
-        //                        columnArray.slice(destColumn, originColumn+1) ;
-        // let oppositeDiagLineNdx = oppositeDiagonalRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_NUMERIC_NDX];
-        
-        // oppositeDiagColumnInterval.map(function(value){
-        //     let squareId = "" + value + oppositeDiagLineNdx;
-        //     let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-        //     setColorByBGAttr("diagonalmovhl", bgcAttr, squareId);
-        //     oppositeDiagLineNdx++;
-        // });
         }
     }
     if ( matchMovementDirection(movementType,MOVEMENT_DIRECTION_L) ){
@@ -514,17 +511,18 @@ function colorMovementPath(movementType){
             if ( isValidSquareIndex(squareId)){
                 setBGColorAsDOMAttributeAndRemove(squareId);
                 let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-                setColorByBGAttr("knightmovhl", bgcAttr, squareId);
+                setClassByBGAttr("knightmovhl", bgcAttr, squareId);
             }
         });
     }
+    colorCaptureSquares();
+}
+function colorCaptureSquares(){
     if ( captureSquareCtr > 0 ) { 
-        // alert(captureSquares);
         captureSquares.map(function(squareId){
             if ( isValidSquareIndex(squareId)){
-                // alert(squareId)
                 let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
-                setColorByBGAttr("capturehl", bgcAttr, squareId);
+                setClassByBGAttr("capturehl", bgcAttr, squareId);
             }
         });
     }
@@ -1182,7 +1180,7 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
                 LMovementSquares = data.concat(emptySquareArr);
                 // Array.prototype.push.apply(captureSquares, opponentSquareArr);
                 // Array.prototype.push.apply(LMovementSquares, emptySquareArr);
-                alert(LMovementSquares)
+                // alert(LMovementSquares)
                 // if ( getSquareStatus(leftZoneMoveTop) )
                 //     LMovementSquares[LSquareMovementCtr++] = leftZoneMoveTop;
                 // if ( hasBlankSpace(leftZoneMoveBottom) )
@@ -1237,6 +1235,58 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
     }
 
     return false;
+}
+function getLineDiscreteIntervalFromSquare(beginLineSquare){
+    let lineNdx       = beginLineSquare[SQUARE_NUMERIC_NDX];
+    let myColumnIndex = columnArray.indexOf(beginLineSquare[SQUARE_ALPHABETICAL_NDX]);
+    let discreteLine  = [beginLineSquare];
+    
+    let nextRightColumnOffset = getMovementOffset(RGT_OFFSET, getPlayerColorNotation());
+    let nextRightColumn = myColumnIndex + nextRightColumnOffset;
+    while ( columnArray[nextRightColumn] !== undefined ){
+        discreteLine.push("" + columnArray[nextRightColumn] + lineNdx);
+        nextRightColumnOffset += getMovementOffset(RGT_OFFSET, getPlayerColorNotation());
+        nextRightColumn = myColumnIndex + nextRightColumnOffset;
+    }
+    return discreteLine;
+}
+function getColumnDiscreteIntervalFromSquare(beginColumnSquare){
+    let lineNdx         = getLineIndexFromSquare(beginColumnSquare);
+    let discreteColumn  = [beginColumnSquare];
+    
+    
+    let nextBottomLineOffset  = getMovementOffset(BOT_OFFSET, getPlayerColorNotation());
+    let nextBottomLine = lineNdx + nextBottomLineOffset;
+    
+    while ( nextBottomLine > 0 ){
+        discreteColumn.push("" + beginColumnSquare[SQUARE_ALPHABETICAL_NDX] + nextBottomLine);
+        nextBottomLineOffset += getMovementOffset(BOT_OFFSET, getPlayerColorNotation());
+        nextBottomLine = lineNdx + nextBottomLineOffset;
+    }
+    return discreteColumn;
+}
+function getPlayerColorNotation(){
+    return colorNotation[playerColorStatus];
+}
+function drawIdentityDiagonal(){
+    let movPath = getAnyMainDiagonalFromBegin('a8', getPlayerColorNotation());
+    colorDiscreteMovementPath(movPath, MOVEMENT_DIRECTION_DIAGONAL);
+}
+function drawOppositeIdentityDiagonal(){
+    let movPath = getAnyOppositeDiagonalFromEnd('h8');
+    colorDiscreteMovementPath(movPath, MOVEMENT_DIRECTION_DIAGONAL);
+}
+function drawIdentityX(){
+    let movPath = getAnyMainDiagonalFromBegin('a8', getPlayerColorNotation());
+    colorDiscreteMovementPath(movPath, MOVEMENT_DIRECTION_DIAGONAL);
+    movPath = getAnyOppositeDiagonalFromEnd('h8');
+    colorDiscreteMovementPath(movPath, MOVEMENT_DIRECTION_DIAGONAL);
+}
+function drawCross(beginLineSquare, beginColumnSquare){
+    let movPath = getLineDiscreteIntervalFromSquare(beginLineSquare);
+    colorDiscreteMovementPath(movPath, MOVEMENT_DIRECTION_LINE);
+    movPath = getColumnDiscreteIntervalFromSquare(beginColumnSquare);
+    colorDiscreteMovementPath(movPath, MOVEMENT_DIRECTION_COLUMN);
 }
 // Calcular e avaliar se existe algum movimento possivel em qualquer direção desta peça.
 function pieceMovementIsPossible(piece, originSquare){
@@ -1425,7 +1475,6 @@ function drawSinglePiece(squareName){
 $(document).ready(function () {
     initPieceMovements();
     drawBoard();
-    // alert(getAnyMainDiagonalFromBegin('a8', colorNotation[playerColorStatus]));
-    // let movPath = getAnyMainDiagonalFromBegin('a8', colorNotation[playerColorStatus]);
-    // colorDiscreteMovementPath(movPath);
+    drawIdentityX();
+    drawCross('a5','d8');
 });
