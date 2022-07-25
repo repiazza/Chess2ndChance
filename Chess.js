@@ -40,9 +40,6 @@ var boardGrid = [
                     ['a1'], ['b1'], ['c1'], ['d1'], ['e1'], ['f1'], ['g1'], ['h1']
                 ];
 
-function getLineRange(){
-    
-}
 const TOTAL_PIECE_COUNT = 16;
 const PLAYER_PIECE_COUNT = TOTAL_PIECE_COUNT / 2;
 
@@ -156,10 +153,10 @@ const UNKNOWN_SQUARE        =  3; // Casa em formato desconhecido
 
 let pieceSelected = 0;
 let playerColorStatus = 0;
-let colorName = ['white', 'black'];
-let colorNotation = ['W', 'B'];
+const colorName = ['white', 'black'];
+const colorNotation = ['W', 'B'];
 let columnArray = ['a','b','c','d','e','f','g','h'];
-let initialRows = [1, 2, 7, 8];
+
 
 //                             0    1    2    3   4   5    6    7
 let highValuePieceNotation = ['R1','N1','B1','Q','K','B2','N2','R2'];
@@ -182,34 +179,84 @@ let LMovementSquares      = [];
 let captureSquares        = [];
 let captureSquareCtr      = 0;
 
+let castleMovement;
 const HAS_MOVED = 0;
 const MOVEMENT_CASTLE_BOTH = 3
 const MOVEMENT_CASTLE_LONG = 2
 const MOVEMENT_CASTLE_SHORT = 1
+
+const KING_CASTLED_INDEX = 0;
+const ROOK_CASTLED_INDEX = 1; 
+
+const longCastleSquareColumn = ['c','d'];
+const shortCastleSquareAlpha = ['g','f'];
+
+const initialRows = [1, 2, 7, 8];
+
+const FIRST_WHITE_ROW  = 0;
+const SECOND_WHITE_ROW = 1;
+const FIRST_BLACK_ROW  = 2;
+const SECOND_BLACK_ROW = 3;
+
+function getWhiteFirstRow(){
+    return initialRows[FIRST_WHITE_ROW];
+}
+function getWhiteSecondRow(){
+    return initialRows[SECOND_WHITE_ROW];
+}
+function getBlackFirstRow(){
+    return initialRows[FIRST_BLACK_ROW];
+}
+function getBlackSecondRow(){
+    return initialRows[SECOND_BLACK_ROW];
+}
+function getPlayerFirstRow(){
+    return (playerColorStatus == COLOR_WHITE)
+               ? getWhiteFirstRow() : getBlackFirstRow(); 
+}
+
+function getLongCastleKingSquare(){
+    return longCastleSquareColumn[KING_CASTLED_INDEX]
+           + getPlayerFirstRow();
+}
+function getLongCastleRookSquare(){
+    return longCastleSquareColumn[ROOK_CASTLED_INDEX]
+           + getPlayerFirstRow();
+}
+function getShortCastleKingSquare(){
+    return shortCastleSquareAlpha[KING_CASTLED_INDEX]
+           + getPlayerFirstRow();
+}
+function getShortCastleRookSquare(){
+    return shortCastleSquareAlpha[ROOK_CASTLED_INDEX]
+           + getPlayerFirstRow();
+}
+
 function matchPieceType(piece, pieceType){
-    return (piece[1] == pieceType) ? true : false;
+    return (piece[PIECE_NOTATION_INDEX] == pieceType) ? true : false;
 }
 function isCastlePossibleFromKingPosition(candidateElement){
     let kingElement = candidateElement;
     let isShortCastlePossible = true;
     let isLongCastlePossible = true;
-    alert("a")
-    let lineIndex = getLineIndexFromSquare(kingElement.id) - 1;
-    let columnIndex = getColumnIndexFromSquare(kingElement.id);
-    let rightMovementOffset = getMovementOffset(RGT_OFFSET, colorNotation[playerColorStatus]);
-    let leftMovementOffset  = getMovementOffset(LFT_OFFSET, colorNotation[playerColorStatus]);
-
-    let initSquare = kingElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex+rightMovementOffset++);
-    let endSquare = kingElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex+rightMovementOffset++);
+    let lineIndex = getLineIndexFromSquare(kingElement.id);
+    let originColumn = columnArray[columnArray.indexOf(kingElement.id[SQUARE_ALPHABETICAL_NDX])+1]
+    let destColumn = columnArray[columnArray.indexOf(originColumn)+1];
+    let initSquare = originColumn + lineIndex;
+    let endSquare = destColumn + lineIndex;
+    // alert(initSquare + " " + endSquare);
     if ( !hasBlankSpace(initSquare) 
          || !hasBlankSpace(endSquare)
        ){
          isShortCastlePossible = false;
-
      }
-     initSquare = kingElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
-     let middleSquare = kingElement.id[SQUARE_ALPHABETICAL_NDX]+  Number(columnIndex-leftMovementOffset--);
-     endSquare = kingElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+     originColumn = columnArray[columnArray.indexOf(kingElement.id[SQUARE_ALPHABETICAL_NDX])-1]
+     let middleColumn = columnArray[columnArray.indexOf(originColumn)-1];
+     destColumn = columnArray[columnArray.indexOf(middleColumn)-1];
+     initSquare = originColumn + lineIndex;
+     middleSquare = middleColumn + lineIndex;
+     endSquare = destColumn + lineIndex;
+    //  alert(initSquare + " " + middleSquare + " " + endSquare);
 
      if ( !hasBlankSpace(initSquare) 
           || !hasBlankSpace(middleSquare)
@@ -220,7 +267,7 @@ function isCastlePossibleFromKingPosition(candidateElement){
      if ( isLongCastlePossible == false && isShortCastlePossible == false )
          return false;
     
-     return ( (isLongCastlePossible & isShortCastlePossible) == true )
+     return (isLongCastlePossible & isShortCastlePossible) == true 
               ? MOVEMENT_CASTLE_BOTH 
               : (isLongCastlePossible)
                 ? MOVEMENT_CASTLE_LONG 
@@ -230,16 +277,12 @@ function isCastlePossibleFromKingPosition(candidateElement){
 function isCastlePossibleFromRookPosition(candidateElement){
     let RookElement = candidateElement;
     let castleMovementPossible = false;
-    let lineIndex = getLineIndexFromSquare(RookElement.id);
-    let columnIndex = getColumnIndexFromSquare(RookElement.id);
-    let nextRightColumnOffset = getMovementOffset(RGT_OFFSET, colorNotation[playerColorStatus]);
-    let leftMovementOffset  = getMovementOffset(LFT_OFFSET, colorNotation[playerColorStatus]);
+    let castleMovement = [];
 
-    let initSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex+nextRightColumnOffset++);
-    let middleSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX]+  Number(columnIndex+nextRightColumnOffset++);
-    let endSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex+nextRightColumnOffset++);
+    let initSquare   = getNextRightSquareBySquare(RookElement.id)
+    let middleSquare = getNextRightSquareBySquare(initSquare)
+    let endSquare    = getNextRightSquareBySquare(middleSquare)
     if ( RookElement.id == 'a1' ){
-        
         if ( !hasBlankSpace(initSquare) 
              || !hasBlankSpace(middleSquare)
              || !hasBlankSpace(endSquare)
@@ -249,8 +292,8 @@ function isCastlePossibleFromRookPosition(candidateElement){
         castleMovementPossible = MOVEMENT_CASTLE_LONG;
     }
     else if ( RookElement.id == 'h1' ){
-        initSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
-        endSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+        initSquare = getNextLeftSquareBySquare(RookElement.id)
+        endSquare = getNextLeftSquareBySquare(initSquare);
         if ( !hasBlankSpace(initSquare) 
              || !hasBlankSpace(endSquare)
         ){
@@ -259,9 +302,10 @@ function isCastlePossibleFromRookPosition(candidateElement){
         castleMovementPossible = MOVEMENT_CASTLE_SHORT;
     }
     else if ( RookElement.id == 'a8' ){
-        initSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--)
-        middleSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX]+  Number(columnIndex-leftMovementOffset--)
-        endSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+        initSquare = getNextLeftSquareBySquare(RookElement.id)
+        middleSquare = getNextLeftSquareBySquare(initSquare)
+       
+        endSquare = getNextLeftSquareBySquare(middleSquare);
         if ( !hasBlankSpace(initSquare) 
             || !hasBlankSpace(middleSquare)
             || !hasBlankSpace(endSquare)
@@ -271,8 +315,9 @@ function isCastlePossibleFromRookPosition(candidateElement){
         castleMovementPossible = MOVEMENT_CASTLE_LONG;
     }
     else if ( RookElement.id == 'h8' ){
-        initSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
-        endSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+        initSquare = getNextRightSquareBySquare(RookElement.id)
+        // alert(initSquare)
+        endSquare = getNextRightSquareBySquare(initSquare)
         if ( !hasBlankSpace(initSquare) 
             || !hasBlankSpace(endSquare)
         ){
@@ -280,11 +325,12 @@ function isCastlePossibleFromRookPosition(candidateElement){
         }
         castleMovementPossible = MOVEMENT_CASTLE_SHORT;
     }
+    castleMovement = castleMovementPossible;
     return castleMovementPossible;
     
 }
 function checkPiecePosition(piece){
-    alert(piece);
+    // alert(piece);
     let candidateElement = document.getElementById(getPieceLocation(piece));
     if ( candidateElement.getAttribute("hasNotMoved") == HAS_MOVED ){
         return false;
@@ -296,6 +342,54 @@ function checkPiecePosition(piece){
         return isCastlePossibleFromRookPosition(candidateElement)
     }
 }
+function getNextLeftSquareByPiece(piece){
+    let originSquare = getPieceLocation(piece);
+    let myColumnIndex  = columnArray.indexOf(originSquare[SQUARE_ALPHABETICAL_NDX]);                
+    let nextLeftColumnOffset  = getMovementOffset(LFT_OFFSET, getPlayerColorNotation());
+
+    let nextLeftColumn  = myColumnIndex + nextLeftColumnOffset;
+    let nextLeftSquareName  = (columnArray[nextLeftColumn] !== undefined) ?
+                                columnArray[nextLeftColumn] + originSquare[SQUARE_NUMERIC_NDX] :
+                                -1;
+    return nextLeftSquareName;
+                                       
+}
+function getNextLeftSquareBySquare(square){
+    let originSquare = square
+    let myColumnIndex  = columnArray.indexOf(originSquare[SQUARE_ALPHABETICAL_NDX]);                
+    let nextLeftColumnOffset  = getMovementOffset(LFT_OFFSET, getPlayerColorNotation());
+
+    let nextLeftColumn  = myColumnIndex + nextLeftColumnOffset;
+    let nextLeftSquareName  = (columnArray[nextLeftColumn] !== undefined) ?
+                                columnArray[nextLeftColumn] + originSquare[SQUARE_NUMERIC_NDX] :
+                                -1;
+    return nextLeftSquareName;
+                                       
+}
+function getNextRightSquareByPiece(piece){
+    let originSquare = getPieceLocation(piece)
+    let myColumnIndex  = columnArray.indexOf(originSquare[SQUARE_ALPHABETICAL_NDX]);                
+    let nextRightColumnOffset  = getMovementOffset(RGT_OFFSET, getPlayerColorNotation());
+
+    let nextRightColumn  = myColumnIndex + nextRightColumnOffset;
+    let nextRightSquareName  = (columnArray[nextRightColumn] !== undefined) ?
+                                columnArray[nextRightColumn] + originSquare[SQUARE_NUMERIC_NDX] :
+                                -1;
+    return nextRightSquareName;
+                                       
+}
+function getNextRightSquareBySquare(square){
+    let originSquare = square
+    let myColumnIndex  = columnArray.indexOf(originSquare[SQUARE_ALPHABETICAL_NDX]);                
+    let nextRightColumnOffset  = getMovementOffset(RGT_OFFSET, getPlayerColorNotation());
+
+    let nextRightColumn  = myColumnIndex + nextRightColumnOffset;
+    let nextRightSquareName  = (columnArray[nextRightColumn] !== undefined) ?
+                                columnArray[nextRightColumn] + originSquare[SQUARE_NUMERIC_NDX] :
+                                -1;
+    return nextRightSquareName;
+                                       
+}
 // O rei e a torre envolvida não podem ter se movimentado nenhuma vez desde o início do jogo;
 // As casas entre o rei e a torre devem estar desocupadas;
 // O rei não pode estar em xeque, e também não pode ficar em xeque depois do roque;
@@ -306,28 +400,34 @@ function drawSpecialMovement(movementType){
         let castleMovementPossible;
         if ( (castleMovementPossible = checkPiecePosition(pieceSelected)) == false )
             return false; 
-        
-        var castleMovement;
-        var movementDiscreteArray = boardGrid[getLineIndexFromPiece(pieceSelected)];
+
+        var movementDiscreteArray = [];
+        nextLeftSquare = getNextLeftSquareByPiece(pieceSelected);
+        while ( isValidSquareAlpha(nextLeftSquare) ){
+            movementDiscreteArray.push(nextLeftSquare);
+            nextLeftSquare = getNextLeftSquareBySquare(nextLeftSquare)
+        }
+        nextRightSquare = getNextRightSquareByPiece(pieceSelected)
+        while ( isValidSquareAlpha(nextRightSquare) ){
+            movementDiscreteArray.push(nextRightSquare);
+            nextRightSquare = getNextRightSquareBySquare(nextRightSquare)
+        }
         if ( castleMovementPossible == MOVEMENT_CASTLE_BOTH ){
-          castleMovement = movementDiscreteArray;
-          colorDiscreteMovementPath(castleMovement, MOVEMENT_DIRECTION_LINE);
+            castleMovement = movementDiscreteArray;
         }
         else if ( castleMovementPossible == MOVEMENT_CASTLE_LONG ){
-            if ( getLineIndex(pieceSelected) == 8 )
-                castleMovement = movementDiscreteArray.slice(4);
+            if ( getLineIndexFromPiece(pieceSelected) == 8 )
+                castleMovement = movementDiscreteArray.slice(0,-3);
             else
                 castleMovement = movementDiscreteArray.slice(0,4);
-
         }
         else {
-            if ( getLineIndex(pieceSelected) == 8 )
-                castleMovement = movementDiscreteArray.slice(0,4);
+            if ( getLineIndexFromPiece(pieceSelected) == 8 )
+                castleMovement = movementDiscreteArray.slice(0,-4);
             else
-                castleMovement = movementDiscreteArray.slice(4);
+                castleMovement = movementDiscreteArray.slice(0,3);
         }
-        
-        colorDiscreteMovementPath(movementDiscreteArray, MOVEMENT_DIRECTION_LINE);
+        colorDiscreteMovementPath(castleMovement, MOVEMENT_DIRECTION_LINE);
     }
 }
 function getLineIndexFromPiece(piece){
@@ -443,13 +543,13 @@ function initPieceMovements(){
                 pieceMovementRange[i] = LINE_OF_SIGHT;
                 break;
             case PIECE_TYPE_KING:
+                pieceMovementType[i] |= SPECIAL_MOVEMENT_CASTLE;
                 pieceMovementType[i] |= MOVEMENT_DIRECTION_COLUMN;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_TOP;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_BOTTOM;
-                pieceMovementType[i] |= SPECIAL_MOVEMENT_CASTLE;
-                // pieceMovementType[i] |= MOVEMENT_DIRECTION_LINE;
-                // pieceMovementType[i]   |= SUBTYPE_LINE_LEFT;
-                // pieceMovementType[i]   |= SUBTYPE_LINE_RIGHT;
+                pieceMovementType[i] |= MOVEMENT_DIRECTION_LINE;
+                pieceMovementType[i]   |= SUBTYPE_LINE_LEFT;
+                pieceMovementType[i]   |= SUBTYPE_LINE_RIGHT;
                 pieceMovementType[i] |= MOVEMENT_DIRECTION_DIAGONAL;
                 pieceMovementType[i]   |= SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END;
                 pieceMovementType[i]   |= SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
@@ -473,12 +573,13 @@ function isValidSquareIndex(squareName){
     
     return true;
 }
+
 function isLetter(letter) {
     return letter.length === 1 && letter.match(/[a-z]/i);
 }
 function isValidSquareAlpha(squareName){
     let squareAlpha = squareName[SQUARE_ALPHABETICAL_NDX];
-    if ( /*isLetter(squareAlpha) ||*/ columnArray.indexOf(squareAlpha) === -1 )
+    if ( columnArray.indexOf(squareAlpha) === -1 )
         return false;
     
     return true;
@@ -545,7 +646,7 @@ function getClassNameFromMovementDirection(baseMovementDirection){
 }
 
 function colorDiscreteMovementPath(movementDiscreteArray, baseMovementDirection){
-    alert("colorDiscreteMovementPath("+movementDiscreteArray+", "+baseMovementDirection+")");
+    // alert("colorDiscreteMovementPath("+movementDiscreteArray+", "+baseMovementDirection+")");
     let myClassName = getClassNameFromMovementDirection(baseMovementDirection);
     movementDiscreteArray.map(function(squareId){
         let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
@@ -553,12 +654,13 @@ function colorDiscreteMovementPath(movementDiscreteArray, baseMovementDirection)
     })
 }
 function colorMovementPath(movementType){
+    matchMovementDirection(movementType,MOVEMENT_DIRECTION_LINE);
     if ( matchMovementDirection(movementType,MOVEMENT_DIRECTION_LINE) ){
         let lineNdx = lineMovementRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_NUMERIC_NDX];
         
         let originColumn   = columnArray.indexOf(lineMovementRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_ALPHABETICAL_NDX]);
         let destColumn     = columnArray.indexOf(lineMovementRange[MOVEMENT_RANGE_END_SQUARE][SQUARE_ALPHABETICAL_NDX]);
-        let comparisonColumn = (pieceSelected[0] == colorNotation[COLOR_WHITE]) ? 
+        let comparisonColumn = (pieceSelected[PIECE_COLOR_INDEX] == colorNotation[COLOR_WHITE]) ? 
                                 (originColumn <= destColumn) :
                                 (originColumn >= destColumn);
 
@@ -718,7 +820,7 @@ function hasFullFilledRange(movementType, pieceRange){
     if ( movementType & MOVEMENT_DIRECTION_LINE ){
         let originColumn = columnArray.indexOf(lineMovementRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_ALPHABETICAL_NDX]);
         let destColumn = columnArray.indexOf(lineMovementRange[MOVEMENT_RANGE_END_SQUARE][SQUARE_ALPHABETICAL_NDX]);
-        let comparisonColumn = (pieceSelected[0] == colorNotation[COLOR_WHITE]) ? 
+        let comparisonColumn = (pieceSelected[PIECE_COLOR_INDEX] == colorNotation[COLOR_WHITE]) ? 
                                 (originColumn <= destColumn) :
                                 (originColumn >= destColumn);
 
@@ -959,7 +1061,7 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
     let nextRightColumnOffset = getMovementOffset(RGT_OFFSET, myColor);
     captureSquares = [];
     captureSquareCtr = 0;
-    
+
     resetAllDirectionMovementRange();
     
     do {
@@ -1401,8 +1503,18 @@ function doMovePiece(piece, destinationSquare){
     var originSquare = getPieceLocation(piece);
     document.getElementById(originSquare).innerHTML = "";
     document.getElementById(destinationSquare).innerHTML = piece;
-    if ( matchPieceType(piece,PIECE_TYPE_KING) || matchPieceType(piece,PIECE_TYPE_ROOK) ){
-        document.getElementById(piece).setAttribute("hasNotMoved", "0");
+    if ( matchPieceType(piece,PIECE_TYPE_KING) ){
+        $("div[hasNotMoved='1']").attr("hasNotMoved", "0");
+    }
+    else if ( matchPieceType(piece,PIECE_TYPE_ROOK) ){        
+        let myNdx = (piece[PIECE_COMPLEMENT_IDENTIFIER_INDEX] == 1) ? 2 : 1;
+        let otherRookPiece = '#'+piece.substr(2)+myNdx;
+        // alert(otherRookPiece);
+        if ( $(otherRookPiece).attr("hasNotMoved") == "0" )
+           $("div[hasNotMoved='1']").attr("hasNotMoved", "0");
+        else{
+           $("#"+getPieceLocation(piece)).attr("hasNotMoved", "0");
+        }
     }
 }
 function doCapturePiece(piece, pieceSquare){
@@ -1414,7 +1526,7 @@ function doCapturePiece(piece, pieceSquare){
     document.getElementById("pwhite").innerHTML = "White Captures: "
     document.getElementById("pblack").innerHTML = "Black Captures: " 
     capturedPieces.map(function(piece){
-        if ( piece[0] == colorNotation[COLOR_BLACK]) 
+        if ( piece[PIECE_COLOR_INDEX] == colorNotation[COLOR_BLACK]) 
             document.getElementById("pwhite").innerHTML += " " + piece;    
         else
             document.getElementById("pblack").innerHTML += " " + piece;
@@ -1424,10 +1536,19 @@ function doCapturePiece(piece, pieceSquare){
 }
 function selectSquare(content, squareName){
     let squareStatus = getSquareStatus(squareName);
+    // alert(squareStatus);
     if ( squareStatus == PLAYER_PIECE_SQUARE )
         return selectPlayerPiece(content, squareName);
     
-
+    if ( matchMovementDirection(getMovementType(pieceSelected), SPECIAL_MOVEMENT_CASTLE)
+         && pieceSelected ){
+        // clearActiveSelection(true);
+        // let myMovType = getMovementType(pieceSelected)
+        // // myMovType = matchMovementDirectionAndDisable(myMovType, SPECIAL_MOVEMENT_CASTLE)
+        // colorMovementPath(myMovType);
+        // drawSpecialMovement(myMovType);
+        return;
+    }
     if ( pieceSelected && isSquareOnMovementRange(squareName) ){
         if ( squareStatus == BLANK_SPACE_SQUARE )
             selectEmptySquare(squareName);
@@ -1454,11 +1575,61 @@ function selectOpponentPiece(piece, pieceSquare){
     
     return;
 }
+function getCastleTypeByRook(pieceRook){
+    let columnIndex = getColumnIndexFromSquare(getPieceLocation(pieceRook));
+    if ( columnArray[columnIndex] == 'a' )
+        return MOVEMENT_CASTLE_LONG;
+    else
+        return MOVEMENT_CASTLE_SHORT;
+}
+function pieceDidSpecialMove(piece){
+    let castleType;
+    let kingPiece;
+    let rookPiece;
+
+    if ( matchPieceType(piece, PIECE_TYPE_ROOK)
+         && matchPieceType(pieceSelected, PIECE_TYPE_KING) ){
+        castleType = getCastleTypeByRook(piece);
+        rookPiece  = piece;
+        kingPiece  = pieceSelected;
+    }
+    else if ( matchPieceType(pieceSelected, PIECE_TYPE_KING)
+              && matchPieceType(piece, PIECE_TYPE_ROOK) ) {
+        castleType = getCastleTypeByRook(pieceSelected);
+        kingPiece  = piece;
+        rookPiece  = pieceSelected;
+    }
+    else {
+        return false;
+    }
+    
+    if ( castleType == MOVEMENT_CASTLE_SHORT ){
+        doMovePiece(kingPiece, getShortCastleKingSquare());
+        doMovePiece(rookPiece, getShortCastleRookSquare());
+    }
+    else if ( castleType == MOVEMENT_CASTLE_LONG ){
+        doMovePiece(kingPiece, getLongCastleKingSquare());
+        doMovePiece(rookPiece, getLongCastleRookSquare());
+    }
+    else{
+        return false;   
+    }
+    
+    return true;
+}
 function selectPlayerPiece(piece, pieceSquare){
     // Se estamos selecionando uma peça, ela precisa estar "solta",
     // ou seja, ter algum movimento possivel.
     if ( pieceMovementIsPossible(piece, pieceSquare) == false )
         return;
+
+    if ( pieceSelected && isSquareOnMovementRange(getPieceLocation(piece) ) ){
+        if ( pieceDidSpecialMove(piece) ){
+          clearActiveSelection();
+          return;
+        }
+        
+    }
 
     clearActiveSelection();
     pieceSelected = piece;
@@ -1466,7 +1637,7 @@ function selectPlayerPiece(piece, pieceSquare){
     evaluatePieceMovementRange(piece, pieceSquare);
     colorMovementPath(getMovementType(piece));
 }
-function clearActiveSelection(){
+function clearActiveSelection(keepPieceSelection=false){
     highlightClasses.map(function(value){
         let className = "." + value;
         $(className).each(function(){
@@ -1477,7 +1648,8 @@ function clearActiveSelection(){
             $(this).removeClass(value);
         });        
     });
-    pieceSelected = 0;
+    if ( keepPieceSelection == false)
+        pieceSelected = 0;
     return;
 }
 function deleteBoard(){
@@ -1520,9 +1692,7 @@ function drawBoard() {
             divSquare.id = "" + columnChar + rowNumber;
             board.appendChild(divSquare);
             divSquare = document.getElementById(divSquare.id);
-            if ( rowNumber == 2 || rowNumber == 7 );
-            
-            else if ( initialRows.includes(rowNumber) ){
+            if ( initialRows.includes(rowNumber) ){
                 drawSinglePiece(divSquare.id);
             }
             //                                                piece           sq
@@ -1544,11 +1714,12 @@ function drawSinglePiece(squareName){
         document.getElementById(squareName).innerHTML = "BP" + pawnColumn;
         return COLOR_BLACK;
     }
-    // let pieceName = ""; 
+    let pieceName = ""; 
     for ( i = 0 ; i < columnArray.length; i++ ){
         if ( squareName.includes(columnArray[i]) ){
             let pieceColor = squareName.includes("1") ? "W" : "B";
-            //document.getElementById(squareName).innerHTML = "" + pieceColor + highValuePieceNotation[i];
+            document.getElementById(squareName).innerHTML = "" + pieceColor + highValuePieceNotation[i];
+            if ( highValuePieceNotation[i][0] != 'R' &&  highValuePieceNotation[i][0] != 'K'  ) continue;
             pieceName = "" + pieceColor + highValuePieceNotation[i];
             if ( matchPieceType(pieceName, PIECE_TYPE_KING) || matchPieceType(pieceName, PIECE_TYPE_ROOK) ){
                 document.getElementById(squareName).setAttribute("hasNotMoved","1");
