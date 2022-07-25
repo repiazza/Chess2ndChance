@@ -401,6 +401,7 @@ function drawSpecialMovement(movementType){
         if ( (castleMovementPossible = checkPiecePosition(pieceSelected)) == false )
             return false; 
 
+            // alert(castleMovementPossible);
         var movementDiscreteArray = [];
         nextLeftSquare = getNextLeftSquareByPiece(pieceSelected);
         while ( isValidSquareAlpha(nextLeftSquare) ){
@@ -427,6 +428,7 @@ function drawSpecialMovement(movementType){
             else
                 castleMovement = movementDiscreteArray.slice(0,3);
         }
+        alert(castleMovement);
         colorDiscreteMovementPath(castleMovement, MOVEMENT_DIRECTION_LINE);
     }
 }
@@ -515,9 +517,9 @@ function initPieceMovements(){
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_TOP;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_BOTTOM;
                 pieceMovementType[i] |= SPECIAL_MOVEMENT_CASTLE;
-                // pieceMovementType[i] |= MOVEMENT_DIRECTION_LINE;
-                // pieceMovementType[i]   |= SUBTYPE_LINE_LEFT;
-                // pieceMovementType[i]   |= SUBTYPE_LINE_RIGHT;
+                pieceMovementType[i] |= MOVEMENT_DIRECTION_LINE;
+                pieceMovementType[i]   |= SUBTYPE_LINE_LEFT;
+                pieceMovementType[i]   |= SUBTYPE_LINE_RIGHT;
                 pieceMovementRange[i] = LINE_OF_SIGHT;
                 break;     
             case PIECE_TYPE_KNIGHT:
@@ -1498,6 +1500,13 @@ function isSquareOnMovementRange(squareId){
     let classAttr = divSquare.getAttribute("class").split(" ");
     return classAttr.some(isHighlightClass);
 }
+function teste1(){
+    document.getElementById('h3').innerHTML = 'BP1';
+    document.getElementById('h3').innerHTML = 'BP1';
+    document.getElementById('h3').innerHTML = 'BP1';
+    document.getElementById('h3').innerHTML = 'BP1';
+    document.getElementById('h3').innerHTML = 'BP1';
+}
 // Mover peça de seu local atual para destinationSquare.
 function doMovePiece(piece, destinationSquare){
     var originSquare = getPieceLocation(piece);
@@ -1542,6 +1551,7 @@ function selectSquare(content, squareName){
     
     if ( matchMovementDirection(getMovementType(pieceSelected), SPECIAL_MOVEMENT_CASTLE)
          && pieceSelected ){
+            alert( getMovementType(pieceSelected))
         // clearActiveSelection(true);
         // let myMovType = getMovementType(pieceSelected)
         // // myMovType = matchMovementDirectionAndDisable(myMovType, SPECIAL_MOVEMENT_CASTLE)
@@ -1628,7 +1638,7 @@ function selectPlayerPiece(piece, pieceSquare){
 
     if ( pieceSelected && isSquareOnMovementRange(getPieceLocation(piece) ) ){
         if ( pieceDidSpecialMove(piece) ){
-          clearActiveSelection();
+        //   clearActiveSelection();
           return;
         }
         
@@ -1739,12 +1749,16 @@ function removeMyPieces(){
     let piece1 = ['WN1','WB1','WQ','WB2','WN2'];
     let piece2 = ['WPa', 'WPb', 'WPc', 'WPd', 'WPe', 'WPf', 'WPg', 'WPh'];
     piece1 = piece1.concat(piece2);
-    piece1.map(function(mypiece){removePieces(mypiece);});
+    piece1.map(function(mypiece){
+        removePieces(mypiece);
+    });
 }
-
+//
+// main
+//
 $(document).ready(function () {
     initPieceMovements();
     drawBoard();
-
-    removeMyPieces();
+    // teste1()
+    // removeMyPieces();
 });
