@@ -1582,6 +1582,9 @@ function getCastleTypeByRook(pieceRook){
     else
         return MOVEMENT_CASTLE_SHORT;
 }
+function removePieces(pieceArr){
+    document.getElementById(getPieceLocation(pieceArr)).innerHTML = "";
+}
 function pieceDidSpecialMove(piece){
     let castleType;
     let kingPiece;
@@ -1732,10 +1735,16 @@ function drawSinglePiece(squareName){
     return COLOR_NONE;
 }
 
+function removeMyPieces(){
+    let piece1 = ['WN1','WB1','WQ','WB2','WN2'];
+    let piece2 = ['WPa', 'WPb', 'WPc', 'WPd', 'WPe', 'WPf', 'WPg', 'WPh'];
+    piece1 = piece1.concat(piece2);
+    piece1.map(function(mypiece){removePieces(mypiece);});
+}
 
 $(document).ready(function () {
     initPieceMovements();
     drawBoard();
-    // drawIdentityX();
-    // drawCross('a5','d8');
+
+    removeMyPieces();
 });
