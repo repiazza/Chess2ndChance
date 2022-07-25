@@ -1582,6 +1582,9 @@ function getCastleTypeByRook(pieceRook){
     else
         return MOVEMENT_CASTLE_SHORT;
 }
+function removePieces(pieceArr){
+    document.getElementById(getPieceLocation(pieceArr)).innerHTML = "";
+}
 function pieceDidSpecialMove(piece){
     let castleType;
     let kingPiece;
@@ -1714,13 +1717,11 @@ function drawSinglePiece(squareName){
         document.getElementById(squareName).innerHTML = "BP" + pawnColumn;
         return COLOR_BLACK;
     }
-    // let pieceName = ""; 
+    let pieceName = ""; 
     for ( i = 0 ; i < columnArray.length; i++ ){
-        if ( squareName.includes("7") ) continue;
-        if ( squareName.includes("2") ) continue;
         if ( squareName.includes(columnArray[i]) ){
             let pieceColor = squareName.includes("1") ? "W" : "B";
-            // document.getElementById(squareName).innerHTML = "" + pieceColor + highValuePieceNotation[i];
+            document.getElementById(squareName).innerHTML = "" + pieceColor + highValuePieceNotation[i];
             if ( highValuePieceNotation[i][0] != 'R' &&  highValuePieceNotation[i][0] != 'K'  ) continue;
             pieceName = "" + pieceColor + highValuePieceNotation[i];
             if ( matchPieceType(pieceName, PIECE_TYPE_KING) || matchPieceType(pieceName, PIECE_TYPE_ROOK) ){
@@ -1734,10 +1735,16 @@ function drawSinglePiece(squareName){
     return COLOR_NONE;
 }
 
+function removeMyPieces(){
+    let piece1 = ['WN1','WB1','WQ','WB2','WN2'];
+    let piece2 = ['WPa', 'WPb', 'WPc', 'WPd', 'WPe', 'WPf', 'WPg', 'WPh'];
+    piece1 = piece1.concat(piece2);
+    piece1.map(function(mypiece){removePieces(mypiece);});
+}
 
 $(document).ready(function () {
     initPieceMovements();
     drawBoard();
-    // drawIdentityX();
-    // drawCross('a5','d8');
+
+    removeMyPieces();
 });
