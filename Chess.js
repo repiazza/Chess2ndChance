@@ -1,3 +1,12 @@
+//          2
+//          1
+// -2.  -1  0  1  2   ________| * 
+//                         2
+//         -1
+//         -2
+// function cossTheta(piRad, radius) {
+// return Math.cos(piRad) * radius;
+// }
 // import * as sample_1 from './module_1.js';
 // console.log(sample_1.hello());
 // console.log(`${sample_1.increment()} ${sample_1.hello()}`);
@@ -8,11 +17,8 @@
 //    return "John"
 // }
 // export default function count () { return count; }
-
 // import count from './module_2'
-
 // import count, { firstName, lastName } from './module_2'
-
 //  import { default as simple, hello, increment        
 //  } from './module_1.js';
 //  console.log(hello());
@@ -21,16 +27,22 @@
 //  } from './module_1.js';
 // let gameBoard = [[a8],[],[],[],[],[],[],[]];
 
+let imgpath = "img/";
 
-var boardGrid = [['a8'], ['b8'], ['c8'], ['d8'], ['e8'], ['f8'], ['g8'], ['h8'],
-                 ['a7'], ['b7'], ['c7'], ['d7'], ['e7'], ['f7'], ['g7'], ['h7'],
-                 ['a6'], ['b6'], ['c6'], ['d6'], ['e6'], ['f6'], ['g6'], ['h6'],
-                 ['a5'], ['b5'], ['c5'], ['d5'], ['e5'], ['f5'], ['g5'], ['h5'],
-                 ['a4'], ['b4'], ['c4'], ['d4'], ['e4'], ['f4'], ['g4'], ['h4'],
-                 ['a3'], ['b3'], ['c3'], ['d3'], ['e3'], ['f3'], ['g3'], ['h3'],
-                 ['a2'], ['b2'], ['c2'], ['d2'], ['e2'], ['f2'], ['g2'], ['h2'],
-                 ['a1'], ['b1'], ['c1'], ['d1'], ['e1'], ['f1'], ['g1'], ['h1']]
+var boardGrid = [
+                    ['a8'], ['b8'], ['c8'], ['d8'], ['e8'], ['f8'], ['g8'], ['h8'],
+                    ['a7'], ['b7'], ['c7'], ['d7'], ['e7'], ['f7'], ['g7'], ['h7'],
+                    ['a6'], ['b6'], ['c6'], ['d6'], ['e6'], ['f6'], ['g6'], ['h6'],
+                    ['a5'], ['b5'], ['c5'], ['d5'], ['e5'], ['f5'], ['g5'], ['h5'],
+                    ['a4'], ['b4'], ['c4'], ['d4'], ['e4'], ['f4'], ['g4'], ['h4'],
+                    ['a3'], ['b3'], ['c3'], ['d3'], ['e3'], ['f3'], ['g3'], ['h3'],
+                    ['a2'], ['b2'], ['c2'], ['d2'], ['e2'], ['f2'], ['g2'], ['h2'],
+                    ['a1'], ['b1'], ['c1'], ['d1'], ['e1'], ['f1'], ['g1'], ['h1']
+                ];
 
+function getLineRange(){
+    
+}
 const TOTAL_PIECE_COUNT = 16;
 const PLAYER_PIECE_COUNT = TOTAL_PIECE_COUNT / 2;
 
@@ -57,9 +69,9 @@ const captureClasses =
 ];
 
 var opponentSquareArr = [];
-var emptySquareArr = [];
+var emptySquareArr    = [];
 let capturedPieces    = [];
-let capturedPiecesCtr = 0
+let capturedPiecesCtr = 0;
 
 const TOP_OFFSET = 1;
 const BOT_OFFSET = 2;
@@ -79,8 +91,8 @@ const MOVEMENT_RANGE_END_SQUARE   = 1;
 const SQUARE_ALPHABETICAL_NDX = 0;
 const SQUARE_NUMERIC_NDX      = 1;
 
-const PIECE_COLOR_INDEX = 0; // B or W
-const PIECE_NOTATION_INDEX = 1;  // R N B Q K or P
+const PIECE_COLOR_INDEX                 = 0; // B or W
+const PIECE_NOTATION_INDEX              = 1;  // R N B Q K or P
 const PIECE_COMPLEMENT_IDENTIFIER_INDEX = 2; // Column or Sequence 
 
 const MOVEMENT_DIRECTION_COLUMN   = 0x01;
@@ -88,18 +100,20 @@ const MOVEMENT_DIRECTION_LINE     = 0x02;
 const MOVEMENT_DIRECTION_DIAGONAL = 0x04; 
 const MOVEMENT_DIRECTION_L        = 0x08;
 
-const SUBTYPE_DIAG_MAIN_BEGIN      = 0x10;
-const SUBTYPE_DIAG_MAIN_END        = 0x20;
-const SUBTYPE_DIAG_OPPOSITE_BEGIN  = 0x40;
-const SUBTYPE_DIAG_OPPOSITE_END    = 0x80;
+const SUBTYPE_DIAG_MAIN_BEGIN     = 0x10;
+const SUBTYPE_DIAG_MAIN_END       = 0x20;
+const SUBTYPE_DIAG_OPPOSITE_BEGIN = 0x40;
+const SUBTYPE_DIAG_OPPOSITE_END   = 0x80;
 
-const SUBTYPE_COLUMN_TOP    = 1024; 
-const SUBTYPE_COLUMN_BOTTOM = 2048;
-const SUBTYPE_LINE_LEFT     = 4096;
-const SUBTYPE_LINE_RIGHT    = 8192;
+const SUBTYPE_COLUMN_TOP      = 1024; 
+const SUBTYPE_COLUMN_BOTTOM   = 2048;
+const SUBTYPE_LINE_LEFT       = 4096;
+const SUBTYPE_LINE_RIGHT      = 8192;
 
-const MAIN_DIAGONAL     = SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END;
-const OPPOSITE_DIAGONAL = SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
+const SPECIAL_MOVEMENT_CASTLE = 16384; 
+
+const MAIN_DIAGONAL        = SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END;
+const OPPOSITE_DIAGONAL    = SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
 const DIAGONAL_FOUR_SQUARE = MAIN_DIAGONAL | OPPOSITE_DIAGONAL;
 
 const MOVEMENT_DIRECTION_ALL = MOVEMENT_DIRECTION_COLUMN 
@@ -107,24 +121,22 @@ const MOVEMENT_DIRECTION_ALL = MOVEMENT_DIRECTION_COLUMN
                                 | MOVEMENT_DIRECTION_DIAGONAL
                                 | MOVEMENT_DIRECTION_L;
                                        
-
 const SUBTYPE_DIAG_ALL = SUBTYPE_DIAG_MAIN_BEGIN 
                          | SUBTYPE_DIAG_MAIN_END 
                          | SUBTYPE_DIAG_OPPOSITE_BEGIN 
                          | SUBTYPE_DIAG_OPPOSITE_END;
-
 // LINE COLUMN CROSS
 const SUBTYPE_COLUMN_ALL = SUBTYPE_COLUMN_TOP | SUBTYPE_COLUMN_BOTTOM;  
 const SUBTYPE_LINE_ALL   = SUBTYPE_LINE_LEFT  | SUBTYPE_LINE_RIGHT;            
 
-const SUBTYPE_ALL = SUBTYPE_COLUMN_ALL | SUBTYPE_LINE_ALL | SUBTYPE_DIAG_ALL;
+const SUBTYPE_ALL        = SUBTYPE_COLUMN_ALL | SUBTYPE_LINE_ALL | SUBTYPE_DIAG_ALL;
 
-const MOVEMENT_TYPE_ALL = MOVEMENT_DIRECTION_ALL | SUBTYPE_ALL
+const MOVEMENT_TYPE_ALL  = MOVEMENT_DIRECTION_ALL | SUBTYPE_ALL;
 
-const SQUARE_RANGE       = 1;
-const DOUBLE_SQUARE_RANGE= 2;
-const L_RANGE            = 4;
-const LINE_OF_SIGHT      = 8;
+const SQUARE_RANGE        = 1;
+const DOUBLE_SQUARE_RANGE = 2;
+const L_RANGE             = 4;
+const LINE_OF_SIGHT       = 8;
 
 const PIECE_TYPE_ROOK    = 'R';
 const PIECE_TYPE_KNIGHT  = 'N';
@@ -133,14 +145,14 @@ const PIECE_TYPE_QUEEN   = 'Q';
 const PIECE_TYPE_KING    = 'K';
 const PIECE_TYPE_PAWN    = 'P';
 
-const PIECE_COLOR_WHITE = 'W';
-const PIECE_COLOR_BLACK = 'B';
+const PIECE_COLOR_WHITE  = 'W';
+const PIECE_COLOR_BLACK  = 'B';
 
 const INVALID_SQUARE        = -1; // Casa fora do 8x8 ou semelhante
-const BLANK_SPACE_SQUARE    = 0;
-const PLAYER_PIECE_SQUARE   = 1;
-const OPPONENT_PIECE_SQUARE = 2;
-const UNKNOWN_SQUARE        = 3; // Casa em formato desconhecido
+const BLANK_SPACE_SQUARE    =  0; // Casa Livre
+const PLAYER_PIECE_SQUARE   =  1; // 
+const OPPONENT_PIECE_SQUARE =  2;
+const UNKNOWN_SQUARE        =  3; // Casa em formato desconhecido
 
 let pieceSelected = 0;
 let playerColorStatus = 0;
@@ -148,19 +160,18 @@ let colorName = ['white', 'black'];
 let colorNotation = ['W', 'B'];
 let columnArray = ['a','b','c','d','e','f','g','h'];
 let initialRows = [1, 2, 7, 8];
+
 //                             0    1    2    3   4   5    6    7
 let highValuePieceNotation = ['R1','N1','B1','Q','K','B2','N2','R2'];
 let lowValuePieceNotation  = ['Pa', 'Pb', 'Pc', 'Pd', 'Pe', 'Pf', 'Pg', 'Ph'];
 let pieceType              = ['R', 'N', 'B', 'Q', 'K', 'P'];
 
+//                           R N B Q K P
+let pieceMovementType     = [0,0,0,0,0,0];
+//                           R N B Q K P
+let pieceMovementRange    = [0,0,0,0,0,0];
 
-
-//                        R N B Q K P
-let pieceMovementType  = [0,0,0,0,0,0];
-//                        R N B Q K P
-let pieceMovementRange = [0,0,0,0,0,0];
-
-let mainDiagonalRange  = [];
+let mainDiagonalRange     = [];
 let oppositeDiagonalRange = [];
 
 let columnMovementRange   = [];
@@ -169,8 +180,159 @@ let diagonalMovementRange = [];
 let LMovementSquares      = [];
 
 let captureSquares        = [];
-let captureSquareCtr = 0;
+let captureSquareCtr      = 0;
 
+const HAS_MOVED = 0;
+const MOVEMENT_CASTLE_BOTH = 3
+const MOVEMENT_CASTLE_LONG = 2
+const MOVEMENT_CASTLE_SHORT = 1
+function matchPieceType(piece, pieceType){
+    return (piece[1] == pieceType) ? true : false;
+}
+function isCastlePossibleFromKingPosition(candidateElement){
+    let kingElement = candidateElement;
+    let isShortCastlePossible = true;
+    let isLongCastlePossible = true;
+    let lineIndex = getLineIndexFromSquare(kingElement.id) - 1;
+    let columnIndex = getColumnIndexFromSquare(kingElement.id);
+    let rightMovementOffset = getMovementOffset(RGT_OFFSET, colorNotation[playerColorStatus]);
+    let leftMovementOffset  = getMovementOffset(LFT_OFFSET, colorNotation[playerColorStatus]);
+
+    // alert(boardGrid[lineIndex][columnIndex+rightMovementOffset]);
+    alert(lineIndex + " " + columnIndex + " " + rightMovementOffset);
+    alert(boardGrid[lineIndex][columnIndex+rightMovementOffset++]);
+    if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex+rightMovementOffset++]) 
+         || !hasBlankSpace(boardGrid[lineIndex][columnIndex+rightMovementOffset])
+       ){
+         isShortCastlePossible = false;
+     }
+     if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--]) 
+          || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
+          || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
+        ){
+         isLongCastlePossible = false;
+     }
+     if ( isLongCastlePossible == false && isShortCastlePossible == false )
+         return false;
+    
+     return ( (isLongCastlePossible & isShortCastlePossible) == true )
+              ? MOVEMENT_CASTLE_BOTH 
+              : (isLongCastlePossible)
+                ? MOVEMENT_CASTLE_LONG 
+                : MOVEMENT_CASTLE_SHORT;
+}
+// function isCastlePossibleFromKingPosition(candidateElement){
+//     let kingElement = candidateElement;
+//     let isShortCastlePossible = true;
+//     let isLongCastlePossible = true;
+//     let lineIndex = getLineIndexFromSquare(kingElement.id);
+//     let columnIndex = getColumnIndexFromSquare(kingElement.id);
+//     let rightMovementOffset = getMovementOffset(RGT_OFFSET, colorNotation[playerColorStatus]);
+//     let leftMovementOffset  = getMovementOffset(LFT_OFFSET, colorNotation[playerColorStatus]);
+
+//     if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex+rightMovementOffset++]) 
+//          || !hasBlankSpace(boardGrid[lineIndex][columnIndex+rightMovementOffset])
+//        ){
+//          isShortCastlePossible = false;
+//      }
+//      if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--]) 
+//           || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
+//           || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
+//         ){
+//          isLongCastlePossible = false;
+//      }
+//      if ( isLongCastlePossible == false && isShortCastlePossible == false )
+//          return false;
+// }
+function isCastlePossibleFromRookPosition(candidateElement){
+    let RookElement = candidateElement;
+    let castleMovementPossible = false;
+    let lineIndex = getLineIndexFromSquare(RookElement.id);
+    let columnIndex = getColumnIndexFromSquare(RookElement.id);
+    let nextRightColumnOffset = getMovementOffset(RGT_OFFSET, colorNotation[playerColorStatus]);
+    if ( RookElement.id == 'a1' ){
+        if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex+nextRightColumnOffset++]) 
+             || !hasBlankSpace(boardGrid[lineIndex][columnIndex+nextRightColumnOffset++])
+             || !hasBlankSpace(boardGrid[lineIndex][columnIndex+nextRightColumnOffset++])
+        ){
+         return false;
+        }
+        castleMovementPossible = MOVEMENT_CASTLE_LONG;
+    }
+    else if ( RookElement.id == 'h1' ){
+        if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--]) 
+             || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
+        ){
+         return false;
+        }
+        castleMovementPossible = MOVEMENT_CASTLE_SHORT;
+    }
+    else if ( RookElement.id == 'a8' ){
+        if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--]) 
+            || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
+            || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
+        ){
+         return false;
+        }
+        castleMovementPossible = MOVEMENT_CASTLE_LONG;
+    }
+    else if ( RookElement.id == 'h8' ){
+        if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex-nextRightColumnOffset--]) 
+            || !hasBlankSpace(boardGrid[lineIndex][columnIndex-nextRightColumnOffset--])
+        ){
+         return false;
+        }
+        castleMovementPossible = MOVEMENT_CASTLE_SHORT;
+    }
+    return castleMovementPossible;
+    
+}
+function checkPiecePosition(piece){
+    let candidateElement = document.getElementById(getPieceLocation(piece));
+    if ( candidateElement.getAttribute("hasNotMoved") == HAS_MOVED ){
+        return false;
+    }
+    if ( matchPieceType(piece, PIECE_TYPE_KING) ){
+        return isCastlePossibleFromKingPosition(candidateElement)
+    }
+    if ( matchPieceType(piece, PIECE_TYPE_ROOK) ){
+        return isCastlePossibleFromRookPosition(candidateElement)
+    }
+}
+// O rei e a torre envolvida não podem ter se movimentado nenhuma vez desde o início do jogo;
+// As casas entre o rei e a torre devem estar desocupadas;
+// O rei não pode estar em xeque, e também não pode ficar em xeque depois do roque;
+// Nenhuma das casas onde o rei passar ou ficar deverá estar no raio de ação de uma peça adversária.
+// Isto não se aplica à torre envolvida.
+function drawSpecialMovement(movementType){
+    if ( matchMovementDirection(movementType, SPECIAL_MOVEMENT_CASTLE) ){
+        let castleMovementPossible;
+        if ( (castleMovementPossible = checkPiecePosition(pieceSelected)) == false )
+            return false; 
+        
+        var castleMovement;
+        var movementDiscreteArray = boardGrid[getLineIndexFromPiece(pieceSelected)];
+        if ( castleMovementPossible == MOVEMENT_CASTLE_BOTH ){
+          castleMovement = movementDiscreteArray;
+          colorDiscreteMovementPath(castleMovement, MOVEMENT_DIRECTION_LINE);
+        }
+        else if ( castleMovementPossible == MOVEMENT_CASTLE_LONG ){
+            if ( getLineIndex(pieceSelected) == 8 )
+                castleMovement = movementDiscreteArray.slice(4);
+            else
+                castleMovement = movementDiscreteArray.slice(0,4);
+
+        }
+        else {
+            if ( getLineIndex(pieceSelected) == 8 )
+                castleMovement = movementDiscreteArray.slice(0,4);
+            else
+                castleMovement = movementDiscreteArray.slice(4);
+        }
+        
+        colorDiscreteMovementPath(movementDiscreteArray, MOVEMENT_DIRECTION_LINE);
+    }
+}
 function getLineIndexFromPiece(piece){
     return getPieceLocation(piece)[SQUARE_NUMERIC_NDX];
 }
@@ -195,11 +357,12 @@ function getAnyMainDiagonalFromBegin(beginSquareName, color){
         return -1;
     
     let nextRightColumnOffset = getMovementOffset(RGT_OFFSET, color);
-    let nextBottomLineOffset =0;
+    let nextBottomLineOffset = 0;
     if ( color == 'B')
-          nextBottomLineOffset = getMovementOffset(BOT_OFFSET, 'W');
+        nextBottomLineOffset = getMovementOffset(BOT_OFFSET, 'W');
     else
-         nextBottomLineOffset = getMovementOffset(BOT_OFFSET, color);
+        nextBottomLineOffset = getMovementOffset(BOT_OFFSET, color);
+
     let nextBottomLine = myLineIndex + nextBottomLineOffset;
     let nextRightColumn = myColumnIndex + nextRightColumnOffset;
     let nextBottomRightSquareName = (columnArray[nextRightColumn] !== undefined) ?
@@ -254,9 +417,10 @@ function initPieceMovements(){
                 pieceMovementType[i] |= MOVEMENT_DIRECTION_COLUMN;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_TOP;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_BOTTOM;
-                pieceMovementType[i] |= MOVEMENT_DIRECTION_LINE;
-                pieceMovementType[i]   |= SUBTYPE_LINE_LEFT;
-                pieceMovementType[i]   |= SUBTYPE_LINE_RIGHT;
+                pieceMovementType[i] |=SPECIAL_MOVEMENT_CASTLE;
+                // pieceMovementType[i] |= MOVEMENT_DIRECTION_LINE;
+                // pieceMovementType[i]   |= SUBTYPE_LINE_LEFT;
+                // pieceMovementType[i]   |= SUBTYPE_LINE_RIGHT;
                 pieceMovementRange[i] = LINE_OF_SIGHT;
                 break;     
             case PIECE_TYPE_KNIGHT:
@@ -285,9 +449,10 @@ function initPieceMovements(){
                 pieceMovementType[i] |= MOVEMENT_DIRECTION_COLUMN;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_TOP;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_BOTTOM;
-                pieceMovementType[i] |= MOVEMENT_DIRECTION_LINE;
-                pieceMovementType[i]   |= SUBTYPE_LINE_LEFT;
-                pieceMovementType[i]   |= SUBTYPE_LINE_RIGHT;
+                pieceMovementType[i] |=SPECIAL_MOVEMENT_CASTLE;
+                // pieceMovementType[i] |= MOVEMENT_DIRECTION_LINE;
+                // pieceMovementType[i]   |= SUBTYPE_LINE_LEFT;
+                // pieceMovementType[i]   |= SUBTYPE_LINE_RIGHT;
                 pieceMovementType[i] |= MOVEMENT_DIRECTION_DIAGONAL;
                 pieceMovementType[i]   |= SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END;
                 pieceMovementType[i]   |= SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
@@ -325,6 +490,10 @@ function isValidSquareAlpha(squareName){
 function getSquareGroupStatus(squares){
     squares.map(function(value){
         if ( isValidSquareIndex(value) ) {
+            // ( T == BLK ) 
+            //  ? PBLK 
+            //    : IF ( T == OPPO )
+            //        PCP
             if ( getSquareStatus(value) == BLANK_SPACE_SQUARE ) 
                 emptySquareArr.push(value);
             else if ( getSquareStatus(value) == OPPONENT_PIECE_SQUARE )
@@ -344,8 +513,7 @@ function getSquareStatus(squareName){
     if ( mySquareContent == "" )
         return BLANK_SPACE_SQUARE;
     
-    // Tem uma peça nessa casa..
-
+    // Tem uma peça nessa casa...
     if ( mySquareContent[0] == getPlayerColorNotation() )
         return PLAYER_PIECE_SQUARE;
         
@@ -646,17 +814,17 @@ function matchMovementDirectionAndDisable(movType ,direction){
     return movType;
 }
 function alertAllMovementSubTypes(movType){
-    ((movType & SUBTYPE_DIAG_MAIN_BEGIN)) ?alert("SUBTYPE_DIAG_MAIN_BEGIN"): alert("no");
-    ((movType & SUBTYPE_DIAG_MAIN_END)) ? alert("SUBTYPE_DIAG_MAIN_END"): alert("no");;
-    ((movType & SUBTYPE_DIAG_OPPOSITE_BEGIN)) ? alert("SUBTYPE_DIAG_OPPOSITE_BEGIN"):alert("no");;
-    ((movType & SUBTYPE_DIAG_OPPOSITE_END)) ? alert("SUBTYPE_DIAG_OPPOSITE_END") :alert("no");;
+    ((movType & SUBTYPE_DIAG_MAIN_BEGIN))    ? alert("SUBTYPE_DIAG_MAIN_BEGIN"): alert("no");
+    ((movType & SUBTYPE_DIAG_MAIN_END))      ? alert("SUBTYPE_DIAG_MAIN_END"): alert("no");;
+    ((movType & SUBTYPE_DIAG_OPPOSITE_BEGIN))? alert("SUBTYPE_DIAG_OPPOSITE_BEGIN"):alert("no");;
+    ((movType & SUBTYPE_DIAG_OPPOSITE_END))  ? alert("SUBTYPE_DIAG_OPPOSITE_END") :alert("no");;
 }
 function xorMovementDirection(movType, direction){
         return (movType ^ direction);
 }
 // Obter 'casa' da peça (Ex.: a2, h1, f7, etc.)
 function getPieceLocation(piece){
-    let myId = $('.piecesquare:contains("'+piece.toString()+'")').attr("id");
+    let myId = $('.piecesquare:contains("' + piece.toString() + '")').attr("id");
     return (myId) === undefined ? false : myId;
 }
 // Esta peça possui algum movimento ja calculado a realizar ?
@@ -763,7 +931,6 @@ function scanPawnDiagonal(originSquare, piece){
     }
     mySquareContent = getSquareStatus(nextTopRightSquareName);
     if ( mySquareContent == OPPONENT_PIECE_SQUARE ){
-
         captureSquares[captureSquareCtr++] = nextTopRightSquareName;
     }
     let boolReturn = (  
@@ -888,7 +1055,6 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
                     nextLeftColumnOffset += getMovementOffset(LFT_OFFSET, myColor);
                 }
                 else if ( mySquareContent == OPPONENT_PIECE_SQUARE ){ 
-                    
                     captureSquares[captureSquareCtr++] = nextLeftSquareName;
                 }
                 mySquareContent = getSquareStatus(nextRightSquareName);
@@ -1237,6 +1403,9 @@ function doMovePiece(piece, destinationSquare){
     var originSquare = getPieceLocation(piece);
     document.getElementById(originSquare).innerHTML = "";
     document.getElementById(destinationSquare).innerHTML = piece;
+    if ( matchPieceType(piece,PIECE_TYPE_KING) || matchPieceType(piece,PIECE_TYPE_ROOK) ){
+        document.getElementById(piece).setAttribute("hasNotMoved", "0");
+    }
 }
 function doCapturePiece(piece, pieceSquare){
     document.getElementById(pieceSquare).innerHTML = "";
@@ -1295,6 +1464,7 @@ function selectPlayerPiece(piece, pieceSquare){
 
     clearActiveSelection();
     pieceSelected = piece;
+    drawSpecialMovement(getMovementType(piece));
     evaluatePieceMovementRange(piece, pieceSquare);
     colorMovementPath(getMovementType(piece));
 }
@@ -1352,16 +1522,12 @@ function drawBoard() {
             divSquare.id = "" + columnChar + rowNumber;
             board.appendChild(divSquare);
             divSquare = document.getElementById(divSquare.id);
-            if ( initialRows.includes(rowNumber) ){
+            if ( rowNumber == 2 || rowNumber == 7 );
+            
+            else if ( initialRows.includes(rowNumber) ){
                 drawSinglePiece(divSquare.id);
-                // let pieceColorDrew = drawSinglePiece(divSquare.id);
-                // if ( pieceColorDrew == playerColorStatus ){
-            //     }
-            // }
-            // else{
-                // divSquare.setAttribute("onclick", "selectSquare(this.innerHTML, this.id)");
             }
-            //                                              piece           sq
+            //                                                piece           sq
             divSquare.setAttribute("onclick", "selectSquare(this.innerHTML, this.id)");
             sqMarginLeft += iSquareWidth;
         }
@@ -1384,15 +1550,19 @@ function drawSinglePiece(squareName){
     for ( i = 0 ; i < columnArray.length; i++ ){
         if ( squareName.includes(columnArray[i]) ){
             let pieceColor = squareName.includes("1") ? "W" : "B";
-            document.getElementById(squareName).innerHTML = "" + pieceColor + highValuePieceNotation[i];
+            //document.getElementById(squareName).innerHTML = "" + pieceColor + highValuePieceNotation[i];
             pieceName = "" + pieceColor + highValuePieceNotation[i];
-            // document.getElementById(squareName).innerHTML =
-            // "<img src='" + pieceName + ".png'>"
+            if ( matchPieceType(pieceName, PIECE_TYPE_KING) || matchPieceType(pieceName, PIECE_TYPE_ROOK) ){
+                document.getElementById(squareName).setAttribute("hasNotMoved","1");
+            }
+            document.getElementById(squareName).innerHTML = pieceName;
+            //  "<img src='" + imgpath + pieceName.substring(0,2) + ".png' style='pieceimg'>"
             return (pieceColor == "W") ? COLOR_WHITE : COLOR_BLACK;
         }
     }
     return COLOR_NONE;
 }
+
 
 $(document).ready(function () {
     initPieceMovements();
