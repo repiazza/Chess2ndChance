@@ -193,22 +193,27 @@ function isCastlePossibleFromKingPosition(candidateElement){
     let kingElement = candidateElement;
     let isShortCastlePossible = true;
     let isLongCastlePossible = true;
+    alert("a")
     let lineIndex = getLineIndexFromSquare(kingElement.id) - 1;
     let columnIndex = getColumnIndexFromSquare(kingElement.id);
     let rightMovementOffset = getMovementOffset(RGT_OFFSET, colorNotation[playerColorStatus]);
     let leftMovementOffset  = getMovementOffset(LFT_OFFSET, colorNotation[playerColorStatus]);
 
-    // alert(boardGrid[lineIndex][columnIndex+rightMovementOffset]);
-    alert(lineIndex + " " + columnIndex + " " + rightMovementOffset);
-    alert(boardGrid[lineIndex][columnIndex+rightMovementOffset++]);
-    if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex+rightMovementOffset++]) 
-         || !hasBlankSpace(boardGrid[lineIndex][columnIndex+rightMovementOffset])
+    let initSquare = kingElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex+rightMovementOffset++);
+    let endSquare = kingElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex+rightMovementOffset++);
+    if ( !hasBlankSpace(initSquare) 
+         || !hasBlankSpace(endSquare)
        ){
          isShortCastlePossible = false;
+
      }
-     if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--]) 
-          || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
-          || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
+     initSquare = kingElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+     let middleSquare = kingElement.id[SQUARE_ALPHABETICAL_NDX]+  Number(columnIndex-leftMovementOffset--);
+     endSquare = kingElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+
+     if ( !hasBlankSpace(initSquare) 
+          || !hasBlankSpace(middleSquare)
+          || !hasBlankSpace(endSquare)
         ){
          isLongCastlePossible = false;
      }
@@ -221,64 +226,55 @@ function isCastlePossibleFromKingPosition(candidateElement){
                 ? MOVEMENT_CASTLE_LONG 
                 : MOVEMENT_CASTLE_SHORT;
 }
-// function isCastlePossibleFromKingPosition(candidateElement){
-//     let kingElement = candidateElement;
-//     let isShortCastlePossible = true;
-//     let isLongCastlePossible = true;
-//     let lineIndex = getLineIndexFromSquare(kingElement.id);
-//     let columnIndex = getColumnIndexFromSquare(kingElement.id);
-//     let rightMovementOffset = getMovementOffset(RGT_OFFSET, colorNotation[playerColorStatus]);
-//     let leftMovementOffset  = getMovementOffset(LFT_OFFSET, colorNotation[playerColorStatus]);
 
-//     if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex+rightMovementOffset++]) 
-//          || !hasBlankSpace(boardGrid[lineIndex][columnIndex+rightMovementOffset])
-//        ){
-//          isShortCastlePossible = false;
-//      }
-//      if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--]) 
-//           || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
-//           || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
-//         ){
-//          isLongCastlePossible = false;
-//      }
-//      if ( isLongCastlePossible == false && isShortCastlePossible == false )
-//          return false;
-// }
 function isCastlePossibleFromRookPosition(candidateElement){
     let RookElement = candidateElement;
     let castleMovementPossible = false;
     let lineIndex = getLineIndexFromSquare(RookElement.id);
     let columnIndex = getColumnIndexFromSquare(RookElement.id);
     let nextRightColumnOffset = getMovementOffset(RGT_OFFSET, colorNotation[playerColorStatus]);
+    let leftMovementOffset  = getMovementOffset(LFT_OFFSET, colorNotation[playerColorStatus]);
+
+    let initSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex+nextRightColumnOffset++);
+    let middleSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX]+  Number(columnIndex+nextRightColumnOffset++);
+    let endSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex+nextRightColumnOffset++);
     if ( RookElement.id == 'a1' ){
-        if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex+nextRightColumnOffset++]) 
-             || !hasBlankSpace(boardGrid[lineIndex][columnIndex+nextRightColumnOffset++])
-             || !hasBlankSpace(boardGrid[lineIndex][columnIndex+nextRightColumnOffset++])
+        
+        if ( !hasBlankSpace(initSquare) 
+             || !hasBlankSpace(middleSquare)
+             || !hasBlankSpace(endSquare)
         ){
          return false;
         }
         castleMovementPossible = MOVEMENT_CASTLE_LONG;
     }
     else if ( RookElement.id == 'h1' ){
-        if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--]) 
-             || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
+        initSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+        endSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+        if ( !hasBlankSpace(initSquare) 
+             || !hasBlankSpace(endSquare)
         ){
          return false;
         }
         castleMovementPossible = MOVEMENT_CASTLE_SHORT;
     }
     else if ( RookElement.id == 'a8' ){
-        if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--]) 
-            || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
-            || !hasBlankSpace(boardGrid[lineIndex][columnIndex-leftMovementOffset--])
+        initSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--)
+        middleSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX]+  Number(columnIndex-leftMovementOffset--)
+        endSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+        if ( !hasBlankSpace(initSquare) 
+            || !hasBlankSpace(middleSquare)
+            || !hasBlankSpace(endSquare)
         ){
          return false;
         }
         castleMovementPossible = MOVEMENT_CASTLE_LONG;
     }
     else if ( RookElement.id == 'h8' ){
-        if ( !hasBlankSpace(boardGrid[lineIndex][columnIndex-nextRightColumnOffset--]) 
-            || !hasBlankSpace(boardGrid[lineIndex][columnIndex-nextRightColumnOffset--])
+        initSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+        endSquare = RookElement.id[SQUARE_ALPHABETICAL_NDX] + Number(columnIndex-leftMovementOffset--);
+        if ( !hasBlankSpace(initSquare) 
+            || !hasBlankSpace(endSquare)
         ){
          return false;
         }
@@ -288,6 +284,7 @@ function isCastlePossibleFromRookPosition(candidateElement){
     
 }
 function checkPiecePosition(piece){
+    alert(piece);
     let candidateElement = document.getElementById(getPieceLocation(piece));
     if ( candidateElement.getAttribute("hasNotMoved") == HAS_MOVED ){
         return false;
@@ -417,7 +414,7 @@ function initPieceMovements(){
                 pieceMovementType[i] |= MOVEMENT_DIRECTION_COLUMN;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_TOP;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_BOTTOM;
-                pieceMovementType[i] |=SPECIAL_MOVEMENT_CASTLE;
+                pieceMovementType[i] |= SPECIAL_MOVEMENT_CASTLE;
                 // pieceMovementType[i] |= MOVEMENT_DIRECTION_LINE;
                 // pieceMovementType[i]   |= SUBTYPE_LINE_LEFT;
                 // pieceMovementType[i]   |= SUBTYPE_LINE_RIGHT;
@@ -449,7 +446,7 @@ function initPieceMovements(){
                 pieceMovementType[i] |= MOVEMENT_DIRECTION_COLUMN;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_TOP;
                 pieceMovementType[i]   |= SUBTYPE_COLUMN_BOTTOM;
-                pieceMovementType[i] |=SPECIAL_MOVEMENT_CASTLE;
+                pieceMovementType[i] |= SPECIAL_MOVEMENT_CASTLE;
                 // pieceMovementType[i] |= MOVEMENT_DIRECTION_LINE;
                 // pieceMovementType[i]   |= SUBTYPE_LINE_LEFT;
                 // pieceMovementType[i]   |= SUBTYPE_LINE_RIGHT;
@@ -548,6 +545,7 @@ function getClassNameFromMovementDirection(baseMovementDirection){
 }
 
 function colorDiscreteMovementPath(movementDiscreteArray, baseMovementDirection){
+    alert("colorDiscreteMovementPath("+movementDiscreteArray+", "+baseMovementDirection+")");
     let myClassName = getClassNameFromMovementDirection(baseMovementDirection);
     movementDiscreteArray.map(function(squareId){
         let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
@@ -1567,6 +1565,6 @@ function drawSinglePiece(squareName){
 $(document).ready(function () {
     initPieceMovements();
     drawBoard();
-    drawIdentityX();
-    drawCross('a5','d8');
+    // drawIdentityX();
+    // drawCross('a5','d8');
 });
