@@ -50,6 +50,7 @@ var boardGrid = [
     ['a7'], ['b7'], ['c7'], ['d7'], ['e7'], ['f7'], ['g7'], ['h7'],
     ['a8'], ['b8'], ['c8'], ['d8'], ['e8'], ['f8'], ['g8'], ['h8']                    
                 ];                
+   
 
 const TOTAL_PIECE_COUNT = 16;
 const PLAYER_PIECE_COUNT = TOTAL_PIECE_COUNT / 2;
@@ -168,7 +169,26 @@ const colorName = ['white', 'black'];
 const colorNotation = ['W', 'B'];
 let columnArray = ['a','b','c','d','e','f','g','h'];
 
+class Piece {
 
+    type;
+  
+    // constructor(type) {
+    //   this.type = type;
+    // // }
+    // setType(type){
+    //     this.type = type
+    // }
+    // getType()
+  
+}
+
+let rook   = new Piece();
+let knight = new Piece();
+let queen  = new Piece();
+let king   = new Piece();
+let bishop = new Piece();
+let pawn   = new Piece();
 //                             0    1    2    3   4   5    6    7
 let highValuePieceNotation = ['R1','N1','B1','Q','K','B2','N2','R2'];
 let lowValuePieceNotation  = ['Pa', 'Pb', 'Pc', 'Pd', 'Pe', 'Pf', 'Pg', 'Ph'];
