@@ -28,6 +28,27 @@
 // let gameBoard = [[a8],[],[],[],[],[],[],[]];
 
 let imgpath = "img/";
+class Piece {
+
+    type;
+  
+    // constructor(type) {
+    //   this.type = type;
+    // // }
+    // setType(type){
+    //     this.type = type
+    // }
+    // getType()
+  
+}
+
+let rook   = new Piece();
+let knight = new Piece();
+let queen  = new Piece();
+let king   = new Piece();
+let bishop = new Piece();
+let pawn   = new Piece();
+
 
 var boardGrid = [
                     ['a8'], ['b8'], ['c8'], ['d8'], ['e8'], ['f8'], ['g8'], ['h8'],
@@ -151,7 +172,7 @@ const PLAYER_PIECE_SQUARE   =  1; //
 const OPPONENT_PIECE_SQUARE =  2;
 const UNKNOWN_SQUARE        =  3; // Casa em formato desconhecido
 
-let pieceSelected = 0;
+let pieceSelected     = 0;
 let playerColorStatus = 0;
 const colorName = ['white', 'black'];
 const colorNotation = ['W', 'B'];
@@ -212,7 +233,7 @@ function getBlackSecondRow(){
 }
 function getPlayerFirstRow(){
     return (playerColorStatus == COLOR_WHITE)
-               ? getWhiteFirstRow() : getBlackFirstRow(); 
+             ? getWhiteFirstRow() : getBlackFirstRow(); 
 }
 
 function getLongCastleKingSquare(){
@@ -277,7 +298,6 @@ function isCastlePossibleFromKingPosition(candidateElement){
 function isCastlePossibleFromRookPosition(candidateElement){
     let RookElement = candidateElement;
     let castleMovementPossible = false;
-    let castleMovement = [];
 
     let initSquare   = getNextRightSquareBySquare(RookElement.id)
     let middleSquare = getNextRightSquareBySquare(initSquare)
@@ -404,15 +424,19 @@ function drawSpecialMovement(movementType){
             // alert(castleMovementPossible);
         var movementDiscreteArray = [];
         nextLeftSquare = getNextLeftSquareByPiece(pieceSelected);
-        while ( isValidSquareAlpha(nextLeftSquare) ){
+        while ( isValidSquareAlpha(nextLeftSquare) 
+                && hasBlankSpace(nextLeftSquare) ){
             movementDiscreteArray.push(nextLeftSquare);
             nextLeftSquare = getNextLeftSquareBySquare(nextLeftSquare)
         }
         nextRightSquare = getNextRightSquareByPiece(pieceSelected)
-        while ( isValidSquareAlpha(nextRightSquare) ){
+        while ( isValidSquareAlpha(nextRightSquare) 
+                && hasBlankSpace(nextLeftSquare) ){
             movementDiscreteArray.push(nextRightSquare);
             nextRightSquare = getNextRightSquareBySquare(nextRightSquare)
         }
+        alert(movementDiscreteArray);
+        alert(castleMovementPossible);
         if ( castleMovementPossible == MOVEMENT_CASTLE_BOTH ){
             castleMovement = movementDiscreteArray;
         }
@@ -648,7 +672,7 @@ function getClassNameFromMovementDirection(baseMovementDirection){
 }
 
 function colorDiscreteMovementPath(movementDiscreteArray, baseMovementDirection){
-    // alert("colorDiscreteMovementPath("+movementDiscreteArray+", "+baseMovementDirection+")");
+    alert("colorDiscreteMovementPath("+movementDiscreteArray+", "+baseMovementDirection+")");
     let myClassName = getClassNameFromMovementDirection(baseMovementDirection);
     movementDiscreteArray.map(function(squareId){
         let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
