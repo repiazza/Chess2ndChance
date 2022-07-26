@@ -31,23 +31,31 @@ let imgpath = "img/";
 class Piece {
 
     type;
+    initsq;
+
   
-    // constructor(type) {
-    //   this.type = type;
-    // // }
+    constructor(name, initsq) {
+        this.name = name;
+        this.initsq = initsq;
+        document.getElementById(initsq).innerHTML = name;
+    }
     // setType(type){
     //     this.type = type
     // }
-    // getType()
+    // setPiecePosition(){
+
+    // }
+    getName(){
+        return this.name;
+    } 
   
 }
-
-let rook   = new Piece();
-let knight = new Piece();
-let queen  = new Piece();
-let king   = new Piece();
-let bishop = new Piece();
-let pawn   = new Piece();
+let rook   ;
+let knight ;
+let queen  ;
+let king   ;
+let bishop ;
+let pawn   ;
 
 
 var boardGrid = [
@@ -1730,7 +1738,7 @@ function drawBoard() {
             board.appendChild(divSquare);
             divSquare = document.getElementById(divSquare.id);
             if ( initialRows.includes(rowNumber) ){
-                drawSinglePiece(divSquare.id);
+                drawSinglePiece(divSquare.id); 
             }
             //                                                piece           sq
             divSquare.setAttribute("onclick", "selectSquare(this.innerHTML, this.id)");
@@ -1740,6 +1748,7 @@ function drawBoard() {
         sqMarginLeft = 0;
         rowColorToggle = !rowColorToggle;
     }
+
 }
 function drawSinglePiece(squareName){
     let pawnColumn = columnArray[columnArray.indexOf(squareName[SQUARE_ALPHABETICAL_NDX])];
@@ -1759,9 +1768,22 @@ function drawSinglePiece(squareName){
             if ( highValuePieceNotation[i][0] != 'R' &&  highValuePieceNotation[i][0] != 'K'  ) continue;
             pieceName = "" + pieceColor + highValuePieceNotation[i];
             if ( matchPieceType(pieceName, PIECE_TYPE_KING) || matchPieceType(pieceName, PIECE_TYPE_ROOK) ){
-                document.getElementById(squareName).setAttribute("hasNotMoved","1");
+                document.getElementById(squareName).setAttribute("hasNotMoved", "1");
             }
             document.getElementById(squareName).innerHTML = pieceName;
+            if ( matchPieceType(pieceName, PIECE_TYPE_KNIGHT) )
+                knight = new Piece("Knight");
+            else if ( matchPieceType(pieceName, PIECE_TYPE_ROOK) )
+                rook   = new Piece("Rook");
+            else if ( matchPieceType(pieceName, PIECE_TYPE_QUEEN) )
+                queen  = new Piece("Queen");    
+            else if ( matchPieceType(pieceName, PIECE_TYPE_KING) )
+                king   = new Piece("King");            
+            else if ( matchPieceType(pieceName, PIECE_TYPE_BISHOP) )
+                bishop = new Piece("Bishop");
+            else if ( matchPieceType(pieceName, PIECE_TYPE_PAWN) )
+                pawn   = new Piece("Pawn");
+            
             //  "<img src='" + imgpath + pieceName.substring(0,2) + ".png' style='pieceimg'>"
             return (pieceColor == "W") ? COLOR_WHITE : COLOR_BLACK;
         }
