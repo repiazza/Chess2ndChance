@@ -245,7 +245,6 @@ function getPlayerFirstRow(){
     return (playerColorStatus == COLOR_WHITE)
                ? getWhiteFirstRow() : getBlackFirstRow(); 
 }
-
 function getLongCastleKingSquare(){
     return longCastleSquareColumn[KING_CASTLED_INDEX]
            + getPlayerFirstRow();
@@ -287,6 +286,7 @@ function isCastlePossibleFromKingPosition(candidateElement){
      initSquare = originColumn + lineIndex;
      middleSquare = middleColumn + lineIndex;
      endSquare = destColumn + lineIndex;
+     
     //  alert(initSquare + " " + middleSquare + " " + endSquare);
 
      if ( !hasBlankSpace(initSquare) 
