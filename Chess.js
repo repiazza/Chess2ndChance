@@ -136,11 +136,13 @@ class Piece {
         this.currentsquare = square;
     }
     getPiecePosition(postype){
+        if ( !isValidSquareIndex(this.currentsquare) || !isValidSquareAlpha(this.currentsquare) ) 
         if ( postype == SQUARE_ALPHABETICAL_NDX )
             return this.currentsquare[SQUARE_ALPHABETICAL_NDX];
         else if ( postype == SQUARE_NUMERIC_NDX )
             return this.currentsquare[SQUARE_NUMERIC_NDX];
         
+        //SQUARE_NAME
         return this.currentsquare;
     }
     getRange(){
@@ -152,11 +154,17 @@ class Piece {
     getName(){
         return this.name;
     } 
+    getType(){
+        return this.type;
+    } 
     getMovementObj(){
         return this.movement;
     }
     getInitialSquare(){
         return this.initsq;
+    }
+    logPieceObj(){
+        console.debug(this);
     }
 }
 
@@ -239,6 +247,7 @@ const MOVEMENT_RANGE_END_SQUARE   = 1;
 
 const SQUARE_ALPHABETICAL_NDX = 0;
 const SQUARE_NUMERIC_NDX      = 1;
+const SQUARE_NAME             = 2;
 
 const PIECE_COLOR_INDEX                 = 0; // B or W
 const PIECE_NOTATION_INDEX              = 1;  // R N B Q K or P
@@ -546,8 +555,8 @@ function isCastlePossibleFromRookPosition(candidateElement){
 }
 function checkPiecePosition(piece){
     
-    //let candidateElement = document.getElementById(pieceObj.getPiecePosition(2));
-    alert(pieceSelected.hasMoved);
+    //let candidateElement = document.getElementById(pieceObj.getPiecePosition(SQUARE_NAME));
+    // alert(pieceSelected.hasMoved);
     if ( pieceSelected.hasMoved == HAS_MOVED ){
         return false;
     }
@@ -559,7 +568,7 @@ function checkPiecePosition(piece){
     }
 }
 function getNextLeftSquareByPiece(piece){
-    let originSquare = pieceObj.getPiecePosition(2);
+    let originSquare = pieceObj.getPiecePosition(SQUARE_NAME);
     let myColumnIndex  = columnArray.indexOf(originSquare[SQUARE_ALPHABETICAL_NDX]);                
     let nextLeftColumnOffset  = getMovementOffset(LFT_OFFSET, getPlayerColorNotation());
 
@@ -583,7 +592,7 @@ function getNextLeftSquareBySquare(square){
                                        
 }
 function getNextRightSquareByPiece(piece){
-    let originSquare = pieceObj.getPiecePosition(2)
+    let originSquare = pieceObj.getPiecePosition(SQUARE_NAME)
     let myColumnIndex  = columnArray.indexOf(originSquare[SQUARE_ALPHABETICAL_NDX]);                
     let nextRightColumnOffset  = getMovementOffset(RGT_OFFSET, getPlayerColorNotation());
 
@@ -631,8 +640,8 @@ function drawSpecialMovement(movementType){
             movementDiscreteArray.push(nextRightSquare);
             nextRightSquare = getNextRightSquareBySquare(nextRightSquare)
         }
-        alert(movementDiscreteArray);
-        alert(castleMovementPossible);
+        // alert(movementDiscreteArray);
+        // alert(castleMovementPossible);
         if ( castleMovementPossible == MOVEMENT_CASTLE_BOTH ){
             castleMovement = movementDiscreteArray;
         }
@@ -648,12 +657,12 @@ function drawSpecialMovement(movementType){
             else
                 castleMovement = movementDiscreteArray.slice(0,3);
         }
-        alert(castleMovement);
+        // alert(castleMovement);
         colorDiscreteMovementPath(castleMovement, MOVEMENT_DIRECTION_LINE);
     }
 }
 function getLineIndexFromPiece(piece){
-    return pieceObj.getPiecePosition(2)[SQUARE_NUMERIC_NDX];
+    return pieceObj.getPiecePosition(SQUARE_NAME)[SQUARE_NUMERIC_NDX];
 }
 function getLineIndexFromSquare(squareName){
     if ( !isValidSquareIndex(squareName) )
@@ -818,6 +827,12 @@ function isValidSquareAlpha(squareName){
     
     return true;
 }
+function isValidSquare(squareName){
+    if ( isValidSquareAlpha(squareName) && isValidSquareIndex(squareName) )
+        return true;
+
+    return false;
+}
 
 function getSquareGroupStatus(squares){
     squares.map(function(value){
@@ -837,14 +852,13 @@ function getSquareStatus(squareName){
         return INVALID_SQUARE;
 
     // let mySquareContent = document.getElementById(squareName).innerHTML;
-    
-    if ( pieceObj == PIECE_TYPE_NONE )
+
+    if ( pieceObj === undefined  )
         return BLANK_SPACE_SQUARE;
     
     // Tem uma peça nessa casa...
     if ( pieceObj.color == getPlayerColorNotation() )
         return PLAYER_PIECE_SQUARE;
-        
     else if ( pieceObj.color == getOpponentColorNotation() )
         return OPPONENT_PIECE_SQUARE;
 
@@ -867,17 +881,21 @@ function setClassByBGAttr(className, bgcAttr, squareId){
     document.getElementById(squareId).classList.add(className);
 }
 
-
+// 0001 >> 1 0000
+// 0010 >> 2 0001 0000
+// 0100 >> 3 0010 0001 0000
+// 1000 >> 4 0100 0010 0001 0000 
 function getClassNameFromMovementDirection(baseMovementDirection){
     let i = 0;
     for ( ; baseMovementDirection > 0 ; i++ ){
         baseMovementDirection = baseMovementDirection >> 1;
+        // alert(baseMovementDirection);
     }
     return highlightClasses[i-1];
 }
 
 function colorDiscreteMovementPath(movementDiscreteArray, baseMovementDirection){
-    alert("colorDiscreteMovementPath("+movementDiscreteArray+", "+baseMovementDirection+")");
+    // alert("colorDiscreteMovementPath("+movementDiscreteArray+", "+baseMovementDirection+")");
     let myClassName = getClassNameFromMovementDirection(baseMovementDirection);
         movementDiscreteArray.map(function(squareId){
             
@@ -886,6 +904,8 @@ function colorDiscreteMovementPath(movementDiscreteArray, baseMovementDirection)
     })
 }
 function colorMovementPath(movementType){
+    highlightMovementDirection(movementType);
+    return;
     matchMovementDirection(movementType,MOVEMENT_DIRECTION_LINE);
     if ( matchMovementDirection(movementType,MOVEMENT_DIRECTION_LINE) ){
         let lineNdx = lineMovementRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_NUMERIC_NDX];
@@ -1159,7 +1179,7 @@ function getPieceLocation(){
 }
 // Esta peça possui algum movimento ja calculado a realizar ?
 function hasAnyMovementOnRange(piece){
-    let movType = getMovementType(piece);
+    let movType = pieceObj.getMovement();
     if ( matchMovementDirection(movType, MOVEMENT_DIRECTION_COLUMN) ){
         let lineNdx0 = Math.abs(Number(columnMovementRange[MOVEMENT_RANGE_BEGIN_SQUARE][SQUARE_NUMERIC_NDX]));
         let lineNdx1 = Math.abs(Number(columnMovementRange[MOVEMENT_RANGE_END_SQUARE][SQUARE_NUMERIC_NDX]));
@@ -1279,20 +1299,31 @@ function scanPawnDiagonal(originSquare, piece){
 // document.querySelectorAll('[lndx="[3-8]"][clm="c"]')
 
 function highlightMovementDirection(direction){
-
-    switch(direction){
-        case MOVEMENT_DIRECTION_COLUMN:
-            // alert("$(\"[clm='\""+pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX)+"']:not([piece])");
-            var objRetorno = new Object();
-            objRetorno =  $("[clm='"+pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX)+"']:not([piece])");
-            for ( i=0; i<objRetorno.length; i++){
-                highlightColumnSquare(objRetorno[i]);
-            }
-            break;
-        case MOVEMENT_DIRECTION_LINE:
-            break;
-        case MOVEMENT_DIRECTION_DIAGONAL:
-            break;
+    if ( matchMovementDirection(direction, MOVEMENT_DIRECTION_COLUMN) ){
+        alert("colum")
+        // alert("$(\"[clm='\""+pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX)+"']:not([piece])");
+        var objRetorno = new Object();
+        let myClassName = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_COLUMN);
+        objRetorno =  $("[clm='"+pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX)+"']:not([piece])");
+        for ( i=0; i<objRetorno.length; i++){
+            highlightColumnSquare(objRetorno[i], myClassName);
+        }
+    }
+    if ( matchMovementDirection(direction, MOVEMENT_DIRECTION_LINE) ){
+        var objRetorno = new Object();
+        let myClassName = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_LINE);
+        objRetorno =  $("[lndx='"+pieceObj.getPiecePosition(SQUARE_NUMERIC_NDX)+"']:not([piece])");
+        for ( i=0; i<objRetorno.length; i++){
+            highlightLineSquare(objRetorno[i], myClassName);
+        }
+    }
+    if ( matchMovementDirection(direction, MOVEMENT_DIRECTION_DIAGONAL) ){
+        // var objRetorno = new Object();
+        // let myClassName = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_LINE);
+        // objRetorno =  $("[lndx='"+pieceObj.getPiecePosition(SQUARE_NUMERIC_NDX)+"']:not([piece])");
+        // for ( i=0; i<objRetorno.length; i++){
+        //     highlightLineSquare(objRetorno[i], myClassName);
+        // }
     }
 
 }
@@ -1302,7 +1333,9 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
     // const MOVEMENT_DIRECTION_LINE     = 0x02;
     // const MOVEMENT_DIRECTION_DIAGONAL = 0x04;
     // const MOVEMENT_DIRECTION_L        = 0x08;
-    highlightMovementDirection(MOVEMENT_DIRECTION_COLUMN);
+    alert(movementType);
+    highlightMovementDirection(movementType);
+    return;
     let myColor        = pieceObj.color;
     let pieceNdx       = pieceType.indexOf(piece[PIECE_NOTATION_INDEX]);
     let myLineIndex    = Number(originSquare[SQUARE_NUMERIC_NDX]);
@@ -2128,12 +2161,12 @@ function drawCross(beginLineSquare, beginColumnSquare){
     colorDiscreteMovementPath(movPath, MOVEMENT_DIRECTION_COLUMN);
 }
 // Calcular e avaliar se existe algum movimento possivel em qualquer direção desta peça.
-function pieceMovementIsPossible(piece, originSquare){
+function pieceMovementIsPossible(){
     return scanMovementDirections(pieceObj.getMovement(), pieceObj.getInitialSquare(), piece, SQUARE_SCAN);
 }
 // Calcular todos os movimentos possiveis em todas as direção.
 function evaluatePieceMovementRange(piece, originSquare){
-    return scanMovementDirections(getMovementType(piece), originSquare, piece, FULL_SCAN);
+    return scanMovementDirections(pieceObj.getMovement(), pieceObj.getInitialSquare(), piece, FULL_SCAN);
 }
 function isHighlightClass(myClass) { 
     return highlightClasses.includes(myClass) 
@@ -2153,24 +2186,14 @@ function teste1(){
 }
 // Mover peça de seu local atual para destinationSquare.
 function doMovePiece(piece, destinationSquare){
-    var originSquare = pieceObj.getPiecePosition(2);
-    document.getElementById(originSquare).innerHTML = "";
-    document.getElementById(destinationSquare).innerHTML = piece;
-    if ( matchPieceType(piece,PIECE_TYPE_KING) ){
-        $("div[notmov='1']").attr("notmov", "0");
-    }
-    else if ( matchPieceType(piece,PIECE_TYPE_ROOK) ){        
-        let myNdx = (piece[PIECE_COMPLEMENT_IDENTIFIER_INDEX] == 1) ? 2 : 1;
-        let otherRookPiece = '#'+piece.substr(2)+myNdx;
-        // alert(otherRookPiece);
-        if ( $(otherRookPiece).attr("notmov") == "0" )
-           $("div[notmov='1']").attr("notmov", "0");
-        else{
-           $("#"+pieceObj.getPiecePosition(2)).attr("notmov", "0");
-        }
-    }
+    var originSquare = piece.getPiecePosition(SQUARE_NAME);
+    // document.getElementById(originSquare).innerHTML = "";
+    // document.getElementById(destinationSquare).innerHTML = piece;
+    console.log(document.getElementById(originSquare));
+    document.getElementById(destinationSquare);
+    piece.hasMoved = HAS_MOVED;
 }
-function doCapturePiece(piece, pieceSquare){
+function doCapturePiece(pieceSquare){
     document.getElementById(pieceSquare).innerHTML = "";
     capturedPieces[capturedPiecesCtr++] = piece;
     selectEmptySquare(pieceSquare);
@@ -2192,16 +2215,17 @@ function playSquareName(squareName){
     audio.src = squareName+".wav";
     audio.play();
 }
-function selectSquare(content, squareName){
+function selectSquare(squareName){
     pieceObj = new Piece(1,1,1,1,getPieceObjFromDiv(squareName));
     let squareStatus = getSquareStatus(squareName);
    
-    alert(squareStatus);
-    alert(pieceObj.type);
+    alert("sqsts"+squareStatus);
+    alert("selected"+pieceSelected);
+    pieceObj.logPieceObj();
     //playSquareName(squareName);
-
+    
     if ( squareStatus == PLAYER_PIECE_SQUARE ){
-        return selectPlayerPiece(content, squareName);
+        return selectPlayerPiece();
     }
     if ( matchMovementDirection(getMovementType(pieceSelected), SPECIAL_MOVEMENT_CASTLE)
          && pieceSelected ){
@@ -2217,7 +2241,7 @@ function selectSquare(content, squareName){
         if ( squareStatus == BLANK_SPACE_SQUARE )
             selectEmptySquare(squareName);
         else if ( squareStatus == OPPONENT_PIECE_SQUARE )
-            selectOpponentPiece(content, squareName);
+            selectOpponentPiece(squareName);
 
         clearActiveSelection();
         pieceSelected = 0;
@@ -2228,14 +2252,16 @@ function selectSquare(content, squareName){
     return false;
 }
 function selectEmptySquare(squareId){
-    
+
     doMovePiece(pieceSelected, squareId);    
+    
+    pieceSelected = 0;
     
     return;
 }
-function selectOpponentPiece(piece, pieceSquare){
+function selectOpponentPiece(pieceSquare){
 
-    doCapturePiece(piece, pieceSquare);    
+    doCapturePiece(pieceSquare);    
     
     return;
 }
@@ -2284,16 +2310,16 @@ function pieceDidSpecialMove(piece){
     
     return true;
 }
-function selectPlayerPiece(piece, pieceSquare){
+function selectPlayerPiece(){
     // Se estamos selecionando uma peça, ela precisa estar "solta",
     // ou seja, ter algum movimento possivel.
-    if ( pieceMovementIsPossible(piece, pieceSquare) == false )
+    if ( pieceMovementIsPossible() == false )
         return;
 
 
-    if ( pieceSelected && isSquareOnMovementRange(pieceObj.getPiecePosition(2) ) ){
-        if ( pieceDidSpecialMove(piece) ){
-        //   clearActiveSelection();
+    if ( pieceSelected && isSquareOnMovementRange(pieceObj.getPiecePosition(SQUARE_NAME) ) ){
+        if ( pieceDidSpecialMove() ){
+          clearActiveSelection();
           return;
         }
         
@@ -2301,21 +2327,17 @@ function selectPlayerPiece(piece, pieceSquare){
 
     clearActiveSelection();
     pieceSelected = pieceObj;
-    drawSpecialMovement(getMovementType(piece));
+    drawSpecialMovement(pieceObj.getMovement());
     evaluatePieceMovementRange(piece, pieceSquare);
-    colorMovementPath(getMovementType(piece));
+    colorMovementPath(pieceObj.getMovement());
 }
 function clearActiveSelection(keepPieceSelection=false){
+    let bgcelem = $('[bgc]');
     highlightClasses.map(function(value){
         let className = "." + value;
-        $(className).each(function(){
-            let bgclass = $(this).attr("bgc");
-            if ( bgclass !== undefined ){
-                $(this).addClass(bgclass);
-            }
-            $(this).removeClass(value);
-        });        
+        $(className).removeClass(className);
     });
+    $(bgcelem).addClass($(this).attr("bgc"));
     if ( keepPieceSelection == false)
         pieceSelected = 0;
     return;
@@ -2368,8 +2390,8 @@ function drawBoard() {
             if ( initialRows.includes(rowNumber) == true ){
                 drawSinglePiece(divSquare.id); 
             }
-            //                                                piece           sq
-            divSquare.setAttribute("onclick", "selectSquare(this.innerHTML, this.id)");
+            //                                                 sq
+            divSquare.setAttribute("onclick", "selectSquare(this.id)");
             divSquare.setAttribute("clm", divSquare.id[0]);
             divSquare.setAttribute("lndx", divSquare.id[1]);
             if ( divSquare.id == 'a1' || divSquare.id == 'a8' || divSquare.id == 'h1' || divSquare.id == 'h8' )
@@ -2448,20 +2470,19 @@ function highlightColumn(columnLetter){
         setClassByBGAttr("goldenrod", bgc, elem.id);
     });
 }
-function highlightColumnSquare(elem){
-        alert(elem);
-        let bgc = elem.getAttribute("bgc");
-        elem.setAttribute("class","");
-        setClassByBGAttr("goldenrod", bgc, elem.id);
-        
-    // });
+function highlightColumnSquare(elem, myClassName){
+    let bgc = elem.getAttribute("bgc");
+    elem.setAttribute("class","");
+    setClassByBGAttr(myClassName, bgc, elem.id);
+}
+function highlightLineSquare(elem, myClassName){
+    let bgc = elem.getAttribute("bgc");
+    elem.setAttribute("class","");
+    setClassByBGAttr(myClassName, bgc, elem.id);
 }
 function highlightColumnArray(columnsToHighlight){
     console.log(columnsToHighlight);
-    columnsToHighlight.map(function(ndx, value){
-        console.log(value)
-        console.log()
-        alert("aaaa" + value.id[SQUARE_ALPHABETICAL_NDX]);
+    columnsToHighlight.map(function(value){
         highlightColumn(value.id[SQUARE_ALPHABETICAL_NDX]);
     });
 }
@@ -2470,6 +2491,8 @@ function highlightLineArray(linesToHighlight){
         highlightLine(value);
     });
 }
+
+
 $(document).ready(function () {
     // var audio = new Audio();
     // audio.src ='e2.wav';
