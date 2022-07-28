@@ -85,9 +85,14 @@ class Movement{
         if (movementMatchesAnyDirection(movType)) return movType;
         return this.type;
     }
-    constructor(piece_type){
-        this.type = this.setPieceMovementType(piece_type);
-        this.range = this.getMovementRangeFromPieceType(piece_type);
+    constructor(piece_type, objJSON=null){
+        if ( objJSON == null ){
+            this.type = this.setPieceMovementType(piece_type);
+            this.range = this.getMovementRangeFromPieceType(piece_type);
+        }
+        else{
+            Object.assign(this, objJSON);
+        }
     }
     setMovementType(value){
         this.type = this.fixMovementType(value);
@@ -2182,7 +2187,7 @@ function playSquareName(squareName){
     audio.play();
 }
 function selectSquare(content, squareName){
-    Object.assign(pieceObj, getPieceObjFromDiv(squareName));
+    pieceObj = new Piece(1,1,1,1,getPieceObjFromDiv(squareName));
     let squareStatus = getSquareStatus(squareName);
    
     alert(squareStatus);
@@ -2375,9 +2380,9 @@ function getPieceObjFromDiv(squareName){
     var squareContent = document.getElementById(squareName);
     if ( squareContent === undefined )
         return PIECE_TYPE_NONE;
-
+    var movement = new Object(JSON.parse(document.getElementById(squareName).getAttribute("piece")).movement);
     var objpawn = new Object(JSON.parse(document.getElementById(squareName).getAttribute("piece")));
-    
+    objpawn.movement = new Movement(1, movement);
     return objpawn;
 }
 
