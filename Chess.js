@@ -545,11 +545,9 @@ function isCastlePossibleFromRookPosition(candidateElement){
     
 }
 function checkPiecePosition(piece){
-    alert(typeof(pieceSelected));
-    alert(typeof(pieceObj));
     
     //let candidateElement = document.getElementById(pieceObj.getPiecePosition(2));
-    pieceObj
+    alert(pieceSelected.hasMoved);
     if ( pieceSelected.hasMoved == HAS_MOVED ){
         return false;
     }
@@ -1284,7 +1282,12 @@ function highlightMovementDirection(direction){
 
     switch(direction){
         case MOVEMENT_DIRECTION_COLUMN:
-            alert($("[clm='"+pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX)+"']:not([piece])"));
+            // alert("$(\"[clm='\""+pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX)+"']:not([piece])");
+            var objRetorno = new Object();
+            objRetorno =  $("[clm='"+pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX)+"']:not([piece])");
+            for ( i=0; i<objRetorno.length; i++){
+                highlightColumnSquare(objRetorno[i]);
+            }
             break;
         case MOVEMENT_DIRECTION_LINE:
             break;
@@ -2194,6 +2197,7 @@ function selectSquare(content, squareName){
     let squareStatus = getSquareStatus(squareName);
    
     alert(squareStatus);
+    alert(pieceObj.type);
     //playSquareName(squareName);
 
     if ( squareStatus == PLAYER_PIECE_SQUARE ){
@@ -2285,6 +2289,7 @@ function selectPlayerPiece(piece, pieceSquare){
     // ou seja, ter algum movimento possivel.
     if ( pieceMovementIsPossible(piece, pieceSquare) == false )
         return;
+
 
     if ( pieceSelected && isSquareOnMovementRange(pieceObj.getPiecePosition(2) ) ){
         if ( pieceDidSpecialMove(piece) ){
@@ -2381,8 +2386,10 @@ function drawBoard() {
 
 function getPieceObjFromDiv(squareName){
     var squareContent = document.getElementById(squareName);
-    if ( squareContent === undefined )
+    var myPiece =  document.getElementById(squareName).getAttribute("piece");
+    if ( squareContent === undefined || myPiece == null )
         return PIECE_TYPE_NONE;
+
     var movement = new Object(JSON.parse(document.getElementById(squareName).getAttribute("piece")).movement);
     var objpawn = new Object(JSON.parse(document.getElementById(squareName).getAttribute("piece")));
     objpawn.movement = new Movement(1, movement);
@@ -2441,9 +2448,21 @@ function highlightColumn(columnLetter){
         setClassByBGAttr("goldenrod", bgc, elem.id);
     });
 }
+function highlightColumnSquare(elem){
+        alert(elem);
+        let bgc = elem.getAttribute("bgc");
+        elem.setAttribute("class","");
+        setClassByBGAttr("goldenrod", bgc, elem.id);
+        
+    // });
+}
 function highlightColumnArray(columnsToHighlight){
-    columnsToHighlight.map(function(value){
-        highlightColumn(value);
+    console.log(columnsToHighlight);
+    columnsToHighlight.map(function(ndx, value){
+        console.log(value)
+        console.log()
+        alert("aaaa" + value.id[SQUARE_ALPHABETICAL_NDX]);
+        highlightColumn(value.id[SQUARE_ALPHABETICAL_NDX]);
     });
 }
 function highlightLineArray(linesToHighlight){
@@ -2457,8 +2476,8 @@ $(document).ready(function () {
     // audio.play();
     initPieceMovements();
     drawBoard();
-    highlightLineArray(['1','2','3','4'])
-    highlightColumnArray(['a','b','c','d']);
+    // highlightLineArray(['1','2','3','4'])
+    // highlightColumnArray(['a','b','c','d']);
     // columnArray.map(function(value){
     //     highlightColumn(value);
     // });
