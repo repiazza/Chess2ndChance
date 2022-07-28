@@ -77,4 +77,10 @@ img {
 .goldenroddark{
     background-color: rgba(218, 165, 32,1);
 }
+.silverbuenao{
+    background-color: rgba(192, 192, 192, 0.4);
+}
+.silverbuenaodark{
+    background-color: rgba(192, 192, 192,0.8);
+}
 

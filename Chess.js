@@ -106,26 +106,38 @@ class Piece {
     type;
     initsq;
     movement;
-    name;
+    color;
+    currentsquare;
+    notmov;
 
-    constructor(name, initsq, objMov, objJSON=null) {
+    constructor(type, initsq, objMov, color, objJSON=null) {
         if ( objJSON == null ){
-            this.name = name;
-            this.type = name;
+            this.type = type;
             this.initsq = initsq;
-            // document.getElementById(initsq).innerHTML = name;
+            this.currentsquare = initsq;
+            this.color = color;
+            this.notmov = 1;
+            document.getElementById(initsq).innerHTML = "" +color+type;
             this.movement = objMov;
         }
         else{
             Object.assign(this, objJSON);
         }
     }
-    // setType(type){
-    //     this.type = type
-    // }
-    // setPiecePosition(){
-
-    // }
+    setType(type){
+        this.type = type
+    }
+    setPiecePosition(square){
+        this.currentsquare = square;
+    }
+    getPiecePosition(postype){
+        if ( postype == SQUARE_ALPHABETICAL_NDX )
+            return this.currentsquare[SQUARE_ALPHABETICAL_NDX];
+        else if ( postype == SQUARE_NUMERIC_NDX )
+            return this.currentsquare[SQUARE_NUMERIC_NDX];
+        
+        return this.currentsquare;
+    }
     getRange(){
         return this.movement.getObjRange();
     }
@@ -137,28 +149,35 @@ class Piece {
     } 
     getMovementObj(){
         return this.movement;
-    } 
-
-  
+    }
+    getInitialSquare(){
+        return this.initsq;
+    }
 }
-let rook   ;
-let knight ;
-let queen  ;
-let king   ;
-let bishop ;
-let pawn   ;
+
+// let rook  ;
+// let knight;
+// let queen ;
+// let king  ;
+// let bishop;
+// let pawn  ;
+
+let pieceObj;
+
+// let blackPieces = [];
+// let whitePieces = [];
 
 
-var boardGrid = [
-                    ['a8'], ['b8'], ['c8'], ['d8'], ['e8'], ['f8'], ['g8'], ['h8'],
-                    ['a7'], ['b7'], ['c7'], ['d7'], ['e7'], ['f7'], ['g7'], ['h7'],
-                    ['a6'], ['b6'], ['c6'], ['d6'], ['e6'], ['f6'], ['g6'], ['h6'],
-                    ['a5'], ['b5'], ['c5'], ['d5'], ['e5'], ['f5'], ['g5'], ['h5'],
-                    ['a4'], ['b4'], ['c4'], ['d4'], ['e4'], ['f4'], ['g4'], ['h4'],
-                    ['a3'], ['b3'], ['c3'], ['d3'], ['e3'], ['f3'], ['g3'], ['h3'],
-                    ['a2'], ['b2'], ['c2'], ['d2'], ['e2'], ['f2'], ['g2'], ['h2'],
-                    ['a1'], ['b1'], ['c1'], ['d1'], ['e1'], ['f1'], ['g1'], ['h1']
-                ];
+// var boardGrid = [
+//                     ['a8'], ['b8'], ['c8'], ['d8'], ['e8'], ['f8'], ['g8'], ['h8'],
+//                     ['a7'], ['b7'], ['c7'], ['d7'], ['e7'], ['f7'], ['g7'], ['h7'],
+//                     ['a6'], ['b6'], ['c6'], ['d6'], ['e6'], ['f6'], ['g6'], ['h6'],
+//                     ['a5'], ['b5'], ['c5'], ['d5'], ['e5'], ['f5'], ['g5'], ['h5'],
+//                     ['a4'], ['b4'], ['c4'], ['d4'], ['e4'], ['f4'], ['g4'], ['h4'],
+//                     ['a3'], ['b3'], ['c3'], ['d3'], ['e3'], ['f3'], ['g3'], ['h3'],
+//                     ['a2'], ['b2'], ['c2'], ['d2'], ['e2'], ['f2'], ['g2'], ['h2'],
+//                     ['a1'], ['b1'], ['c1'], ['d1'], ['e1'], ['f1'], ['g1'], ['h1']
+//                 ];
 
 const TOTAL_PIECE_COUNT = 16;
 const PLAYER_PIECE_COUNT = TOTAL_PIECE_COUNT / 2;
@@ -184,6 +203,14 @@ const captureClasses =
     "capturehl",
     "capturehldark"             
 ];
+
+const DARK_BGCOLOR = 0;
+const LIGHT_BGCOLOR = 1;
+
+const bgBoardColors = [
+    "darksquarecolor",
+    "lightsquarecolor"
+]
 
 var opponentSquareArr = [];
 var emptySquareArr    = [];
@@ -318,6 +345,7 @@ const PIECE_TYPE_BISHOP  = 'B';
 const PIECE_TYPE_QUEEN   = 'Q';
 const PIECE_TYPE_KING    = 'K';
 const PIECE_TYPE_PAWN    = 'P';
+const PIECE_TYPE_NONE    =  0;
 
 const PIECE_COLOR_WHITE  = 'W';
 const PIECE_COLOR_BLACK  = 'B';
@@ -407,6 +435,12 @@ function getShortCastleKingSquare(){
 function getShortCastleRookSquare(){
     return shortCastleSquareAlpha[ROOK_CASTLED_INDEX]
            + getPlayerFirstRow();
+}
+
+function getPieceTypeFromPiece(piece){
+    for ( let i = 0; i < pieceType.length; i++ )
+      if (piece[PIECE_NOTATION_INDEX] == pieceType[i]) 
+        return pieceType[i];
 }
 
 function matchPieceType(piece, pieceType){
@@ -508,7 +542,7 @@ function isCastlePossibleFromRookPosition(candidateElement){
 function checkPiecePosition(piece){
     // alert(piece);
     let candidateElement = document.getElementById(getPieceLocation(piece));
-    if ( candidateElement.getAttribute("hasNotMoved") == HAS_MOVED ){
+    if ( candidateElement.getAttribute("notmov") == HAS_MOVED ){
         return false;
     }
     if ( matchPieceType(piece, PIECE_TYPE_KING) ){
@@ -782,10 +816,6 @@ function isValidSquareAlpha(squareName){
 function getSquareGroupStatus(squares){
     squares.map(function(value){
         if ( isValidSquareIndex(value) ) {
-            // ( T == BLK ) 
-            //  ? PBLK 
-            //    : IF ( T == OPPO )
-            //        PCP
             if ( getSquareStatus(value) == BLANK_SPACE_SQUARE ) 
                 emptySquareArr.push(value);
             else if ( getSquareStatus(value) == OPPONENT_PIECE_SQUARE )
@@ -800,16 +830,16 @@ function getSquareStatus(squareName){
     if ( isValidSquareIndex(squareName) == false )
         return INVALID_SQUARE;
 
-    let mySquareContent = document.getElementById(squareName).innerHTML;
+    // let mySquareContent = document.getElementById(squareName).innerHTML;
     
-    if ( mySquareContent == "" )
+    if ( pieceObj == PIECE_TYPE_NONE )
         return BLANK_SPACE_SQUARE;
     
     // Tem uma peça nessa casa...
-    if ( mySquareContent[0] == getPlayerColorNotation() )
+    if ( pieceObj.color == getPlayerColorNotation() )
         return PLAYER_PIECE_SQUARE;
         
-    else if ( mySquareContent[0] == colorNotation[(playerColorStatus ? 0 : 1)] )
+    else if ( pieceObj.color == getOpponentColorNotation() )
         return OPPONENT_PIECE_SQUARE;
 
     return UNKNOWN_SQUARE;
@@ -983,12 +1013,12 @@ function colorCaptureSquares(){
     }
 }
 function setBGColorAsDOMAttributeAndRemove(elemId){
-    let myClassName = "darksquarecolor";
+    let myClassName = bgBoardColors[DARK_BGCOLOR];
     let myElem = document.getElementById(elemId);
-    if ( !myElem.classList.includes(myClassName) )
-        myClassName = "lightsquarecolor";
+    if ( !myElem.classList.contains(myClassName) )
+        myClassName = bgBoardColors[LIGHT_BGCOLOR];
 
-    if ( myElem.classList.includes(myClassName) ) {
+    if ( myElem.classList.contains(myClassName) ) {
         myElem.setAttribute("bgc", myClassName);
         myElem.classList.remove(myClassName);
     }
@@ -1239,17 +1269,35 @@ function scanPawnDiagonal(originSquare, piece){
     return boolReturn;
     
 }
+// document.querySelectorAll('[lndx="[3-8]"][clm="c"]')
+
+function highlightMovementDirection(direction){
+
+    switch(direction){
+        case MOVEMENT_DIRECTION_COLUMN:
+            alert($("[clm='"+pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX)+"']:not([piece])"));
+            break;
+        case MOVEMENT_DIRECTION_LINE:
+            break;
+        case MOVEMENT_DIRECTION_DIAGONAL:
+            break;
+    }
+
+}
+
 function scanMovementDirections(movementType, originSquare, piece, scanType){
     // const MOVEMENT_DIRECTION_COLUMN   = 0x01;
     // const MOVEMENT_DIRECTION_LINE     = 0x02;
     // const MOVEMENT_DIRECTION_DIAGONAL = 0x04;
     // const MOVEMENT_DIRECTION_L        = 0x08;
-    let myColor        = piece[PIECE_COLOR_INDEX];
+    highlightMovementDirection(MOVEMENT_DIRECTION_COLUMN);
+    return;
+    let myColor        = pieceObj.color;
     let pieceNdx       = pieceType.indexOf(piece[PIECE_NOTATION_INDEX]);
     let myLineIndex    = Number(originSquare[SQUARE_NUMERIC_NDX]);
     let myFirstLineNdx = myLineIndex;
     let myMovType      = movementType;
-    let mySquareContent = 0;
+    let mySquareContent= 0;
     let myColumnIndex  = columnArray.indexOf(originSquare[SQUARE_ALPHABETICAL_NDX]);
     let nextTopLineOffset     = getMovementOffset(TOP_OFFSET, myColor);
     let nextBottomLineOffset  = getMovementOffset(BOT_OFFSET, myColor);
@@ -2045,6 +2093,9 @@ function getColumnDiscreteIntervalFromSquare(beginColumnSquare){
 function getPlayerColorNotation(){
     return colorNotation[playerColorStatus];
 }
+function getOpponentColorNotation(){
+    return colorNotation[(playerColorStatus ? 0 : 1)];
+}
 function drawIdentityDiagonal(){
     let movPath = getAnyMainDiagonalFromBegin('a8', getPlayerColorNotation());
     colorDiscreteMovementPath(movPath, MOVEMENT_DIRECTION_DIAGONAL);
@@ -2067,7 +2118,7 @@ function drawCross(beginLineSquare, beginColumnSquare){
 }
 // Calcular e avaliar se existe algum movimento possivel em qualquer direção desta peça.
 function pieceMovementIsPossible(piece, originSquare){
-    return scanMovementDirections(getMovementType(piece), originSquare, piece, SQUARE_SCAN);
+    return scanMovementDirections(pieceObj.getMovement(), pieceObj.getInitialSquare(), piece, SQUARE_SCAN);
 }
 // Calcular todos os movimentos possiveis em todas as direção.
 function evaluatePieceMovementRange(piece, originSquare){
@@ -2095,16 +2146,16 @@ function doMovePiece(piece, destinationSquare){
     document.getElementById(originSquare).innerHTML = "";
     document.getElementById(destinationSquare).innerHTML = piece;
     if ( matchPieceType(piece,PIECE_TYPE_KING) ){
-        $("div[hasNotMoved='1']").attr("hasNotMoved", "0");
+        $("div[notmov='1']").attr("notmov", "0");
     }
     else if ( matchPieceType(piece,PIECE_TYPE_ROOK) ){        
         let myNdx = (piece[PIECE_COMPLEMENT_IDENTIFIER_INDEX] == 1) ? 2 : 1;
         let otherRookPiece = '#'+piece.substr(2)+myNdx;
         // alert(otherRookPiece);
-        if ( $(otherRookPiece).attr("hasNotMoved") == "0" )
-           $("div[hasNotMoved='1']").attr("hasNotMoved", "0");
+        if ( $(otherRookPiece).attr("notmov") == "0" )
+           $("div[notmov='1']").attr("notmov", "0");
         else{
-           $("#"+getPieceLocation(piece)).attr("hasNotMoved", "0");
+           $("#"+getPieceLocation(piece)).attr("notmov", "0");
         }
     }
 }
@@ -2131,13 +2182,15 @@ function playSquareName(squareName){
     audio.play();
 }
 function selectSquare(content, squareName){
+    Object.assign(pieceObj, getPieceObjFromDiv(squareName));
     let squareStatus = getSquareStatus(squareName);
    
+    alert(squareStatus);
     //playSquareName(squareName);
 
-    if ( squareStatus == PLAYER_PIECE_SQUARE )
+    if ( squareStatus == PLAYER_PIECE_SQUARE ){
         return selectPlayerPiece(content, squareName);
-    
+    }
     if ( matchMovementDirection(getMovementType(pieceSelected), SPECIAL_MOVEMENT_CASTLE)
          && pieceSelected ){
             alert( getMovementType(pieceSelected))
@@ -2271,16 +2324,14 @@ function drawBoard() {
     let rowColorToggle = true;
     for ( let i = 0; i < LINE_SQUARE_COUNT; i++ ){
         for( let j = 0; j < COLUMN_SQUARE_ROW; j++ ){
-            var divSquare = document.createElement('div');
+            var squareColorSeq = DARK_BGCOLOR;
             if ( j%2 != rowColorToggle ) {
-                divSquare.classList.add('lightsquarecolor');
-                divSquare.setAttribute("bgc",'lightsquarecolor');
+                squareColorSeq = LIGHT_BGCOLOR;
             }
-            else{
-                divSquare.classList.add('darksquarecolor');
-                divSquare.setAttribute("bgc",'darksquarecolor');
-            }
-                
+        
+            var divSquare = document.createElement('div');
+            divSquare.classList.add(bgBoardColors[squareColorSeq]);
+            divSquare.setAttribute("bgc", bgBoardColors[squareColorSeq]);                
             divSquare.style.width  = iSquareWidth;
             divSquare.style.height = iSquareHeight;
             divSquare.style.position = 'absolute';
@@ -2290,17 +2341,15 @@ function drawBoard() {
 
             if (colorName[playerColorStatus] == 'white') {
                  rowNumber = LINE_SQUARE_COUNT - i
-                 columnChar = columnArray[j];
-                 
+                 columnChar = columnArray[j];    
             }
             else{
                 rowNumber = i + 1;
                 columnChar = columnArray[(COLUMN_SQUARE_ROW - j - 1)];
             }
+
             divSquare.id = "" + columnChar + rowNumber;
             
-            divSquare.setAttribute("clm", divSquare.id[0]);
-            divSquare.setAttribute("lndx", divSquare.id[1]);
             board.appendChild(divSquare);
             divSquare = document.getElementById(divSquare.id);
             if ( initialRows.includes(rowNumber) == true ){
@@ -2308,6 +2357,11 @@ function drawBoard() {
             }
             //                                                piece           sq
             divSquare.setAttribute("onclick", "selectSquare(this.innerHTML, this.id)");
+            divSquare.setAttribute("clm", divSquare.id[0]);
+            divSquare.setAttribute("lndx", divSquare.id[1]);
+            if ( divSquare.id == 'a1' || divSquare.id == 'a8' || divSquare.id == 'h1' || divSquare.id == 'h8' )
+              document.getElementById(divSquare.id).setAttribute("crn","1");
+
             sqMarginLeft += iSquareWidth;
         }
         sqMarginTop += iSquareHeight;
@@ -2316,129 +2370,34 @@ function drawBoard() {
     }
 
 }
-function jsonStringifyRecursive(obj) {
-    const cache = new Set();
-    return JSON.stringify(obj, (key, value) => {
-        if (typeof value === 'object' && value !== null) {
-            if (cache.has(value)) {
-                // Circular reference found, discard key
-                return;
-            }
-            // Store value in our collection
-            cache.add(value);
-        }
-        return value;
-    }, 4);
-}
-function drawSinglePiece(squareName){
-    // let pawnColumn      = columnArray[columnArray.indexOf(squareName[SQUARE_ALPHABETICAL_NDX])];
-    let pieceName       = "";
 
+function getPieceObjFromDiv(squareName){
+    var squareContent = document.getElementById(squareName);
+    if ( squareContent === undefined )
+        return PIECE_TYPE_NONE;
+
+    var objpawn = new Object(JSON.parse(document.getElementById(squareName).getAttribute("piece")));
+    
+    return objpawn;
+}
+
+function drawSinglePiece(squareName){
     for ( i = 0 ; i < columnArray.length; i++ ){
-        // let strSquareName = squareName.toString();
         squareName = squareName.toString();
         if ( squareName.includes(columnArray[i]) ){
-            let pieceColor = squareName.toString().includes("1") ? "W" : "B";
-
-            if ( squareName.includes("2") ){
-                let movement = new Movement(PIECE_TYPE_PAWN);
-                pawn   = new Piece(PIECE_TYPE_PAWN, squareName, movement);
-                document.getElementById(squareName).setAttribute("clm", squareName[0]);
-                document.getElementById(squareName).setAttribute("lndx",squareName[1]);
-                // document.getElementById(squareName).setAttribute("mt",pawn.getMovement());
-                // pawn   = 0;
-                return COLOR_WHITE;
-            }
-            if ( squareName.includes("7") ){ 
-                let movement = new Movement(PIECE_TYPE_PAWN);
-                pawn   = new Piece(PIECE_TYPE_PAWN, squareName, movement);
-                console.log(movement);
-                console.log(pawn);
-                document.getElementById(squareName).setAttribute("clm", squareName[0]);
-                document.getElementById(squareName).setAttribute("lndx",squareName[1]);
-                document.getElementById(squareName).innerDiv = pawn;
-                // document.getElementById(squareName).innerHTML = pawn;
-                // window.localStorage.setItem("pawn", pawn);
-                // document.getElementById(squareName).setAttribute("mt", pawn.getMovement());
-                // document.getElementById(squareName).setAttribute("mr", pawn.getRange());
-                // document.getElementById(squareName).setAttribute("piece", JSON.stringify(pawn));
-                //console.log(pawn.getMovementObj());
-                // <div class="darksquarecolor pieceSquare"
-                // bgc="darksquarecolor"
-                // id="a7" 
-                // clm="a"
-                // lndx="7"
-                // mt="3077"
-                // mr="2"
-                // piece="{&quot;initsq&quot;:&quot;a7&quot;,&quot;movement&quot;:{},&quot;name&quot;:&quot;Pawn&quot;}" 
-                // onclick="selectSquare(this.innerHTML, this.id)"
-                // style="width: 80px; height: 80px; position: absolute; margin-left: 0px; margin-top: 80px;">Pawn</div>
-                // document.getElementById(squareName).setAttribute("piece", pawn);
-                // document.getElementById(squareName).setAttribute("piecemt", JSON.stringify(pawn.getMovementObj()));
-                //console.log(JSON.parse(document.getElementById(squareName).getAttribute("piece")));
-                // movement = 0;
-                // pawn = 0;
-                // Object.assign(movement, JSON.parse(document.getElementById(squareName).getAttribute("piecemt")));
-               // var objpawn = new Object;
-                // var objpawn = JSON.parse(document.getElementById(squareName).getAttribute("piece"));
-                // objpawn.movement = movement;
-                // Object.assign(pawn, objpawn);
-                // var myobj = window.localStorage.getItem("pawn");
-
-                // Get saved data from sessionStorage
-                
-                
-                // myobj.name
-                return COLOR_BLACK;
-            }
+            let pieceColor = colorNotation[COLOR_BLACK];
+            if ( getLineIndexFromSquare(squareName) == getWhiteFirstRow() 
+                  || getLineIndexFromSquare(squareName) == getWhiteSecondRow() ) 
+                pieceColor = colorNotation[COLOR_WHITE];
             
-            pieceName = "" + pieceColor + highValuePieceNotation[i];
-            if ( matchPieceType(pieceName, PIECE_TYPE_KING) || matchPieceType(pieceName, PIECE_TYPE_ROOK) ){
-                document.getElementById(squareName).setAttribute("hasNotMoved", "1");
-            }
+            let pieceName = "" + pieceColor + highValuePieceNotation[i];
+			let myPieceType = getPieceTypeFromPiece(pieceName);
+            let movement = new Movement(myPieceType);
+            let myPiece = new Piece(myPieceType, squareName, movement, pieceColor);
 
-            // document.getElementById(squareName).innerHTML = pieceName;
-            
-			if ( squareName == 'a1' || squareName == 'a8' || squareName == 'h1' || squareName == 'h8' )
-				document.getElementById(squareName).setAttribute("crn","1");
-
-            if ( squareName !== undefined ){
-                document.getElementById(squareName).setAttribute("clm", squareName[0]);
-                document.getElementById(squareName).setAttribute("lndx",squareName[1]);
-            }
-			
-            let movement = -1;
-            if ( matchPieceType(pieceName, PIECE_TYPE_KNIGHT) ){
-                movement = new Movement(PIECE_TYPE_KNIGHT);
-                knight = new Piece("Knight", squareName, movement);
-
-                // knight = 0;
-            }
-            else if ( matchPieceType(pieceName, PIECE_TYPE_ROOK) ){
-                movement = new Movement(PIECE_TYPE_ROOK);
-                rook = new Piece("Rook", squareName, movement);
-                // rook = 0;
-            }
-            else if ( matchPieceType(pieceName, PIECE_TYPE_QUEEN) ){
-                movement = new Movement(PIECE_TYPE_QUEEN);
-                queen  = new Piece("Queen", squareName, movement);
-                // queen  = 0;
-            }
-            else if ( matchPieceType(pieceName, PIECE_TYPE_KING) ){
-                movement = new Movement(PIECE_TYPE_KING);
-                king   = new Piece("King", squareName, movement);
-                // king   = 0;
-            }
-            else if ( matchPieceType(pieceName, PIECE_TYPE_BISHOP) ){
-                movement = new Movement(PIECE_TYPE_BISHOP);
-                bishop   = new Piece("Bishop", squareName, movement);
-                // bishop   = 0;
-            }
-            
-            if ( movement != -1 )
-                document.getElementById(squareName).setAttribute("mt",movement.getObjMovementType());
-
-            "<img src='" + imgpath + pieceName.substring(0,2) + ".png' style='pieceimg'>"
+            document.getElementById(squareName).setAttribute("piece", JSON.stringify(myPiece));
+ 
+            //"<img src='" + imgpath + pieceName.substring(0,2) + ".png' style='pieceimg'>"
             return (pieceColor == "W") ? COLOR_WHITE : COLOR_BLACK;
         }
     }
@@ -2456,11 +2415,11 @@ function removeMyPieces(){
 //
 // main
 //
-function highlightColumn(columnLetter){
-	document.querySelectorAll("div[clm='"+columnLetter+"']").forEach(function(elem) {
+function highlightLine(lineIndex){
+	document.querySelectorAll("div[lndx='"+lineIndex+"']").forEach(function(elem) {
         let bgc = elem.getAttribute("bgc");
         elem.setAttribute("class","");
-        setClassByBGAttr("goldenrod", bgc, elem.id);
+        setClassByBGAttr("silverbuenao", bgc, elem.id);
     });
 }
 function highlightColumn(columnLetter){
@@ -2468,14 +2427,26 @@ function highlightColumn(columnLetter){
         let bgc = elem.getAttribute("bgc");
         elem.setAttribute("class","");
         setClassByBGAttr("goldenrod", bgc, elem.id);
+    });
+}
+function highlightColumnArray(columnsToHighlight){
+    columnsToHighlight.map(function(value){
+        highlightColumn(value);
+    });
+}
+function highlightLineArray(linesToHighlight){
+    linesToHighlight.map(function(value){
+        highlightLine(value);
     });
 }
 $(document).ready(function () {
     // var audio = new Audio();
     // audio.src ='e2.wav';
     // audio.play();
-    // initPieceMovements();
+    initPieceMovements();
     drawBoard();
+    highlightLineArray(['1','2','3','4'])
+    highlightColumnArray(['a','b','c','d']);
     // columnArray.map(function(value){
     //     highlightColumn(value);
     // });
