@@ -71,4 +71,7 @@ img {
     height: 100%;
     object-fit: contain;
 }
+.colorLinkSquare{
+    background-color: goldenrod;
+}
 

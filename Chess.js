@@ -31,13 +31,12 @@ let imgpath = "img/";
 class Piece {
 
     type;
-    initsq;
+    // initsq;
 
-  
-    constructor(name, initsq) {
+    constructor(name) {
         this.name = name;
-        this.initsq = initsq;
-        document.getElementById(initsq).innerHTML = name;
+        // this.initsq = initsq;
+        // document.getElementById(initsq).innerHTML = name;
     }
     // setType(type){
     //     this.type = type
@@ -682,7 +681,8 @@ function getClassNameFromMovementDirection(baseMovementDirection){
 function colorDiscreteMovementPath(movementDiscreteArray, baseMovementDirection){
     alert("colorDiscreteMovementPath("+movementDiscreteArray+", "+baseMovementDirection+")");
     let myClassName = getClassNameFromMovementDirection(baseMovementDirection);
-    movementDiscreteArray.map(function(squareId){
+        movementDiscreteArray.map(function(squareId){
+            
         let bgcAttr = setBGColorAsDOMAttributeAndRemove(squareId);
         setClassByBGAttr(myClassName, bgcAttr, squareId);
     })
@@ -797,9 +797,6 @@ function colorMovementPath(movementType){
                 setClassByBGAttr("diagonalmovhl", bgcAttr, squareId);
                 oppositeDiagLineNdx++;
             });
-                    
-
-
         }
     }
     if ( matchMovementDirection(movementType,MOVEMENT_DIRECTION_L) ){
@@ -826,10 +823,10 @@ function colorCaptureSquares(){
 function setBGColorAsDOMAttributeAndRemove(elemId){
     let myClassName = "darksquarecolor";
     let myElem = document.getElementById(elemId);
-    if ( !myElem.classList.contains(myClassName) )
+    if ( !myElem.classList.includes(myClassName) )
         myClassName = "lightsquarecolor";
 
-    if ( myElem.classList.contains(myClassName) ) {
+    if ( myElem.classList.includes(myClassName) ) {
         myElem.setAttribute("bgc", myClassName);
         myElem.classList.remove(myClassName);
     }
@@ -948,10 +945,10 @@ function matchMovementDirectionAndDisable(movType ,direction){
     return movType;
 }
 function alertAllMovementSubTypes(movType){
-    ((movType & SUBTYPE_DIAG_MAIN_BEGIN))    ? alert("SUBTYPE_DIAG_MAIN_BEGIN"): alert("no");
-    ((movType & SUBTYPE_DIAG_MAIN_END))      ? alert("SUBTYPE_DIAG_MAIN_END"): alert("no");;
+    ((movType & SUBTYPE_DIAG_MAIN_BEGIN))    ? alert("SUBTYPE_DIAG_MAIN_BEGIN")    :alert("no");
+    ((movType & SUBTYPE_DIAG_MAIN_END))      ? alert("SUBTYPE_DIAG_MAIN_END")      :alert("no");;
     ((movType & SUBTYPE_DIAG_OPPOSITE_BEGIN))? alert("SUBTYPE_DIAG_OPPOSITE_BEGIN"):alert("no");;
-    ((movType & SUBTYPE_DIAG_OPPOSITE_END))  ? alert("SUBTYPE_DIAG_OPPOSITE_END") :alert("no");;
+    ((movType & SUBTYPE_DIAG_OPPOSITE_END))  ? alert("SUBTYPE_DIAG_OPPOSITE_END")  :alert("no");;
 }
 function xorMovementDirection(movType, direction){
         return (movType ^ direction);
@@ -1726,9 +1723,11 @@ function drawBoard() {
             divSquare.style.marginLeft = sqMarginLeft;
             divSquare.style.marginTop = sqMarginTop;
             divSquare.classList.add('pieceSquare');
+
             if (colorName[playerColorStatus] == 'white') {
                  rowNumber = LINE_SQUARE_COUNT - i
                  columnChar = columnArray[j];
+                 
             }
             else{
                 rowNumber = i + 1;
@@ -1737,7 +1736,7 @@ function drawBoard() {
             divSquare.id = "" + columnChar + rowNumber;
             board.appendChild(divSquare);
             divSquare = document.getElementById(divSquare.id);
-            if ( initialRows.includes(rowNumber) ){
+            if ( initialRows.includes(rowNumber) == true ){
                 drawSinglePiece(divSquare.id); 
             }
             //                                                piece           sq
@@ -1751,39 +1750,77 @@ function drawBoard() {
 
 }
 function drawSinglePiece(squareName){
-    let pawnColumn = columnArray[columnArray.indexOf(squareName[SQUARE_ALPHABETICAL_NDX])];
-    if ( squareName.includes("2") ){
-        document.getElementById(squareName).innerHTML = "WP" + pawnColumn;
-        return COLOR_WHITE;
-    }
-    if ( squareName.includes("7") ){
-        document.getElementById(squareName).innerHTML = "BP" + pawnColumn;
-        return COLOR_BLACK;
-    }
-    let pieceName = ""; 
+    // let pawnColumn      = columnArray[columnArray.indexOf(squareName[SQUARE_ALPHABETICAL_NDX])];
+    let pieceName       = "";
+
     for ( i = 0 ; i < columnArray.length; i++ ){
+        // let strSquareName = squareName.toString();
+        squareName = squareName.toString();
         if ( squareName.includes(columnArray[i]) ){
-            let pieceColor = squareName.includes("1") ? "W" : "B";
-            document.getElementById(squareName).innerHTML = "" + pieceColor + highValuePieceNotation[i];
-            if ( highValuePieceNotation[i][0] != 'R' &&  highValuePieceNotation[i][0] != 'K'  ) continue;
+            let pieceColor = squareName.toString().includes("1") ? "W" : "B";
+
+            if ( squareName.includes("2") ){
+                pawn   = new Piece("Pawn");
+                document.getElementById(squareName).innerHTML = pawn.name;
+                pawn   = 0;
+                document.getElementById(squareName).setAttribute("clm", squareName[0]);
+                document.getElementById(squareName).setAttribute("lndx",squareName[1]);
+                return COLOR_WHITE;
+            }
+            if ( squareName.includes("7") ){
+                pawn   = new Piece("Pawn");
+                document.getElementById(squareName).innerHTML = pawn.name;
+                pawn   = 0;
+                document.getElementById(squareName).setAttribute("clm", squareName[0]);
+                document.getElementById(squareName).setAttribute("lndx",squareName[1]);
+                return COLOR_BLACK;
+            }
+            
+            // document.getElementById(squareName).innerHTML = "" + pieceColor + highValuePieceNotation[i];
+            // if ( highValuePieceNotation[i][0] != 'R' &&  highValuePieceNotation[i][0] != 'K'  ) 
+            //   continue;
+            
             pieceName = "" + pieceColor + highValuePieceNotation[i];
             if ( matchPieceType(pieceName, PIECE_TYPE_KING) || matchPieceType(pieceName, PIECE_TYPE_ROOK) ){
                 document.getElementById(squareName).setAttribute("hasNotMoved", "1");
             }
-            document.getElementById(squareName).innerHTML = pieceName;
-            if ( matchPieceType(pieceName, PIECE_TYPE_KNIGHT) )
-                knight = new Piece("Knight");
-            else if ( matchPieceType(pieceName, PIECE_TYPE_ROOK) )
-                rook   = new Piece("Rook");
-            else if ( matchPieceType(pieceName, PIECE_TYPE_QUEEN) )
-                queen  = new Piece("Queen");    
-            else if ( matchPieceType(pieceName, PIECE_TYPE_KING) )
-                king   = new Piece("King");            
-            else if ( matchPieceType(pieceName, PIECE_TYPE_BISHOP) )
-                bishop = new Piece("Bishop");
-            else if ( matchPieceType(pieceName, PIECE_TYPE_PAWN) )
-                pawn   = new Piece("Pawn");
+
+            // document.getElementById(squareName).innerHTML = pieceName;
             
+			if ( squareName == 'a1' || squareName == 'a8' || squareName == 'h1' || squareName == 'h8' )
+				document.getElementById(squareName).setAttribute("crn","1");
+
+            if ( squareName !== undefined ){
+                document.getElementById(squareName).setAttribute("clm", squareName[0]);
+                document.getElementById(squareName).setAttribute("lndx",squareName[1]);
+            }
+			
+            if ( matchPieceType(pieceName, PIECE_TYPE_KNIGHT) ){
+                knight = new Piece("Knight");
+                document.getElementById(squareName).innerHTML = knight.name;
+                knight = 0;
+            }
+            else if ( matchPieceType(pieceName, PIECE_TYPE_ROOK) ){
+                rook = new Piece("Rook");
+                document.getElementById(squareName).innerHTML = rook.name;
+                rook = 0;
+            }
+            else if ( matchPieceType(pieceName, PIECE_TYPE_QUEEN) ){
+                queen  = new Piece("Queen");
+                document.getElementById(squareName).innerHTML = queen.name;
+                queen  = 0;
+            }
+            else if ( matchPieceType(pieceName, PIECE_TYPE_KING) ){
+                king   = new Piece("King");
+                document.getElementById(squareName).innerHTML = king.name;
+                king   = 0;
+            }
+            else if ( matchPieceType(pieceName, PIECE_TYPE_BISHOP) ){
+                bishop   = new Piece("Bishop");
+                document.getElementById(squareName).innerHTML = bishop.name;
+                bishop   = 0;
+            }
+
             //  "<img src='" + imgpath + pieceName.substring(0,2) + ".png' style='pieceimg'>"
             return (pieceColor == "W") ? COLOR_WHITE : COLOR_BLACK;
         }
@@ -1792,7 +1829,7 @@ function drawSinglePiece(squareName){
 }
 
 function removeMyPieces(){
-    let piece1 = ['WN1','WB1','WQ','WB2','WN2'];
+    let piece1 = ['WN1', 'WB1', 'WQ', 'WB2', 'WN2'];
     let piece2 = ['WPa', 'WPb', 'WPc', 'WPd', 'WPe', 'WPf', 'WPg', 'WPh'];
     piece1 = piece1.concat(piece2);
     piece1.map(function(mypiece){
@@ -1802,9 +1839,23 @@ function removeMyPieces(){
 //
 // main
 //
+function highlightColumn(columnLetter){
+	document.querySelectorAll("div[clm='"+columnLetter+"']").forEach(function(elem) {
+        //let bgc = elem.getAttribute("bgc");
+        elem.setAttribute("bgc",elem.style);
+        elem.setAttribute("class","");
+        
+    
+        
+        // setClassByBGAttr("columnhl", bgc, elem.id);
+        setClassByBGAttr("goldenrod", bgc, elem.id);
+    });
+}
 $(document).ready(function () {
     initPieceMovements();
     drawBoard();
+
+	highlightColumn('a');
     // teste1()
     // removeMyPieces();
 });
