@@ -136,7 +136,8 @@ class Piece {
         this.currentsquare = square;
     }
     getPiecePosition(postype){
-        if ( !isValidSquareIndex(this.currentsquare) || !isValidSquareAlpha(this.currentsquare) ) 
+        if ( !isValidSquareIndex(this.currentsquare) || !isValidSquareAlpha(this.currentsquare) )
+            return -1;
         if ( postype == SQUARE_ALPHABETICAL_NDX )
             return this.currentsquare[SQUARE_ALPHABETICAL_NDX];
         else if ( postype == SQUARE_NUMERIC_NDX )
@@ -1300,12 +1301,14 @@ function scanPawnDiagonal(originSquare, piece){
 
 function highlightMovementDirection(direction){
     if ( matchMovementDirection(direction, MOVEMENT_DIRECTION_COLUMN) ){
-        alert("colum")
         // alert("$(\"[clm='\""+pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX)+"']:not([piece])");
         var objRetorno = new Object();
         let myClassName = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_COLUMN);
+        alert(pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX));
         objRetorno =  $("[clm='"+pieceObj.getPiecePosition(SQUARE_ALPHABETICAL_NDX)+"']:not([piece])");
+        console.log(objRetorno)
         for ( i=0; i<objRetorno.length; i++){
+            // alert(objRetorno[i]);
             highlightColumnSquare(objRetorno[i], myClassName);
         }
     }
@@ -1333,7 +1336,6 @@ function scanMovementDirections(movementType, originSquare, piece, scanType){
     // const MOVEMENT_DIRECTION_LINE     = 0x02;
     // const MOVEMENT_DIRECTION_DIAGONAL = 0x04;
     // const MOVEMENT_DIRECTION_L        = 0x08;
-    alert(movementType);
     highlightMovementDirection(movementType);
     return;
     let myColor        = pieceObj.color;
@@ -2162,7 +2164,7 @@ function drawCross(beginLineSquare, beginColumnSquare){
 }
 // Calcular e avaliar se existe algum movimento possivel em qualquer direção desta peça.
 function pieceMovementIsPossible(){
-    return scanMovementDirections(pieceObj.getMovement(), pieceObj.getInitialSquare(), piece, SQUARE_SCAN);
+    return scanMovementDirections(pieceObj.getMovement(), pieceObj.getInitialSquare(), pieceObj, SQUARE_SCAN);
 }
 // Calcular todos os movimentos possiveis em todas as direção.
 function evaluatePieceMovementRange(piece, originSquare){
@@ -2223,7 +2225,7 @@ function selectSquare(squareName){
     alert("selected"+pieceSelected);
     pieceObj.logPieceObj();
     //playSquareName(squareName);
-    
+
     if ( squareStatus == PLAYER_PIECE_SQUARE ){
         return selectPlayerPiece();
     }
