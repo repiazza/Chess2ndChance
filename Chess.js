@@ -1,62 +1,37 @@
-//          2
-//          1
-// -2.  -1  0  1  2   ________| * 
-//                         2
-//         -1
-//         -2
-// function cossTheta(piRad, radius) {
-// return Math.cos(piRad) * radius;
-// }
-// import * as sample_1 from './module_1.js';
-// console.log(sample_1.hello());
-// console.log(`${sample_1.increment()} ${sample_1.hello()}`);
-// export function firstName () {
-//    return "Emmanuel"
-// }
-// export function lastName () {
-//    return "John"
-// }
-// export default function count () { return count; }
-// import count from './module_2'
-// import count, { firstName, lastName } from './module_2'
-//  import { default as simple, hello, increment        
-//  } from './module_1.js';
-//  console.log(hello());
-//  console.log(increment());
-//  import { default as simple, hello, increment        
-//  } from './module_1.js';
-// let gameBoard = [[a8],[],[],[],[],[],[],[]];
-// [[md1],[md8],[md9],[md10],[md11],[md13],[md14],[]];
-// [[md2],[md1],[md8],[md9],[md10],[md11],[md13],[md14]];
-// [[md3],[md2],[md1],[md8],[md9],[md10],[md11],[md12]];
-// [[md4],[md3],[md2],[md1],[md8],[md9],[md10],[md11]];
-// [[md5],[md4],[md3],[md2],[md1],[md8],[md9],[md10]];
-// [[md6],[md5],[md4],[md3],[md2],[md1],[md8],[md9]];
-// [[md7],[md6],[md5],[md4],[md3],[md2],[md1],[md8]];
-// [[],[md7],[md6],[md5],[md4],[md3],[md2],[md1]];
-
-// [[],[],[],[],[],[],[],[mo15]];
-// [[],[],[],[],[],[],[mo15],[mo16]];
-// [[],[],[],[],[],[mo15],[mo16],[]];
-// [[],[],[],[],[mo15],[],[],[]];
-// [[],[],[],[mo15],[],[],[],[]];
-// [[],[],[mo15],[],[],[],[],[]];
-// [[],[mo15],[],[],[],[],[],[]];
-// [[mo15],[],[],[],[],[],[],[]];
-
-
 let imgpath = "img/";
-
-// class Board{
-//     square{
-
-//     }
-// }
 
 class Movement{
     type = MOVEMENT_TYPE_NONE;
     range = RANGE_TYPE_NONE;
-//#
+    elementFromPoint = document.elementFromPoint;
+    elementsFromPoint = document.elementsFromPoint;
+
+    constructor(piece_type, objJSON=null){
+        if ( objJSON == null ){
+            this.type = this.setPieceMovementType(piece_type);
+            this.range = this.getMovementRangeFromPieceType(piece_type);
+        }
+        else{
+            Object.assign(this, objJSON);
+        }
+    }
+    
+    fixMovementType(value) {
+        if (!movementMatchesAnyDirection(value)) return this.type;
+        return value;
+    }
+    //#
+    setPieceMovementType(value) {
+        let movType = this.getMovementTypeFromPieceType(value);
+        if (movementMatchesAnyDirection(movType)) 
+            return (this.type = movType);
+
+        return this.type;
+    }
+    setMovementType(value){
+        this.type = this.fixMovementType(value);
+    }
+    //#
     getMovementTypeFromPieceType(value){
         switch (value){
             case PIECE_TYPE_BISHOP:
@@ -93,31 +68,6 @@ class Movement{
         return MOVEMENT_TYPE_NONE;
     }
     //#
-    fixMovementType(value) {
-        if (!movementMatchesAnyDirection(value)) return this.type;
-        return value;
-    }
-    //#
-    setPieceMovementType(value) {
-        let movType = this.getMovementTypeFromPieceType(value);
-        if (movementMatchesAnyDirection(movType)) 
-            return (this.type = movType);
-
-        return this.type;
-    }
-    constructor(piece_type, objJSON=null){
-        if ( objJSON == null ){
-            this.type = this.setPieceMovementType(piece_type);
-            this.range = this.getMovementRangeFromPieceType(piece_type);
-        }
-        else{
-            Object.assign(this, objJSON);
-        }
-    }
-    setMovementType(value){
-        this.type = this.fixMovementType(value);
-    }
-
     getObjMovementType(){
         return this.type;
     }
@@ -126,8 +76,11 @@ class Movement{
     }
 }
 
-class Piece {
+// class Cursor{
 
+// }
+
+class Piece {
     type;
     initsq;
     movement;
@@ -158,7 +111,6 @@ class Piece {
     getPiecePosition(postype){
         let tmpLineNdx = this.elmcurrentsq.getAttribute("lndx");
         let tmpColumnLetter = this.elmcurrentsq.getAttribute("clm");
-        // alert(tmpLineNdx)
         if ( !isValidSquareIndex(tmpLineNdx) || !isValidSquareAlpha(tmpColumnLetter) )
             return -1;
         if ( postype == SQUARE_ALPHABETICAL_NDX )
@@ -189,37 +141,15 @@ class Piece {
     getInitialSquare(){
         return this.initsq;
     }
-    logPieceObj(){
-        console.debug(this);
-    }
     getColor(){
         return this.color;
     }
+    logPieceObj(){
+        console.debug(this);
+    }
 }
 
-// let rook  ;
-// let knight;
-// let queen ;
-// let king  ;
-// let bishop;
-// let pawn  ;
-
 let pieceObj;
-
-// let blackPieces = [];
-// let whitePieces = [];
-
-
-// var boardGrid = [
-//                     ['a8'], ['b8'], ['c8'], ['d8'], ['e8'], ['f8'], ['g8'], ['h8'],
-//                     ['a7'], ['b7'], ['c7'], ['d7'], ['e7'], ['f7'], ['g7'], ['h7'],
-//                     ['a6'], ['b6'], ['c6'], ['d6'], ['e6'], ['f6'], ['g6'], ['h6'],
-//                     ['a5'], ['b5'], ['c5'], ['d5'], ['e5'], ['f5'], ['g5'], ['h5'],
-//                     ['a4'], ['b4'], ['c4'], ['d4'], ['e4'], ['f4'], ['g4'], ['h4'],
-//                     ['a3'], ['b3'], ['c3'], ['d3'], ['e3'], ['f3'], ['g3'], ['h3'],
-//                     ['a2'], ['b2'], ['c2'], ['d2'], ['e2'], ['f2'], ['g2'], ['h2'],
-//                     ['a1'], ['b1'], ['c1'], ['d1'], ['e1'], ['f1'], ['g1'], ['h1']
-//                 ];
 
 const TOTAL_PIECE_COUNT = 16;
 const PLAYER_PIECE_COUNT = TOTAL_PIECE_COUNT / 2;
@@ -697,9 +627,9 @@ function getLineIndexFromPiece(piece){
     return pieceObj.getPiecePosition(SQUARE_NAME)[SQUARE_NUMERIC_NDX];
 }
 function getLineIndexFromSquare(squareName){
-    if ( !isValidSquareIndex(squareName) )
+    if ( !isValidSquareIndex(squareName[SQUARE_NUMERIC_NDX]) )
         return INVALID_SQUARE;
-
+    
     return Number(squareName[SQUARE_NUMERIC_NDX]);
 }
 
@@ -852,14 +782,12 @@ function isLetter(letter) {
     return letter.length === 1 && letter.match(/[a-z]/i);
 }
 function isValidSquareAlpha(sqAlpha){
-    alert(sqAlpha)
     if ( columnArray.indexOf(sqAlpha) === -1 )
         return false;
     
     return true;
 }
 function isValidSquare(squareName){
-    alert(squareName)
     if ( isValidSquareAlpha(squareName[SQUARE_ALPHABETICAL_NDX])
          && isValidSquareIndex(squareName[SQUARE_NUMERIC_NDX]) )
         return true;
@@ -881,14 +809,11 @@ function getSquareStatus(squareName){
     if ( isValidSquare(squareName) == false )
         return INVALID_SQUARE;
 
-
     var tmpPiece = getPieceObjFromDiv(squareName);
-    
-//   alert("a+"+tmpPiece);
+
     if ( tmpPiece == null  )
         return BLANK_SPACE_SQUARE;
 
-     //   alert(tmpPiece);
     // Tem uma peça nessa casa...
     if ( tmpPiece.color == getPlayerColorNotation() )
         return PLAYER_PIECE_SQUARE;
@@ -1366,9 +1291,16 @@ function highlightMovementDirection(direction){
     if ( matchMovementDirection(direction, MOVEMENT_DIRECTION_DIAGONAL) ){
         var objRetorno = new Object();
         let myClassName = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
+        pieceSelected.getPiecePosition(ELEMENT_SQUARE);
+        // pElement.classList.add('rotate45deg');
+        // pieceSelected.classList.add('rotate45deg');
         // alert(pieceSelected + " " + pieceSelected.getPiecePosition());
         
-        pieceSelected.innerHTML = "-----------------------------------------------------";
+        // pElement.innerHTML += "-----------------------------------------------------";
+       
+        // alert(document.elementFromPoint(x + px, y + py))
+       
+
     }
 
 }
@@ -1848,16 +1780,13 @@ function doMovePiece(destinationSquare){
     // var originSquare = "" + pieceSelected.getPiecePosition(SQUARE_NAME);
     // console.log(pieceSelected);
     var origElem = pieceSelected.getPiecePosition(ELEMENT_SQUARE);
-    console.log(origElem);
     var destElem = document.getElementById(destinationSquare);
-    // destElem.innerHTML = origElem.innerHTML;
-    pieceSelected.setPiecePosition(destinationSquare);
     pieceSelected.hasMoved = HAS_MOVED;
-    
     destElem.setAttribute("piece", JSON.stringify(pieceSelected));
     // // console.debug(origElem);
     origElem.removeAttribute("piece");
-    // origElem.innerHTML = "";
+    destElem.innerHTML = origElem.innerHTML;
+    origElem.innerHTML = "";
 }
 function doCapturePiece(pieceSquare){
     document.getElementById(pieceSquare).innerHTML = "";
@@ -1884,22 +1813,19 @@ function playSquareName(squareName){
 function selectSquare(squareName){
     let squareStatus = getSquareStatus(squareName);
     
-    alert("sq"+squareStatus);
     if ( squareStatus != BLANK_SPACE_SQUARE ){
         pieceObj = new Piece(1,1,1,1,getPieceObjFromDiv(squareName));
         pieceObj.setPiecePosition(squareName);
         pieceObj.logPieceObj();
     }
-    // //playSquareName(squareName);
-    // alert("a"+squareStatus);
     if ( squareStatus == PLAYER_PIECE_SQUARE ){
         return selectPlayerPiece();
     }
-    if ( matchMovementDirection(getMovementType(pieceSelected), SPECIAL_MOVEMENT_CASTLE)
-         && pieceSelected ){
+    if ( pieceSelected &&
+        matchMovementDirection(getMovementType(pieceSelected), SPECIAL_MOVEMENT_CASTLE) ){
         return;
     }
-    // alert(squareName);
+
     if ( pieceSelected && isSquareOnMovementRange(squareName) ){
         if ( squareStatus == BLANK_SPACE_SQUARE )
             selectEmptySquare(squareName);
@@ -1973,8 +1899,8 @@ function selectPlayerPiece(){
     if ( pieceMovementIsPossible() == false )
         return;
 
-        console.log(pieceSelected);
-        console.log(pieceObj);
+        // console.log(pieceSelected);
+        // console.log(pieceObj.getPiecePosition(SQUARE_NAME));
     if ( pieceSelected && isSquareOnMovementRange(pieceObj.getPiecePosition(SQUARE_NAME) ) ){
         if ( pieceDidSpecialMove() ){
         //   clearActiveSelection();
@@ -2000,28 +1926,29 @@ function clearActiveSelection(keepPieceSelection=false){
         if ( elem != 0 && elem !== undefined && elem != "")
             elem.classList.remove(value);
     })});
+    // Checar
     document.querySelectorAll("[bgc='"+bgBoardColors[LIGHT_BGCOLOR]+"']").forEach(function(elem) {
         elem.classList.add(bgBoardColors[LIGHT_BGCOLOR]);
     });
     document.querySelectorAll("[bgc='"+bgBoardColors[DARK_BGCOLOR]+"']").forEach(function(elem) {
         elem.classList.add(bgBoardColors[DARK_BGCOLOR]);
-    });    
-
+    });
+    
     if ( keepPieceSelection == false)
         pieceSelected = 0;
 
     return;
 }
-function setMainDiagonalAndOpposite(){
-    
-    // [[md1],[md8],[md9],[md10],[md11],[md13],[md14],[]];
-    // [[md2],[md1],[md8],[md9],[md10],[md11],[md13],[md14]];
-    // [[md3],[md2],[md1],[md8],[md9],[md10],[md11],[md12]];
-    // [[md4],[md3],[md2],[md1],[md8],[md9],[md10],[md11]];
-    // [[md5],[md4],[md3],[md2],[md1],[md8],[md9],[md10]];
-    // [[md6],[md5],[md4],[md3],[md2],[md1],[md8],[md9]];
-    // [[md7],[md6],[md5],[md4],[md3],[md2],[md1],[md8]];
-    // [[],[md7],[md6],[md5],[md4],[md3],[md2],[md1]];
+function setMainDiagonalAndOpposite(squareName){
+    //       h8     
+    //  h8 [[md1],[md8],[md9],[md10],[md11],[md13],[md14],[]];
+    //  g7 [[md2],[md1],[md8],[md9],[md10],[md11],[md13],[md14]];
+    //  f6 [[md3],[md2],[md1],[md8],[md9],[md10],[md11],[md12]];
+    //  e5 [[md4],[md3],[md2],[md1],[md8],[md9],[md10],[md11]];
+    //  f4 [[md5],[md4],[md3],[md2],[md1],[md8],[md9],[md10]];
+    //  c3 [[md6],[md5],[md4],[md3],[md2],[md1],[md8],[md9]];
+    //  b2 [[md7],[md6],[md5],[md4],[md3],[md2],[md1],[md8]];
+    //  a1 [[],[md7],[md6],[md5],[md4],[md3],[md2],[md1]];
     
     // [[],[],[],[],[],[],[],[mo15]];
     // [[],[],[],[],[],[],[mo15],[mo16]];
@@ -2032,6 +1959,9 @@ function setMainDiagonalAndOpposite(){
     // [[],[mo15],[],[],[],[],[],[]];
     // [[mo15],[],[],[],[],[],[],[]];
 }
+
+
+
 function deleteBoard(){
     $(".pieceSquare").remove();
 }
@@ -2088,7 +2018,7 @@ function drawBoard() {
                 document.getElementById(divSquare.id).setAttribute("crn","1");
             }            
             setTopBotLeftRightAsWhite(divSquare.id);
-            // setMainDiagonalAndOpposite(divSquare.id);
+            setMainDiagonalAndOpposite(divSquare.id);
             
             sqMarginLeft += iSquareWidth;
         }
@@ -2098,6 +2028,10 @@ function drawBoard() {
     }
 
 }
+// function setTopBotLeftRightAsWhite{
+
+// }
+
 
 function setTopBotLeftRightAsWhite(squareName){
     
@@ -2128,6 +2062,7 @@ function setTopBotLeftRightAsWhite(squareName){
         raw = columnArray[raWct++] + "" + myLineIndex + "|";
         document.getElementById(squareName).setAttribute("raw", raw);
     }
+// document.querySelectorAll("[]","[]")
 
     // // Diagonais
     // taWct =  (Number(squareName[SQUARE_NUMERIC_NDX])+1);
@@ -2175,14 +2110,13 @@ function getPieceObjFromDiv(squareName){
     var squareContent = document.getElementById(squareName);
     var myPiece       = document.getElementById(squareName).getAttribute("piece");
     
-    alert("gp" +squareContent);
-    alert("mP"+myPiece);
+console.log(myPiece);
     if ( squareContent === undefined || myPiece == null || myPiece == 0 )
         return null;
 
-    var movement = new Object(JSON.parse(myPiece).movement);
+    var movement = new Object(JSON.parse(document.getElementById(squareName).getAttribute("piece")).movement);
     var objpawn = new Object(JSON.parse(myPiece));
-    // objpawn.currentsquare = document.getElementById(squareName);
+    objpawn.elmcurrentsq = squareContent;
     objpawn.movement = new Movement(1, movement);
 
     return objpawn;
@@ -2205,7 +2139,6 @@ function drawSinglePiece(squareName){
 			let myPieceType = getPieceTypeFromPiece(pieceName);
             let movement = new Movement(myPieceType);
             let myPiece = new Piece(myPieceType, squareName, movement, pieceColor);
-            // console.debug(myPiece);
             document.getElementById(squareName).setAttribute("piece", JSON.stringify(myPiece));
  
             //"<img src='" + imgpath + pieceName.substring(0,2) + ".png' style='pieceimg'>"
@@ -2239,9 +2172,17 @@ function highlightColumn(columnLetter){
     });
 }
 function highlightColumnSquare(elem, myClassName){
-    if ( elem === undefined || elem == 0|| elem == "" )
-        return ;
-
+   
+    let bgcAttr = elem.getAttribute("bgc");
+    
+    setClassByBGAttr(myClassName, bgcAttr, elem.id);
+    if ( elem.classList.contains(bgcAttr) ) {
+        elem.setAttribute("bgc", bgcAttr);
+        elem.classList.remove(bgcAttr);
+    }
+}
+function highlightSquare(elem, myClassName){
+   
     let bgcAttr = elem.getAttribute("bgc");
     
     setClassByBGAttr(myClassName, bgcAttr, elem.id);
@@ -2265,13 +2206,54 @@ function highlightLineArray(linesToHighlight){
         highlightLine(value);
     });
 }
+function DOMRegex(regex) {
+    let output = [];
+    for (let i of document.querySelectorAll('*')) {
+        if (regex.test(i.type)) { // or whatever attribute you want to search
+            output.push(i);
+        }
+    }
+    return output;
+}
 
 $(document).ready(function () {
     // var audio = new Audio();
     // audio.src ='e2.wav';
     // audio.play();
     initPieceMovements();
-    drawBoard();
+    drawBoard(); 
+
+    // alert(elem);
+    // alert(myClassName);
+    // alert(e);
+    // if ( elem === undefined || elem == 0|| elem == "" )
+    //     return ;
+
+    // if ( e == null )
+    //     return;
+    // else{
+    //     setClassByBGAttr(myClassName, elem.getAttribute("bgc"), elem.id);
+    //     return;
+    // }
+    // let docElem = document.getElementById('h8');
+    // document.addEventListener('keydown', (event) => highlightColumnSquare(docElem, columnClass, event));
+    //var d4 = document.getElementById('d4').getBoundingClientRect();
+    //var d5 = document.getElementById('d5').getBoundingClientRect();
+    //var board = document.querySelector('.board').getBoundingClientRect();
+    //console.log(d4.left, d5.left, board.top);
+    
+    // alert(pieceSelected.document.elementsFromPoint(pieceSelected., y + py))
+    // console.debug(document.elementsFromPoint((d4.left+160), d4.top));
+    //pieceSelected.classList.add('rotate45deg');
+    // let columnClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_COLUMN);
+    // var d4 = document.getElementById('d4').getBoundingClientRect();
+    // console.debug(d4.right);
+    // // let myP = createElement;
+    var d5 = document.getElementById('d5').getBoundingClientRect();
+    var board = document.querySelector('.board').getBoundingClientRect();
+    console.log(d4.left, d5.left, board.right);
+    document.elementsFromPoint((d4),(d5)).classList.add(columnClass);
+    
     // highlightLineArray(['1','2','3','4'])
     // highlightColumnArray(['a','b','c','d']);
     // columnArray.map(function(value){
@@ -2279,4 +2261,11 @@ $(document).ready(function () {
     // });
     // teste1()
     // removeMyPieces();
+    
+    // setInterval(function(){
+    //     $(".miniretinea").stop(true,true).animate({top: 160}, 5000, 
+    //         function(){ $(this).stop(true,true).animate({top: 10}, 1000); 
+    //     });
+    // }, 20000);
 });
+

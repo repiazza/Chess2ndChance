@@ -1,0 +1,12 @@
+.container{
+    display: flex;
+    width: 700px;
+    height: 700px;
+    background-color: mediumslateblue;
+}
+
+.row{
+    flex-direction: row;
+    border: 2px solid cornflowerblue;
+    border-radius: 1px;
+}
