@@ -24,6 +24,9 @@
 .rotate180deg{
     transform: scaleY(-1);
 }
+.rotate90{
+    transform: scaleY(-1);
+}
 .selectedsquareborder{
     border:solid 10px green;
 }
