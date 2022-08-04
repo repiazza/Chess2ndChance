@@ -2,13 +2,23 @@
     height: 640px;
     width: 640px;
     margin-top: 50px;
-    margin-left: 400px;
+    margin-left: 50px;
 }
 /* .d_inv{
     visibility: "invisible";
 } */
+.squaredimension{
+    height: 80px;
+    width: 80px;
+}
 .rotate45deg{
     transform: rotate(-45deg);
+}
+.rotate180deg{
+    transform: scaleY(-1);
+}
+.selectedsquareborder{
+    border:solid 10px green;
 }
 .board.div{
     border:solid 1px blue;
@@ -76,7 +86,7 @@
     font-weight: bold;
 }
 .buttons{
-    margin-left: 450px;
+    margin-left: 130px;
 }
 img {
     width: 100%;
@@ -95,4 +105,6 @@ img {
 .silverbuenaodark{
     background-color: rgba(192, 192, 192,0.8);
 }
-
+.moveclass{
+    border: rgba(0, 0, 0, 0.1);
+}
