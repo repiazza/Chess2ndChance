@@ -4,19 +4,17 @@
     width: 100%;
     border :1px solid blue;
 }
+.board > div[square='1']{
+    height: 80px;
+    width: 80px;
+    transform: scaleY(-1);
+}
 .board{
     height: 640px;
     width: 640px;
     margin-top: 50px;
     margin-left: 50px;
     position:absolute;
-}
-/* .d_inv{
-    visibility: "invisible";
-} */
-.squaredimension{
-    height: 80px;
-    width: 80px;
 }
 .captureclass{
     border: rgba(0, 0, 0, 0.1);

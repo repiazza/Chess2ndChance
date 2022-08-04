@@ -92,7 +92,7 @@ function getLSquaresFromSquare(square, ignoreColision=false){
             if ( mySquareLeft && (!ignoreColision && !validateFriendlyPieceSquare(document.getElementById(mySquareLeft))) ){
                 validateAndSetCaptureSquare(mySquareLeft);
                 LSquares.push(mySquareLeft);
-                document.getElementById(mySquareLeft).classList.add("moveclass");
+                document.getElementById(mySquareLeft).setAttribute("mvsl","1");
             }
         }
         mySquareRight = getSquare(square,pair[1][0])
@@ -102,7 +102,7 @@ function getLSquaresFromSquare(square, ignoreColision=false){
             
             if ( mySquareRight ){
                 LSquares.push(mySquareRight);
-                document.getElementById(mySquareRight).classList.add("moveclass");
+                document.getElementById(mySquareRight).setAttribute("mvsl","1");
             }
         }
     });
@@ -444,6 +444,56 @@ function getSquare(square, relativePosition){
     return "" + columnNotation + allPos[relativePosition];
 }
 
+// const highlightClasses = 
+// [
+//     "columnmovhl", 
+//     "linemovhl", 
+//     "diagonalmovhl",
+//     "knightmovhl",
+//     "linemovhldark", 
+//     "columnmovhldark", 
+//     "diagonalmovhldark",
+//     "knightmovhldark",
+//     "capturehl",
+//     "capturehldark",
+//     "orangehl",
+//     "orangeh1dark"
+// ];
+// const captureClasses =
+// [
+//     "capturehl",
+//     "capturehldark"             
+// ];
+
+
+// const bgBoardColors = [
+//     "darksquarecolor",
+//     "lightsquarecolor"
+// ];
+function highlightSelection(direction){
+    let myClass = -1 ;
+    if ( LINE_DIRECTION.includes(direction) )
+        myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_LINE);
+    else if ( COLUMN_DIRECTION.includes(direction) )  
+        myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_COLUMN);
+    else if ( MAIN_DIAGONAL_DIRECTION.includes(direction) )
+        myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
+    else if ( OPPOSITE_DIAGONAL_DIRECTION.includes(direction) )
+        myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
+    
+    if ( nextSqElem.getAttribute('bgc').includes('dark') ){
+        myClass += 'dark';
+    }
+    nextSqElem.classList.forEach(thisclass => {
+        if ( highlightClasses.includes(thisclass) ){
+            nextSqElem.classList.replace(thisclass, myClass);
+        }
+        if ( bgBoardColors.includes(thisclass) ){
+            nextSqElem.classList.replace(thisclass, myClass);
+        }
+    });
+}
+
 function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreColision=false){
     if ( Array.isArray(direction) && direction.length > 1 ){
         direction.map(myDir =>{
@@ -451,7 +501,7 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         });
         return;
     }
-    square.classList.add("moveclass");
+    square.setAttribute("mvsl","1");
     let movDir = square.getAttribute(direction);
     let i = 0;
     while ( document.getElementById(movDir) != null ){
@@ -479,7 +529,6 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
 
             break;
         }
-        let refresh = 0;
         if ( 
             !(
                 (direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION)  
@@ -487,37 +536,14 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
               ) 
             )
         {
-            nextSqElem.classList.add("moveclass");
-            refresh =1;
+            nextSqElem.setAttribute("mvsl", "1");
         }
         else if ( !(direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION) ){
-            nextSqElem.classList.add("moveclass");
-            refresh = 1;
+            nextSqElem.setAttribute("mvsl", "1");
         }
 
-        let myClass = -1 ;
-        if ( LINE_DIRECTION.includes(direction) )
-            myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_LINE);
-        else if ( COLUMN_DIRECTION.includes(direction) )  
-            myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_COLUMN);
-        else if ( MAIN_DIAGONAL_DIRECTION.includes(direction) )
-            myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
-        else if ( OPPOSITE_DIAGONAL_DIRECTION.includes(direction) )
-            myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
-        
-        if ( refresh == 1 ){
-            if ( nextSqElem.getAttribute('bgc').includes('dark') ){
-                myClass += 'dark';
-            }
-            nextSqElem.classList.forEach(thisclass => {
-                if ( highlightClasses.includes(thisclass) ){
-                    nextSqElem.classList.replace(thisclass, myClass);
-                }
-                if ( bgBoardColors.includes(thisclass) ){
-                    nextSqElem.classList.replace(thisclass, myClass);
-                }
-            });
-        }
+        highlightSelection(direction);
+
         movDir = nextSqElem.getAttribute(direction);
         i++;
     }
@@ -587,7 +613,7 @@ function validateIsOnRange(square){
         getLSquaresFromSquare(getFirstSelectedElement());
     }
     
-    if ( !square.classList.contains("moveclass") && !square.classList.contains("captureclass") ){
+    if ( !square.getAttribute('mvsl') && !square.classList.contains("captureclass") ){
         return false;
     }
     
@@ -634,8 +660,9 @@ function drawSquare(squareId, myInner=""){
     let divSquare = document.createElement('div');
     divSquare.id = squareId;
     divSquare.innerHTML = myInner;
-    divSquare.classList.add('square');
-    divSquare.classList.add('squaredimension');
+    // divSquare.classList.add('square');
+    divSquare.setAttribute("square", "1");
+    // divSquare.classList.add('squaredimension');
     divSquare.addEventListener('click', squareHandler)
 
     return divSquare;
@@ -685,12 +712,42 @@ function captureSquare(square){
 function setElementAsSelected(elem){
     elem.setAttribute("sltd", "1");
 }
+function setClassByBGAttr(className, bgcAttr, squareId){
+    if ( bgcAttr.includes('dark') ){
+        className += 'dark';
+    }
+    
+    document.getElementById(squareId).classList.add(className);
+}
 function clearElementSelection(elem){
     document.getElementById(elem.id).removeAttribute('sltd');
+    document.getElementById(elem.id).removeAttribute('mvsl');
     
 }
+function setBGColorAsDOMAttributeAndRemove(elemId){
+    let myClassName = bgBoardColors[DARK_BGCOLOR];
+    let myElem = document.getElementById(elemId);
+    if ( !myElem.classList.contains(myClassName) )
+        myClassName = bgBoardColors[LIGHT_BGCOLOR];
+
+    if ( myElem.classList.contains(myClassName) ) {
+        myElem.setAttribute("bgc", myClassName);
+        myElem.classList.remove(myClassName);
+    }
+    return myClassName;
+}
 function clearAllElementSelection(){
-    document.querySelectorAll('[sltd]').removeAttribute('sltd');
+    document.querySelectorAll('[sltd]').forEach(element => {
+        element.removeAttribute('sltd');
+    });
+    document.querySelectorAll('[mvsl]').forEach(element => {
+        element.removeAttribute('mvsl');
+    });
+    document.querySelectorAll('[bgc]').forEach(element => {
+        let bgcAttr = setBGColorAsDOMAttributeAndRemove(element.id);
+        setClassByBGAttr("", bgcAttr, element.id);
+    });  
+    
 }
 function isElementSelected(elem){
     return document.querySelector('[id="'+elem.id+'"][sltd]');
@@ -738,7 +795,8 @@ function squareHandler(event){
             + event.target.id[0] + " ";
         }
         
-        clearElementSelection(oldelem);
+        // clearElementSelection(oldelem);
+        clearAllElementSelection();
         event.target.setAttribute("sqcolor", oldelem.getAttribute("sqcolor"))
         event.target.setAttribute("sqtype", oldelem.getAttribute("sqtype"))
         event.target.setAttribute("initsq", oldelem.getAttribute("initsq"))
@@ -794,7 +852,7 @@ function readyHandler(event){
                 if (  newsquare.squareColor != BLANK_SQUARE_COLOR )
                     newsquare.squareElem.setAttribute("initsq", newsquare.initSquareId);
                 newsquare.squareElem.innerHTML = newsquare.squareElem.getAttribute("sqtype").split("PIECE")[0];
-                newsquare.squareElem.classList.add('rotate90');
+                // newsquare.squareElem.classList.add('rotate90');
                 newsquare.squareElem.innerHTML == 'BLANK' ? 
                     newsquare.squareElem.innerHTML = "" : "";  
                 let supervisor  =  document.createElement('div');
