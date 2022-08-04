@@ -43,8 +43,11 @@ const DIRECTION_ROTATE = [
 let LSquares = [];
 
 function validateAndSetCaptureSquare(mySquare){
+    if ( mySquare.id === undefined || mySquare.id == null)
+        mySquare = document.getElementById(mySquare);
+
     if ( validateEnemyPieceSquare(mySquare) ){
-        document.getElementById(mySquare).classList.add("captureclass");
+        mySquare.classList.add("captureclass");
     }
 }
 function getLSquaresFromSquare(square, ignoreColision=false){
@@ -439,8 +442,11 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
     while ( document.getElementById(movDir) != null ){
         if ( i >= range )
             break;
-            
-        if ( !ignoreColision && document.getElementById(movDir).getAttribute('sqtype') != SQUARE_TYPE_BLANK){
+
+        let nextSq = document.getElementById(movDir).getAttribute('sqtype');
+
+        alert(nextSq);
+        if ( (!ignoreColision && nextSq != SQUARE_TYPE_BLANK )){
             validateAndSetCaptureSquare(movDir);
             break;
         }
@@ -449,7 +455,7 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         i++;
     }
 
-    return (i > 0);
+    return true;
 }
 
 function validateIsSelected(){
@@ -486,7 +492,7 @@ function validateIsOnRange(square){
         getLSquaresFromSquare(getFirstSelectedElement());
     }
     
-    if ( !square.classList.contains("moveclass")){
+    if ( !square.classList.contains("moveclass") && !square.classList.contains("captureclass") ){
         return false;
     }
     
@@ -497,7 +503,7 @@ function validateIsOnRange(square){
     // highlightMovementDirection(myMov.getObjMovementType())
 }
 function validateEnemyPieceSquare(square){
-    return (square.getAttribute("sqcolor") != playerColor);
+    return (square.getAttribute('sqcolor') != playerColor);
 }
 function validateFriendlyPieceSquare(square){
     return (square.getAttribute("sqcolor") == playerColor)
@@ -557,6 +563,13 @@ function moveToDestination(originsq, destsq, flag){
         outerorig.innerHTML = "";
     }
 }
+function validateIsCaptureSquare(square){
+    alert(square.classList);
+    if ( !square.classList.contains("captureclass")){
+        return false;
+    }
+    return true;
+}
 function hasAnySquareDrew(){
     return (document.querySelectorAll('.square').length > 0);
 }
@@ -567,7 +580,12 @@ function changeSelectedSquare(square){
     return validateIsSelected() &&  (validateSelectedPieceSquare(square) == FRIENDLY_SIDE);
 }
 function captureSquare(square){
-    return (validateIsSelected() && (validateSelectedPieceSquare(square) == ENEMY_SIDE) && validateIsCapture(square));
+    return (
+            validateIsSelected() 
+            && (validateSelectedPieceSquare(square) == ENEMY_SIDE)
+            && validateIsOnRange(square)
+            && validateIsCaptureSquare(square)
+    );
 }
 function setElementAsSelected(elem){
     elem.setAttribute("sltd", "1");
@@ -601,8 +619,7 @@ function squareHandler(event){
     // Validar contexto de algo ja selecionado
     // Sem selecao previa + square com pecas 
     // ou com selecao previua + square aliado
-    if ( selectSquare(event.target) 
-         || changeSelectedSquare(event.target) ){
+    if ( selectSquare(event.target) || changeSelectedSquare(event.target) ){
         if ( validateIsSelected() ){
             let oldelem = getFirstSelectedElement();
             // oldelem.innerHTML = "";
