@@ -25,14 +25,57 @@ const SQUARE_TYPE_KING_PIECE = 'KINGPIECE';
 const SQUARE_TYPE_ROOK_PIECE = 'ROOKPIECE';
     //                0   1   2    3
     //                l   r   t    b
-const BOTTOM_LEFT  = [0 , 3];
-const BOTTOM_RIGHT = [1 , 3];
 const TOP_LEFT     = [0 , 2];
 const TOP_RIGHT    = [1 , 2];
+const BOTTOM_LEFT  = [0 , 3];
+const BOTTOM_RIGHT = [1 , 3];
 const LEFT         = 0 ;
 const RIGHT        = 1 ;
 const TOP          = 2 ;
 const BOTTOM       = 3 ;
+const DIRECTION_ROTATE = [
+                            [[TOP_LEFT, TOP], [TOP_RIGHT, TOP]], 
+                            [[TOP_RIGHT, RIGHT], [BOTTOM_RIGHT, RIGHT]],
+                            [[BOTTOM_RIGHT, BOTTOM], [BOTTOM_LEFT, BOTTOM]],
+                            [[BOTTOM_LEFT, LEFT], [TOP_LEFT, LEFT]]
+                         ];
+
+
+let LSquares = [];
+
+function getLSquaresFromSquare(square){
+    
+    let mySquareLeft = 0;
+    let mySquareRight = 0;
+    DIRECTION_ROTATE.map(pair => {
+        mySquareLeft = getSquare(square,pair[0][0]);
+        if ( mySquareLeft ){
+            mySquareLeft = getSquare(document.getElementById(mySquareLeft),pair[0][1])
+            LSquares.push(mySquareLeft);
+        }
+        mySquareRight = getSquare(square,pair[1][0])
+        if ( mySquareRight ){
+            mySquareRight = getSquare(document.getElementById(mySquareRight),pair[1][1])
+            LSquares.push(mySquareRight);
+        }
+    });
+    // let initSquareL = getSquare(square,TOP_LEFT)
+    // initSquareL = getSquare(document.getElementById(initSquareL),TOP)
+    // let initSquareR = getSquare(square,TOP_RIGHT)
+    // initSquareR = getSquare(document.getElementById(initSquareR),TOP)
+    // LSquares.push(initSquareL, initSquareR);
+    // let i = 90;
+    // while ( i < 360 ){
+    //     $(square).css("transform", "rotate('"+i+"deg')");
+    //     initSquareL = getSquare(square,DIRECTION_ROTATE[])
+    //     initSquareL = getSquare(document.getElementById(initSquareL),TOP)
+    //     initSquareR = getSquare(square,TOP_RIGHT)
+    //     initSquareR = getSquare(document.getElementById(initSquareR),TOP)
+    //     i += 90;
+    //     LSquares.push(initSquareL, initSquareR);
+    // }
+    console.debug(LSquares);
+}                      
         
 const MOVEMENT_DIRECTION_COLUMN   = 0x01;
 const MOVEMENT_DIRECTION_LINE     = 0x02; 
@@ -319,6 +362,7 @@ function createSquare(square){
     };
 }
 function getSquare(square, relativePosition){
+    // console.log(square);
     let columnNotation = square.id[0];
     let indexNotation = Number(square.id[1]);
     let leftPos = -1;
@@ -346,13 +390,14 @@ function getSquare(square, relativePosition){
     }
     if (  allPos[relativePosition] == -1 )
         return false;
+        // console.log(relativePosition)
     if ( isLetter(allPos[relativePosition]) )
         return "" + allPos[relativePosition] + indexNotation;
     
     return "" + columnNotation + allPos[relativePosition];
 }
 
-function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT){
+function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreColision=false){
     if ( Array.isArray(direction) && direction.length > 1 ){
         direction.map(myDir =>{
             getDirectionFromSquare(square, myDir, range);
@@ -365,11 +410,16 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT){
     while ( document.getElementById(movDir) != null ){
         if ( i >= range )
             break;
+            
+        if ( !ignoreColision && document.getElementById(movDir).getAttribute('sqtype') != SQUARE_TYPE_BLANK){
+            break;
+        }
         document.getElementById(movDir).classList.add("moveclass");
         movDir = document.getElementById(movDir).getAttribute(direction);
         i++;
     }
-    return true;
+
+    return (i > 0);
 }
 
 function validateIsSelected(){
@@ -383,27 +433,27 @@ function validateIsBlank(square){
 }
 function validateIsOnRange(square){
     let myPieceType = getFirstSelectedElement().getAttribute('sqtype');
-    let myMov = new Movement(myPieceType[0], null);
-    if ( matchMovementDirection(myMov.getObjMovementType(), MOVEMENT_DIRECTION_DIAGONAL) ){
-        // getHalfDiagonalFromSquare(getFirstSelectedElement(), BOTTOM_LEFT_DIRECTION, myMov.getObjRange());
-        // getHalfDiagonalFromSquare(getFirstSelectedElement(), BOTTOM_RIGHT_DIRECTION, myMov.getObjRange());
-        // getHalfDiagonalFromSquare(getFirstSelectedElement(), TOP_LEFT_DIRECTION, myMov.getObjRange());
-        // getHalfDiagonalFromSquare(getFirstSelectedElement(), TOP_RIGHT_DIRECTION, myMov.getObjRange());
-        getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_LEFT_DIRECTION, myMov.getObjRange());
-        getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_RIGHT_DIRECTION, myMov.getObjRange());
-        getDirectionFromSquare(getFirstSelectedElement(), TOP_LEFT_DIRECTION, myMov.getObjRange());
-        getDirectionFromSquare(getFirstSelectedElement(), TOP_RIGHT_DIRECTION, myMov.getObjRange());
-        // getDirectionFromSquare();
+    let myMovType = getMovementTypeFromPieceType(myPieceType[0]);
+    let myMovRange = getMovementRangeFromPieceType(myPieceType[0]);
+    if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_DIAGONAL) ){
+        getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_LEFT_DIRECTION, myMovRange);
+        getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_RIGHT_DIRECTION, myMovRange);
+        getDirectionFromSquare(getFirstSelectedElement(), TOP_LEFT_DIRECTION, myMovRange);
+        getDirectionFromSquare(getFirstSelectedElement(), TOP_RIGHT_DIRECTION, myMovRange);
     }
-    if ( matchMovementDirection(myMov.getObjMovementType(), MOVEMENT_DIRECTION_COLUMN) ){
-        getDirectionFromSquare(getFirstSelectedElement(), TOP_DIRECTION, myMov.getObjRange());
-        getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_DIRECTION, myMov.getObjRange());
+    if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_COLUMN) ){
+        getDirectionFromSquare(getFirstSelectedElement(), TOP_DIRECTION, myMovRange);
+        getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_DIRECTION, myMovRange);
      
     }
-    if ( matchMovementDirection(myMov.getObjMovementType(), MOVEMENT_DIRECTION_LINE) ){
-        getDirectionFromSquare(getFirstSelectedElement(), RIGHT_DIRECTION, myMov.getObjRange());
-        getDirectionFromSquare(getFirstSelectedElement(), LEFT_DIRECTION, myMov.getObjRange());
+    if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_LINE) ){
+        getDirectionFromSquare(getFirstSelectedElement(), RIGHT_DIRECTION, myMovRange);
+        getDirectionFromSquare(getFirstSelectedElement(), LEFT_DIRECTION, myMovRange);
     }
+    if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_L) ){
+        getLSquaresFromSquare(getFirstSelectedElement());
+    }
+
     if ( !square.classList.contains("moveclass")){
         return false;
     }
@@ -441,8 +491,11 @@ function validateSelectedPieceSquare(square){
 function isLetter(letter) {
     return letter.length === 1 && letter.match(/[a-z]/i);
 }
+function validatePlayerColorSquare(square){
+    return (square.getAttribute("sqcolor") == playerColor);
+}
 function selectSquare(square){
-        return !validateIsSelected() && validateIsNotBlank(square);
+        return (!validateIsSelected() && validateIsNotBlank(square) && validatePlayerColorSquare(square));
 }
 function drawSquare(squareId, myInner=""){
     let divSquare = document.createElement('div');
@@ -561,7 +614,7 @@ function readyHandler(event){
     const board = document.getElementById('board');
     let marginLeft = 0;
     let marginTop = 0;
-    let supervisorMarginTop = 0;
+    let supervisorMarginTop = 40;
     let supervisoridCtr = 0;
     for ( let rowNdx = 1; rowNdx < 9; rowNdx++ ){
         columnArray.map( function (columnAlpha, clmndx){
@@ -590,11 +643,11 @@ function readyHandler(event){
                 let supervisor  =  document.createElement('div');
                 supervisor.style.position = 'absolute'; 
                 supervisor.id = "slp" + (supervisoridCtr++);
-                supervisor.style.marginLeft = "750px";
+                supervisor.style.marginLeft = "780px";
                 supervisor.style.marginTop = supervisorMarginTop+"px";
                 supervisor.classList.add('supervisordiv');
                 board.appendChild(newsquare.squareElem);
-                board.appendChild(supervisor);
+                document.getElementById('container').appendChild(supervisor);
                 supervisorMarginTop += 20;
                 // console.log(newsquare);
 
@@ -606,24 +659,23 @@ function readyHandler(event){
         marginTop += 80;
         marginLeft = 0;
     }
+    $('#board').css("transform", "scaleY(-1)");
     
-    marginLeft = 100;
+    marginLeft = 140;
     columnArray.map( function (columnAlpha,clmndx){        
         let subtitle  =  document.createElement('div');
         subtitle.style.marginLeft = marginLeft+"px";
-        subtitle.style.marginTop = "645px";
+        subtitle.style.marginTop = "690px";
         subtitle.innerHTML = columnAlpha;
         subtitle.style.position = 'absolute'; 
         subtitle.style.color= 'black'; 
         subtitle.style.fontWeight= 'bold';
         subtitle.style.fontSize= "20px";
-        board.appendChild(subtitle);
+        document.getElementById('container').appendChild(subtitle);
         marginLeft += 81;
     });
     drawSquareDetails();
-    document.querySelectorAll('.square').forEach(element => {
-        element.classList.add('rotate180deg');
-    });  
+    
 }
 function drawInitialBoard(boardId, buttonreadyHandler){
      const createbtn = document.getElementById(boardId);
@@ -649,19 +701,19 @@ function drawSupervisorSelect(){
     filterDetails = [-1, -1,-1, -1, -1, -1, -1];
     if ( selectElem != null ){
         selectVal = selectElem.value;
-        document.getElementById("board").removeChild(selectElem);
+        document.getElementById("container").removeChild(selectElem);
     }
     else{    
         document.querySelectorAll('[id^=spsb]').forEach(element => {
-            document.getElementById("board").removeChild(element);
+            document.getElementById("container").removeChild(element);
         });  
     }
     selectElem = document.createElement("select");
     selectElem.id = "supervisorselect";
     selectElem.addEventListener('change', drawSquareDetails);
     selectElem.style.position = 'absolute';
-    selectElem.style.marginLeft = '-30px';
-    let filteropt  = ['Choose Filter', 'Row', 'Column', 'Color', 'Type', 'Selected', 'Not Selected', 'Empty'];
+    selectElem.style.marginTop = '50px';
+    let filteropt  = ['Escolha', 'Row', 'Column', 'Color', 'Type', 'Selected', 'Not Selected', 'Empty'];
     for (var i = 0; i < filteropt.length; i++) {
         option = document.createElement("option");
         option.value = i;
@@ -676,18 +728,17 @@ function drawSupervisorSelect(){
         columnVal = -1;
         if ( selectColumn != null ){
             columnVal = selectColumn.value;
-            document.getElementById("board").removeChild(selectColumn);
+            document.getElementById("container").removeChild(selectColumn);
         }
         else{    
             document.querySelectorAll('[id^=spsb]').forEach(element => {
-                document.getElementById("board").removeChild(element);
+                document.getElementById("container").removeChild(element);
             });  
         }
         selectColumn = document.createElement("select");
         selectColumn.id = "spsbselectcolumn";
         selectColumn.style.position = 'absolute';
-        selectColumn.style.marginTop = '30px';
-        selectColumn.style.marginLeft = '-20px';
+        selectColumn.style.marginTop = '75px';
         selectColumn.addEventListener('change', drawSquareDetails);
         option = document.createElement("option");
         option.value = -1;
@@ -710,18 +761,17 @@ function drawSupervisorSelect(){
         rowVal = -1;
         if ( selectRow != null ){
             rowVal = selectRow.value;
-            document.getElementById("board").removeChild(selectRow);
+            document.getElementById("container").removeChild(selectRow);
         }
         else{    
             document.querySelectorAll('[id^=spsb]').forEach(element => {
-                document.getElementById("board").removeChild(element);
+                document.getElementById("container").removeChild(element);
             });  
         }
         selectRow = document.createElement("select");
         selectRow.id = "spsbselectrow";
         selectRow.style.position = 'absolute';
-        selectRow.style.marginTop = '25px';
-        selectRow.style.marginLeft = '-20px';
+        selectRow.style.marginTop = '75px';
         selectRow.addEventListener('change', drawSquareDetails);
         option = document.createElement("option");
         option.value = -1;
@@ -747,23 +797,23 @@ function drawSupervisorSelect(){
         radioVal = -1;
         if ( radioElem[0] != null ){
             radioVal = (radioElem[0].checked) ? radioElem[0].value : -1;
-            document.getElementById("board").removeChild(radioElem[0]);
+            document.getElementById("container").removeChild(radioElem[0]);
         }
         if ( radioLbl[0] != null ){
-            document.getElementById("board").removeChild(radioLbl[0]);
+            document.getElementById("container").removeChild(radioLbl[0]);
         }
         if ( radioElem[1] != null ){
             if ( radioVal == -1 ){
                 radioVal = (radioElem[1].checked) ? radioElem[1].value : -1;
             }
-            document.getElementById("board").removeChild(radioElem[1]);
+            document.getElementById("container").removeChild(radioElem[1]);
         }
         if ( radioLbl[1] != null ){
-            document.getElementById("board").removeChild(radioLbl[1]);
+            document.getElementById("container").removeChild(radioLbl[1]);
         }
         if ( radioVal == -1 ) {    
             document.querySelectorAll('[id^=spsb]').forEach(element => {
-                document.getElementById("board").removeChild(element);
+                document.getElementById("container").removeChild(element);
             });  
         }
 
@@ -775,15 +825,13 @@ function drawSupervisorSelect(){
             radioElem[0].checked = true;
         radioElem[0].name="colors";
         radioElem[0].style.position = 'absolute';
-        radioElem[0].style.marginTop = '30px';
         radioElem[0].addEventListener('change', drawSquareDetails);
         radioLbl[0] = document.createElement("label");
         radioLbl[0].for = "spsbrdwhite";
         radioLbl[0].id = "spsblblrdwhite";
         radioLbl[0].innerHTML = "White";
         radioLbl[0].style.position = 'absolute';
-        radioLbl[0].style.marginTop = '30px';
-        radioLbl[0].style.marginLeft = '30px';
+        radioLbl[0].style.marginTop = '75px';
         radioElem[1] = document.createElement("input");
         radioElem[1].type = 'radio';
         radioElem[1].id = "spsbrdblack";
@@ -808,18 +856,17 @@ function drawSupervisorSelect(){
         typeValue = -1;
         if ( selectType != null ){
             typeValue = selectType.value;
-            document.getElementById("board").removeChild(selectType);
+            document.getElementById("container").removeChild(selectType);
         }
         else{
             document.querySelectorAll('[id^=spsb]').forEach(element => {
-                document.getElementById("board").removeChild(element);
+                document.getElementById("container").removeChild(element);
             });  
         }
         selectType = document.createElement("select");
         selectType.id = "spsbselecttype";
         selectType.style.position = 'absolute';
         selectType.style.marginTop = '25px';
-        selectType.style.marginLeft = '-20px';
         selectType.addEventListener('change', drawSquareDetails);
         option = document.createElement("option");
         option.value = -1;
@@ -856,7 +903,7 @@ function drawSupervisorSelect(){
     }
     else{
         document.querySelectorAll('[id^=spsb]').forEach(element => {
-            document.getElementById("board").removeChild(element);
+            document.getElementById("container").removeChild(element);
         });   
     }
     filterDetails[FILTER_COLUMN] = columnVal;
@@ -865,30 +912,30 @@ function drawSupervisorSelect(){
     filterDetails[FILTER_TYPE] = typeValue;
     filterDetails[FILTER_SELECTED] = typeSelected;
     if ( selectElem != -1 && selectElem != null ){
-        document.getElementById("board").appendChild(selectElem);
+        document.getElementById("container").appendChild(selectElem);
         if ( selectColumn != -1 && selectColumn != null )
-            document.getElementById("board").appendChild(selectColumn);
+            document.getElementById("container").appendChild(selectColumn);
         if ( selectRow != -1 && selectRow != null )
-            document.getElementById("board").appendChild(selectRow);
+            document.getElementById("container").appendChild(selectRow);
         if ( radioElem[0] != -1 && radioElem[0] != null ){
-            document.getElementById("board").appendChild(radioElem[0]);
-            document.getElementById("board").appendChild(radioLbl[0]);
+            document.getElementById("container").appendChild(radioElem[0]);
+            document.getElementById("container").appendChild(radioLbl[0]);
         } 
         if ( radioElem[1] != -1 && radioElem[1] != null ){
-            document.getElementById("board").appendChild(radioElem[1]);
-            document.getElementById("board").appendChild(radioLbl[1]);
+            document.getElementById("container").appendChild(radioElem[1]);
+            document.getElementById("container").appendChild(radioLbl[1]);
         }
         if ( radioType[0] != -1 && radioType[0] != null ){
-            document.getElementById("board").appendChild(radioType[0]);
-            document.getElementById("board").appendChild(radioTpLbl[0]);
+            document.getElementById("container").appendChild(radioType[0]);
+            document.getElementById("container").appendChild(radioTpLbl[0]);
         } 
         if ( radioType[1] != -1 && radioType[1] != null ){
-            document.getElementById("board").appendChild(radioType[1]);
-            document.getElementById("board").appendChild(radioTpLbl[1]);
+            document.getElementById("container").appendChild(radioType[1]);
+            document.getElementById("container").appendChild(radioTpLbl[1]);
         }
         if ( selectType != -1 && selectType != null ){
-            document.getElementById("board").appendChild(selectType);
-            document.getElementById("board").appendChild(selectType);
+            document.getElementById("container").appendChild(selectType);
+            document.getElementById("container").appendChild(selectType);
         }
     }
 
@@ -906,13 +953,13 @@ function setDiagonalFromSelect(e){
 }
 function drawFullDiagonalSelect(){
     document.querySelectorAll('[id^="diagonalselect"]').forEach(element => {
-        document.getElementById("board").removeChild(element);
+        document.getElementById("container").removeChild(element);
     });
     let selectElem = document.createElement("select");
     selectElem.id = "spsbdiagonalselect";
     selectElem.style.position = "absolute";
-    selectElem.style.marginTop = "100px";
-    selectElem.style.marginLeft = "35px";
+    selectElem.style.marginTop = "120px";
+    selectElem.style.marginLeft = "75px";
     selectElem.addEventListener('change', setDiagonalFromSelect);
     let option = document.createElement("option");
     option.value = -1;
@@ -934,41 +981,38 @@ function drawFullDiagonalSelect(){
     labelElem.id = "spsblbldiagonalselect";
     labelElem.innerHTML = "Diagonal:";
     labelElem.style.position = "absolute";
-    labelElem.style.marginTop = "100px";
-    labelElem.style.marginLeft = "-30px";
-    document.getElementById('board').appendChild(labelElem);
-    document.getElementById('board').appendChild(selectElem);
+    labelElem.style.marginTop = "120px";
+    document.getElementById("container").appendChild(labelElem);
+    document.getElementById("container").appendChild(selectElem);
 }
 function drawIntervalTimeSet(){
     document.querySelectorAll('[id^="textelem"]').forEach(element => {
-        document.getElementById("board").removeChild(element);
+        document.getElementById("container").removeChild(element);
     });
     let ptextElem = document.createElement("p");
     ptextElem.id = 'spsbptextelem';
     ptextElem.innerHTML = 'Refresh(seg):';
     ptextElem.style.position = "absolute";
-    ptextElem.style.marginTop = "135px";
-    ptextElem.style.marginLeft = "-30px";
-    document.getElementById('board').appendChild(ptextElem);
+    ptextElem.style.marginTop = "160px";
+    document.getElementById("container").appendChild(ptextElem);
     let textElem = document.createElement("input");
     textElem.id = 'spsbtextelem';
     textElem.setAttribute("type", "text");
     textElem.setAttribute("maxlenght", "10");
     textElem.setAttribute("lenght", "10");
     textElem.style.position = "absolute";
-    textElem.style.marginTop = "155px";
-    textElem.style.marginLeft = "-30px";
+    textElem.style.marginTop = "180px";
     textElem.style.width = "30px";
-    document.getElementById('board').appendChild(textElem);
+    document.getElementById("container").appendChild(textElem);
     let buttonText = document.createElement("input");
     buttonText.id = 'spsbbttextelem';
     buttonText.setAttribute("type", "button");
     buttonText.style.position = "absolute";
-    buttonText.style.marginTop = "155px";
-    buttonText.style.marginLeft = "10px";
+    buttonText.style.marginTop = "180px";
+    buttonText.style.marginLeft = "30px";
     buttonText.setAttribute("value", "Enviar");
     buttonText.addEventListener('click', setIntervalSeconds);
-    document.getElementById('board').appendChild(buttonText);
+    document.getElementById("container").appendChild(buttonText);
 }
 function setIntervalSeconds(){
     let seconds = document.getElementById('spsbtextelem').value;
@@ -1043,11 +1087,19 @@ function drawSquareDetails(){
 function setSupervisorPatrol(){
     if ( !hasAnySquareDrew() )
         return;
-
-        // alert('a');
+        
+    
     drawSquareDetails();   
     // fixSquareTypeProprierties();
 
+}
+function rotate(cx, cy, x, y, angle) {
+    var radians = (Math.PI / 180) * angle,
+        cos = Math.cos(radians),
+        sin = Math.sin(radians),
+        nx = (cos * (x - cx)) + (sin * (y - cy)) + cx,
+        ny = (cos * (y - cy)) - (sin * (x - cx)) + cy;
+    return [nx, ny];
 }
 function fixSquareTypeProprierties(){
     selector = "[class*='square'][sqtype='BLANK']";
@@ -1072,7 +1124,7 @@ function fixSquareTypeProprierties(){
             element.setAttribute("sqcolor", SQUARE_TYPE_WHITE_PIECE);
     });
 }
-let intervalSeconds = 10;
+let intervalSeconds = 5;
 let intervalTime = intervalSeconds * 1000;
 let myInterval;
 $(document).ready(function (){

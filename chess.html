@@ -7,19 +7,22 @@
     <link href="chess.css" rel="stylesheet"/>
 </head>
 <body>
-    <div id='container'>
-        <div class="board" id="board"></div>
+    <div>
+        <div class="container" id="container">
             <div id="btdiv" class="buttons">
-            <br/>
-            <br/>
-            <button id="boardcreate" >create</button>
-            <button id="togglecolor" onclick="togglePlayerColorAndRedrawBoard()">Alterar Cor</button>
-            <br/>
-            <p id="captured"></p>
+                <button id="boardcreate" >create</button>
+                <button id="togglecolor" onclick="togglePlayerColorAndRedrawBoard()">Alterar Cor</button>
+                <p id="captured"></p>
+            </div>
+            
+            <div class="board" id="board"></div>
         </div>
-    </div>
+        
+        
+    </div>  
+
     <script src="jquery.min.js"></script>
-    <script src="chess.js"></script>
+    <!-- <script src="chess.js"></script> -->
     <script src="functionalInitBoard.js"></script>
 </body>
 </html>

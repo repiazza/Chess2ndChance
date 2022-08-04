@@ -1,8 +1,15 @@
+.container{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    border :1px solid blue;
+}
 .board{
     height: 640px;
     width: 640px;
     margin-top: 50px;
     margin-left: 50px;
+    position:absolute;
 }
 /* .d_inv{
     visibility: "invisible";
@@ -87,6 +94,8 @@
 }
 .buttons{
     margin-left: 130px;
+    margin-top: 730px;
+    position:absolute;
 }
 img {
     width: 100%;
