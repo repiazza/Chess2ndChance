@@ -42,6 +42,11 @@ const DIRECTION_ROTATE = [
 
 let LSquares = [];
 
+function validateAndSetCaptureSquare(mySquare){
+    if ( validateEnemyPieceSquare(mySquare) ){
+        document.getElementById(mySquare).classList.add("captureclass");
+    }
+}
 function getLSquaresFromSquare(square, ignoreColision=false){
     LSquares = [];
     let mySquareLeft = 0;
@@ -50,7 +55,8 @@ function getLSquaresFromSquare(square, ignoreColision=false){
         mySquareLeft = getSquare(square, pair[0][0]);
         if ( mySquareLeft ){
             mySquareLeft = getSquare(document.getElementById(mySquareLeft), pair[0][1]);
-            if ( mySquareLeft && !ignoreColision ){
+            if ( mySquareLeft && (!ignoreColision && !validateFriendlyPieceSquare(mySquareLeft)) ){
+                validateAndSetCaptureSquare(mySquareLeft);
                 LSquares.push(mySquareLeft);
                 document.getElementById(mySquareLeft).classList.add("moveclass");
             }
@@ -268,7 +274,7 @@ function getMovementRangeFromPieceType(value, moved=0){
         case PIECE_TYPE_KING:
             return KING_MOVEMENT_RANGE;
         case PIECE_TYPE_PAWN:
-            return moved ? PAWN_INITIAL_RANGE : PAWN_MOVED_RANGE;
+            return moved ? PAWN_MOVED_RANGE : PAWN_INITIAL_RANGE;
         case PIECE_TYPE_KNIGHT:
             return KNIGHT_MOVEMENT_RANGE;
         case PIECE_TYPE_ROOK:
@@ -284,13 +290,13 @@ function getMovementTypeFromPieceType(value, moved=0){
         case PIECE_TYPE_BISHOP:
             return BISHOP_INITIAL_MOVEMENT;
         case PIECE_TYPE_KING:
-            return moved ? KING_INITIAL_MOVEMENT : KING_CASTLED_MOVEMENT;
+            return moved ? KING_CASTLED_MOVEMENT : KING_INITIAL_MOVEMENT;
         case PIECE_TYPE_PAWN:
             return PAWN_INITIAL_MOVEMENT;
         case PIECE_TYPE_KNIGHT:
             return KNIGHT_INITIAL_MOVEMENT;
         case PIECE_TYPE_ROOK:
-            return moved ? ROOK_INITIAL_MOVEMENT : ROOK_CASTLED_MOVEMENT;
+            return moved ?  ROOK_CASTLED_MOVEMENT : ROOK_INITIAL_MOVEMENT;
         case PIECE_TYPE_QUEEN:
             return QUEEN_INITIAL_MOVEMENT;
     }
@@ -435,6 +441,7 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
             break;
             
         if ( !ignoreColision && document.getElementById(movDir).getAttribute('sqtype') != SQUARE_TYPE_BLANK){
+            validateAndSetCaptureSquare(movDir);
             break;
         }
         document.getElementById(movDir).classList.add("moveclass");
@@ -456,9 +463,10 @@ function validateIsBlank(square){
 }
 function validateIsOnRange(square){
     let myPieceType = getFirstSelectedElement().getAttribute('sqtype');
+    let moved = getFirstSelectedElement().getAttribute('mvd');
 
-    let myMovType = getMovementTypeFromPieceType(getPieceTypeFromSquareType(myPieceType));
-    let myMovRange = getMovementRangeFromPieceType(getPieceTypeFromSquareType(myPieceType));
+    let myMovType = getMovementTypeFromPieceType(getPieceTypeFromSquareType(myPieceType), moved);
+    let myMovRange = getMovementRangeFromPieceType(getPieceTypeFromSquareType(myPieceType), moved);
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_DIAGONAL) ){
         getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_LEFT_DIRECTION, myMovRange);
         getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_RIGHT_DIRECTION, myMovRange);
@@ -559,7 +567,7 @@ function changeSelectedSquare(square){
     return validateIsSelected() &&  (validateSelectedPieceSquare(square) == FRIENDLY_SIDE);
 }
 function captureSquare(square){
-    return (validateIsSelected() && (validateSelectedPieceSquare(square) == ENEMY_SIDE) && validateIsOnRange(square));
+    return (validateIsSelected() && (validateSelectedPieceSquare(square) == ENEMY_SIDE) && validateIsCapture(square));
 }
 function setElementAsSelected(elem){
     elem.setAttribute("sltd", "1");
@@ -606,7 +614,7 @@ function squareHandler(event){
     // Selecao previa + square com pecas inimigas
     else if ( moveSquare(event.target) || captureSquare(event.target) ){
         let oldelem = getFirstSelectedElement();
-        alert(oldelem.innerHTML);
+        // alert(oldelem.innerHTML);
         event.target.innerHTML = oldelem.innerHTML;
         oldelem.innerHTML = "";
         if ( !validateIsBlank(event.target) ){

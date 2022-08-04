@@ -18,6 +18,9 @@
     height: 80px;
     width: 80px;
 }
+.captureclass{
+    border: rgba(0, 0, 0, 0.1);
+}
 .rotate45deg{
     transform: rotate(-45deg);
 }
