@@ -1,5 +1,36 @@
 // import ('./Chess.js');
 // import  Movement  from "./Chess.js"
+
+const DARK_BGCOLOR = 0;
+const LIGHT_BGCOLOR = 1;
+
+const highlightClasses = 
+[
+    "columnmovhl", 
+    "linemovhl", 
+    "diagonalmovhl",
+    "knightmovhl",
+    "linemovhldark", 
+    "columnmovhldark", 
+    "diagonalmovhldark",
+    "knightmovhldark",
+    "capturehl",
+    "capturehldark",
+    "orangehl",
+    "orangeh1dark"
+];
+const captureClasses =
+[
+    "capturehl",
+    "capturehldark"             
+];
+
+
+const bgBoardColors = [
+    "darksquarecolor",
+    "lightsquarecolor"
+];
+
 const SQUARE_RANGE        = 1;
 const DOUBLE_SQUARE_RANGE = 2;
 const L_RANGE             = 4;
@@ -58,7 +89,7 @@ function getLSquaresFromSquare(square, ignoreColision=false){
         mySquareLeft = getSquare(square, pair[0][0]);
         if ( mySquareLeft ){
             mySquareLeft = getSquare(document.getElementById(mySquareLeft), pair[0][1]);
-            if ( mySquareLeft && (!ignoreColision && !validateFriendlyPieceSquare(mySquareLeft)) ){
+            if ( mySquareLeft && (!ignoreColision && !validateFriendlyPieceSquare(document.getElementById(mySquareLeft))) ){
                 validateAndSetCaptureSquare(mySquareLeft);
                 LSquares.push(mySquareLeft);
                 document.getElementById(mySquareLeft).classList.add("moveclass");
@@ -125,7 +156,7 @@ const SUBTYPE_DIAG_ALL = SUBTYPE_DIAG_MAIN_BEGIN
                          | SUBTYPE_DIAG_MAIN_END 
                          | SUBTYPE_DIAG_OPPOSITE_BEGIN 
                          | SUBTYPE_DIAG_OPPOSITE_END;
-// LINE COLUMN CROSS
+
 const SUBTYPE_COLUMN_ALL = SUBTYPE_COLUMN_TOP | SUBTYPE_COLUMN_BOTTOM;  
 const SUBTYPE_LINE_ALL   = SUBTYPE_LINE_LEFT  | SUBTYPE_LINE_RIGHT;            
 
@@ -135,62 +166,45 @@ const MOVEMENT_DIRECTION_SUBTYPE_ALL  = MOVEMENT_DIRECTION_ALL | SUBTYPE_ALL;
 
 const MOVEMENT_TYPE_ALL  = MOVEMENT_DIRECTION_ALL | SUBTYPE_ALL | SPECIAL_MOVEMENT_ALL;
 
-// const SQUARE_RANGE        = 1;
-// const DOUBLE_SQUARE_RANGE = 2;
-// const L_RANGE             = 4;
-// const LINE_OF_SIGHT       = 8;
-// const MOVEMENT_TYPE_NONE = 0;
-// const RANGE_TYPE_NONE = 0;
 
+//ROOK
 const ROOK_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_COLUMN
-                                | SUBTYPE_COLUMN_TOP
-                                | SUBTYPE_COLUMN_BOTTOM
                                 | MOVEMENT_DIRECTION_LINE
-                                | SUBTYPE_LINE_LEFT
-                                | SUBTYPE_LINE_RIGHT
                                 | SPECIAL_MOVEMENT_CASTLE;
 const ROOK_CASTLED_MOVEMENT = (ROOK_INITIAL_MOVEMENT ^ SPECIAL_MOVEMENT_CASTLE)
 const ROOK_MOVEMENT_RANGE = LINE_OF_SIGHT;
-  
+
+//KNIGHT  
 const KNIGHT_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_L;
 const KNIGHT_MOVEMENT_RANGE   = L_RANGE; // 2 movements 4way expressed
-  
+
+//BISHOP
 const BISHOP_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_DIAGONAL
-                                | SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END
-                                | SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
 const BISHOP_MOVEMENT_RANGE   = LINE_OF_SIGHT;
 
-
+// QUEEN
 const QUEEN_INITIAL_MOVEMENT =  MOVEMENT_DIRECTION_COLUMN
-                            | SUBTYPE_COLUMN_TOP
-                            | SUBTYPE_COLUMN_BOTTOM
                             | MOVEMENT_DIRECTION_LINE
-                            | SUBTYPE_LINE_LEFT
-                            | SUBTYPE_LINE_RIGHT
-                            | MOVEMENT_DIRECTION_DIAGONAL 
-                            | SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END
-                            | SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
+                            | MOVEMENT_DIRECTION_DIAGONAL;
 const QUEEN_MOVEMENT_RANGE  = LINE_OF_SIGHT;
 
+//KING
 const KING_INITIAL_MOVEMENT = SPECIAL_MOVEMENT_CASTLE
                             | MOVEMENT_DIRECTION_COLUMN
-                            | SUBTYPE_COLUMN_TOP
-                            | SUBTYPE_COLUMN_BOTTOM
                             | MOVEMENT_DIRECTION_LINE
-                            | SUBTYPE_LINE_LEFT
-                            | SUBTYPE_LINE_RIGHT
-                            | MOVEMENT_DIRECTION_DIAGONAL
-                            | SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END
-                            | SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
+                            | MOVEMENT_DIRECTION_DIAGONAL;
 const KING_CASTLED_MOVEMENT = (KING_INITIAL_MOVEMENT ^ SPECIAL_MOVEMENT_CASTLE)
 const KING_MOVEMENT_RANGE   =  SQUARE_RANGE;
-  
+
+//PAWN
 const PAWN_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_COLUMN
                                 | SUBTYPE_COLUMN_TOP
-                                | SUBTYPE_COLUMN_BOTTOM;
-
+                            | MOVEMENT_DIRECTION_DIAGONAL
+                                | SUBTYPE_DIAG_MAIN_BEGIN
+                                | SUBTYPE_DIAG_OPPOSITE_END;
 const PAWN_INITIAL_RANGE = DOUBLE_SQUARE_RANGE;
-const PAWN_MOVED_RANGE = SQUARE_RANGE;
+const PAWN_MOVED_RANGE   = SQUARE_RANGE;
+
 
 const TOP_RIGHT_DIRECTION = 'trsq';
 const TOP_LEFT_DIRECTION = 'tlsq';
@@ -204,6 +218,7 @@ const LINE_DIRECTION              = [ LEFT_DIRECTION, RIGHT_DIRECTION ];
 const COLUMN_DIRECTION            = [ BOTTOM_DIRECTION, TOP_DIRECTION ];
 const MAIN_DIAGONAL_DIRECTION     = [ BOTTOM_LEFT_DIRECTION,  TOP_RIGHT_DIRECTION];
 const OPPOSITE_DIAGONAL_DIRECTION = [ BOTTOM_RIGHT_DIRECTION,  TOP_LEFT_DIRECTION];
+const DIAGONAL_DIRECTION          = [ MAIN_DIAGONAL_DIRECTION, OPPOSITE_DIAGONAL_DIRECTION]
 
 const CROSS_DIRECTION             = LINE_DIRECTION.concat(COLUMN_DIRECTION);
 const STAR_DIRECTION              = CROSS_DIRECTION.concat(MAIN_DIAGONAL_DIRECTION).concat(OPPOSITE_DIAGONAL_DIRECTION);
@@ -443,19 +458,79 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         if ( i >= range )
             break;
 
+        let nextSqElem = document.getElementById(movDir);
         let nextSq = document.getElementById(movDir).getAttribute('sqtype');
-
-        alert(nextSq);
+        let mySquarePiece = getFirstSelectedElement().getAttribute('sqtype');
+        let moved = getFirstSelectedElement().getAttribute('mvd');
+        let mySquareType = getPieceTypeFromSquareType(mySquarePiece, moved);
+        
+        // alert(nextSq);
         if ( (!ignoreColision && nextSq != SQUARE_TYPE_BLANK )){
-            validateAndSetCaptureSquare(movDir);
+            if ( direction == TOP_DIRECTION
+                 && mySquareType != PIECE_TYPE_PAWN)
+                validateAndSetCaptureSquare(movDir);
+            else if ( (direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION)
+                        && mySquareType == PIECE_TYPE_PAWN ){
+                validateAndSetCaptureSquare(movDir);
+            }
+            else if ( mySquareType != PIECE_TYPE_PAWN){
+                validateAndSetCaptureSquare(movDir);
+            }
+
             break;
         }
-        document.getElementById(movDir).classList.add("moveclass");
-        movDir = document.getElementById(movDir).getAttribute(direction);
+        let refresh = 0;
+        if ( 
+            !(
+                (direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION)  
+                && mySquareType == PIECE_TYPE_PAWN
+              ) 
+            )
+        {
+            nextSqElem.classList.add("moveclass");
+            refresh =1;
+        }
+        else if ( !(direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION) ){
+            nextSqElem.classList.add("moveclass");
+            refresh = 1;
+        }
+
+        let myClass = -1 ;
+        if ( LINE_DIRECTION.includes(direction) )
+            myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_LINE);
+        else if ( COLUMN_DIRECTION.includes(direction) )  
+            myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_COLUMN);
+        else if ( MAIN_DIAGONAL_DIRECTION.includes(direction) )
+            myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
+        else if ( OPPOSITE_DIAGONAL_DIRECTION.includes(direction) )
+            myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
+        
+        if ( refresh == 1 ){
+            if ( nextSqElem.getAttribute('bgc').includes('dark') ){
+                myClass += 'dark';
+            }
+            nextSqElem.classList.forEach(thisclass => {
+                if ( highlightClasses.includes(thisclass) ){
+                    nextSqElem.classList.replace(thisclass, myClass);
+                }
+                if ( bgBoardColors.includes(thisclass) ){
+                    nextSqElem.classList.replace(thisclass, myClass);
+                }
+            });
+        }
+        movDir = nextSqElem.getAttribute(direction);
         i++;
     }
 
     return true;
+}
+function getClassNameFromMovementDirection(baseMovementDirection){
+    let i = 0;
+    for ( ; baseMovementDirection > 0 ; i++ ){
+        baseMovementDirection = baseMovementDirection >> 1;
+        // alert(baseMovementDirection);
+    }
+    return highlightClasses[i-1];
 }
 
 function validateIsSelected(){
@@ -467,6 +542,9 @@ function validateIsNotBlank(square){
 function validateIsBlank(square){
     return square.getAttribute("sqtype") == SQUARE_TYPE_BLANK;
 }
+function highlightSquares(square){
+    validateIsOnRange(square);
+}
 function validateIsOnRange(square){
     let myPieceType = getFirstSelectedElement().getAttribute('sqtype');
     let moved = getFirstSelectedElement().getAttribute('mvd');
@@ -474,19 +552,36 @@ function validateIsOnRange(square){
     let myMovType = getMovementTypeFromPieceType(getPieceTypeFromSquareType(myPieceType), moved);
     let myMovRange = getMovementRangeFromPieceType(getPieceTypeFromSquareType(myPieceType), moved);
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_DIAGONAL) ){
-        getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_LEFT_DIRECTION, myMovRange);
-        getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_RIGHT_DIRECTION, myMovRange);
-        getDirectionFromSquare(getFirstSelectedElement(), TOP_LEFT_DIRECTION, myMovRange);
-        getDirectionFromSquare(getFirstSelectedElement(), TOP_RIGHT_DIRECTION, myMovRange);
+        if ( matchMovementDirection(myMovType, SUBTYPE_DIAG_ALL) == 0 )
+            myMovType = myMovType | SUBTYPE_DIAG_ALL;
+
+        if ( matchMovementDirection(myMovType,SUBTYPE_DIAG_MAIN_BEGIN) )
+            getDirectionFromSquare(getFirstSelectedElement(), TOP_LEFT_DIRECTION, myMovRange);
+        if ( matchMovementDirection(myMovType,SUBTYPE_DIAG_MAIN_END) )
+            getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_RIGHT_DIRECTION, myMovRange);
+        if ( matchMovementDirection(myMovType,SUBTYPE_DIAG_OPPOSITE_BEGIN) )
+            getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_LEFT_DIRECTION, myMovRange);
+        if ( matchMovementDirection(myMovType,SUBTYPE_DIAG_OPPOSITE_END) )
+            getDirectionFromSquare(getFirstSelectedElement(), TOP_RIGHT_DIRECTION, myMovRange);
     }
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_COLUMN) ){
-        getDirectionFromSquare(getFirstSelectedElement(), TOP_DIRECTION, myMovRange);
-        getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_DIRECTION, myMovRange);
-     
+        if ( matchMovementDirection(myMovType, SUBTYPE_COLUMN_ALL) == 0 )
+            myMovType = myMovType | SUBTYPE_COLUMN_ALL;
+
+        if ( matchMovementDirection(myMovType, SUBTYPE_COLUMN_TOP) )
+            getDirectionFromSquare(getFirstSelectedElement(), TOP_DIRECTION, myMovRange);            
+        if ( matchMovementDirection(myMovType, SUBTYPE_COLUMN_BOTTOM) )
+            getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_DIRECTION, myMovRange);
+        
     }
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_LINE) ){
-        getDirectionFromSquare(getFirstSelectedElement(), RIGHT_DIRECTION, myMovRange);
-        getDirectionFromSquare(getFirstSelectedElement(), LEFT_DIRECTION, myMovRange);
+        if ( matchMovementDirection(myMovType, SUBTYPE_LINE_ALL) == 0 )
+            myMovType = myMovType | SUBTYPE_LINE_ALL;
+
+        if ( matchMovementDirection(myMovType, SUBTYPE_LINE_LEFT) )
+            getDirectionFromSquare(getFirstSelectedElement(), LEFT_DIRECTION, myMovRange);            
+        if ( matchMovementDirection(myMovType, SUBTYPE_LINE_RIGHT) )
+            getDirectionFromSquare(getFirstSelectedElement(), RIGHT_DIRECTION, myMovRange);
     }
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_L) ){
         getLSquaresFromSquare(getFirstSelectedElement());
@@ -496,9 +591,9 @@ function validateIsOnRange(square){
         return false;
     }
     
-    document.querySelectorAll('.moveclass').forEach(element => {
-        element.classList.remove("moveclass");
-    });  
+    // document.querySelectorAll('.moveclass').forEach(element => {
+    //     element.classList.remove("moveclass");
+    // });  
     return true;
     // highlightMovementDirection(myMov.getObjMovementType())
 }
@@ -564,7 +659,7 @@ function moveToDestination(originsq, destsq, flag){
     }
 }
 function validateIsCaptureSquare(square){
-    alert(square.classList);
+    // alert(square.classList);
     if ( !square.classList.contains("captureclass")){
         return false;
     }
@@ -592,6 +687,7 @@ function setElementAsSelected(elem){
 }
 function clearElementSelection(elem){
     document.getElementById(elem.id).removeAttribute('sltd');
+    
 }
 function clearAllElementSelection(){
     document.querySelectorAll('[sltd]').removeAttribute('sltd');
@@ -625,7 +721,8 @@ function squareHandler(event){
             // oldelem.innerHTML = "";
             clearElementSelection(oldelem);
         }
-        setElementAsSelected(event.target)
+        setElementAsSelected(event.target);
+        highlightSquares(event.target);
     }
     // Selecao previa + square sem pecas
     // Selecao previa + square com pecas inimigas
@@ -665,16 +762,24 @@ function readyHandler(event){
     let marginTop = 0;
     let supervisorMarginTop = 40;
     let supervisoridCtr = 0;
+    
+    let rowColorToggle = false;
     for ( let rowNdx = 1; rowNdx < 9; rowNdx++ ){
         columnArray.map( function (columnAlpha, clmndx){
             try{
                 let candidateElem = drawSquare(columnAlpha+rowNdx, "");
                 const newsquare = createSquare(candidateElem);
                 marginLeft += 80;
+                var squareColorSeq = DARK_BGCOLOR;
+                if ( clmndx%2 != rowColorToggle ) {
+                    squareColorSeq = LIGHT_BGCOLOR;
+                }
                 newsquare.squareElem.style.position = 'absolute';
                 newsquare.squareElem.style.marginLeft = marginLeft+"px";
                 newsquare.squareElem.style.marginTop = marginTop+"px";
-                newsquare.squareElem.style.backgroundColor = ((clmndx+rowNdx)%2) ? 'red':'yellow';
+                newsquare.squareElem.classList.add(bgBoardColors[squareColorSeq]);
+                newsquare.squareElem.setAttribute("bgc", bgBoardColors[squareColorSeq]); 
+                // newsquare.squareElem.style.backgroundColor = ((clmndx+rowNdx)%2) ? 'red':'yellow';
                 newsquare.squareElem.style.color = 'black';
                 newsquare.squareElem.setAttribute("sqtype", newsquare.squareType);
                 newsquare.squareElem.setAttribute("sqcolor", newsquare.squareColor);
@@ -710,6 +815,8 @@ function readyHandler(event){
         });
         marginTop += 80;
         marginLeft = 0;
+        
+        rowColorToggle = !rowColorToggle;
     }
     $('#board').css("transform", "scaleY(-1)");
     
