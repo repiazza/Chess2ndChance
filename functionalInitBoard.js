@@ -73,6 +73,10 @@ const DIRECTION_ROTATE = [
 
 let LSquares = [];
 
+let intervalSeconds = 5;
+let intervalTime = intervalSeconds * 1000;
+let myInterval;
+
 function validateAndSetCaptureSquare(mySquare){
     if ( mySquare.id === undefined || mySquare.id == null)
         mySquare = document.getElementById(mySquare);
@@ -97,7 +101,6 @@ function getLSquaresFromSquare(square, ignoreColision=false){
         }
         mySquareRight = getSquare(square,pair[1][0])
         if ( mySquareRight ){
-            // alert(mySquareRight);
             mySquareRight = getSquare(document.getElementById(mySquareRight),pair[1][1]);
             
             if ( mySquareRight ){
@@ -106,21 +109,6 @@ function getLSquaresFromSquare(square, ignoreColision=false){
             }
         }
     });
-    // let initSquareL = getSquare(square,TOP_LEFT)
-    // initSquareL = getSquare(document.getElementById(initSquareL),TOP)
-    // let initSquareR = getSquare(square,TOP_RIGHT)
-    // initSquareR = getSquare(document.getElementById(initSquareR),TOP)
-    // LSquares.push(initSquareL, initSquareR);
-    // let i = 90;
-    // while ( i < 360 ){
-    //     $(square).css("transform", "rotate('"+i+"deg')");
-    //     initSquareL = getSquare(square,DIRECTION_ROTATE[])
-    //     initSquareL = getSquare(document.getElementById(initSquareL),TOP)
-    //     initSquareR = getSquare(square,TOP_RIGHT)
-    //     initSquareR = getSquare(document.getElementById(initSquareR),TOP)
-    //     i += 90;
-    //     LSquares.push(initSquareL, initSquareR);
-    // }
     console.debug(LSquares);
 }                      
         
@@ -262,9 +250,10 @@ const FILTER_TYPE = 3
 const FILTER_SELECTED = 4
 const FILTER_NOT_SELECTED = 5
 const FILTER_EMPTY = 6
-                  // 'row', 'column', 'color', 'type', 'selected', 'notselected', 'empty'
-let filterDetails = [ -1, -1, -1, -1, -1, -1, -1];
+                  //  'row', 'column', 'color', 'type', 'selected', 'notselected', 'empty'
+let filterDetails = [  -1,     -1,       -1,     -1,       -1,         -1,           -1];
 let capturedPieces = "";
+
 function movementMatchesAnyDirection(movementType){
     return (movementType & MOVEMENT_DIRECTION_ALL) ? true : false;
 }
@@ -321,12 +310,6 @@ function getMovementTypeFromPieceType(value, moved=0){
     return MOVEMENT_TYPE_NONE;
 }
 
-// function validateSquare(square, flag){
-//     if ( flag === SQUARE_TYPE_BLANK )
-//         return square.innerHTML == "";
-//     if ( flag === SQUARE_TYPE_PIECE )
-//         return square.innerHTML != "";
-// }
 function validateSquare(square, flag){
     if ( square === undefined )
         return false;
@@ -409,7 +392,6 @@ function createSquare(square){
     };
 }
 function getSquare(square, relativePosition){
-    // console.log(square);
     let columnNotation = square.id[0];
     let indexNotation = Number(square.id[1]);
     let leftPos = -1;
@@ -437,40 +419,15 @@ function getSquare(square, relativePosition){
     }
     if (  allPos[relativePosition] == -1 )
         return false;
-        // console.log(relativePosition)
+
     if ( isLetter(allPos[relativePosition]) )
         return "" + allPos[relativePosition] + indexNotation;
     
     return "" + columnNotation + allPos[relativePosition];
 }
 
-// const highlightClasses = 
-// [
-//     "columnmovhl", 
-//     "linemovhl", 
-//     "diagonalmovhl",
-//     "knightmovhl",
-//     "linemovhldark", 
-//     "columnmovhldark", 
-//     "diagonalmovhldark",
-//     "knightmovhldark",
-//     "capturehl",
-//     "capturehldark",
-//     "orangehl",
-//     "orangeh1dark"
-// ];
-// const captureClasses =
-// [
-//     "capturehl",
-//     "capturehldark"             
-// ];
 
-
-// const bgBoardColors = [
-//     "darksquarecolor",
-//     "lightsquarecolor"
-// ];
-function highlightSelection(direction){
+function highlightSelection(direction, elem){
     let myClass = -1 ;
     if ( LINE_DIRECTION.includes(direction) )
         myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_LINE);
@@ -481,17 +438,6 @@ function highlightSelection(direction){
     else if ( OPPOSITE_DIAGONAL_DIRECTION.includes(direction) )
         myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
     
-    if ( nextSqElem.getAttribute('bgc').includes('dark') ){
-        myClass += 'dark';
-    }
-    nextSqElem.classList.forEach(thisclass => {
-        if ( highlightClasses.includes(thisclass) ){
-            nextSqElem.classList.replace(thisclass, myClass);
-        }
-        if ( bgBoardColors.includes(thisclass) ){
-            nextSqElem.classList.replace(thisclass, myClass);
-        }
-    });
 }
 
 function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreColision=false){
@@ -538,11 +484,18 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         {
             nextSqElem.setAttribute("mvsl", "1");
         }
-        else if ( !(direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION) ){
+        else{
+            
+            nextSqElem.removeAttribute("mvsl");
+        }
+        if ( !(direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION) ){
+            
             nextSqElem.setAttribute("mvsl", "1");
         }
-
-        highlightSelection(direction);
+        else{
+            nextSqElem.removeAttribute("mvsl");
+        }
+        highlightSelection(direction, nextSqElem);
 
         movDir = nextSqElem.getAttribute(direction);
         i++;
@@ -550,11 +503,13 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
 
     return true;
 }
+// O array de highlight as 4 primeiras posicoes sao as classes
+// os nossos movimentos sao 4 bits de um byte, na mesma sequencia da respectiva classe
+// entao fazemos um shift right bem maroto.
 function getClassNameFromMovementDirection(baseMovementDirection){
     let i = 0;
     for ( ; baseMovementDirection > 0 ; i++ ){
         baseMovementDirection = baseMovementDirection >> 1;
-        // alert(baseMovementDirection);
     }
     return highlightClasses[i-1];
 }
@@ -562,11 +517,11 @@ function getClassNameFromMovementDirection(baseMovementDirection){
 function validateIsSelected(){
     return getAllSelectedElements()
 }
-function validateIsNotBlank(square){
-    return square.getAttribute("sqtype") != SQUARE_TYPE_BLANK;
-}
 function validateIsBlank(square){
     return square.getAttribute("sqtype") == SQUARE_TYPE_BLANK;
+}
+function validateIsNotBlank(square){
+    return !validateIsBlank(square);
 }
 function highlightSquares(square){
     validateIsOnRange(square);
@@ -617,11 +572,7 @@ function validateIsOnRange(square){
         return false;
     }
     
-    // document.querySelectorAll('.moveclass').forEach(element => {
-    //     element.classList.remove("moveclass");
-    // });  
     return true;
-    // highlightMovementDirection(myMov.getObjMovementType())
 }
 function validateEnemyPieceSquare(square){
     return (square.getAttribute('sqcolor') != playerColor);
@@ -660,13 +611,42 @@ function drawSquare(squareId, myInner=""){
     let divSquare = document.createElement('div');
     divSquare.id = squareId;
     divSquare.innerHTML = myInner;
-    // divSquare.classList.add('square');
     divSquare.setAttribute("square", "1");
-    // divSquare.classList.add('squaredimension');
+    divSquare.setAttribute("clm", squareId[0]);
+    divSquare.setAttribute("ldnx", squareId[1]);
     divSquare.addEventListener('click', squareHandler)
 
     return divSquare;
 }
+function querySelectorAllRegex(regex, attributeToSearch) {
+    const output = [];
+    if (attributeToSearch) {
+      for (let element of document.querySelectorAll(`[${attributeToSearch}]`)) {
+        if (regex.test(element.getAttribute(attributeToSearch))) {
+          output.push(element);
+        }
+      }
+    } else {
+      for (let element of document.querySelectorAll('*')) {
+        for (let attribute of element.attributes) {
+          if (regex.test(attribute.value)) {
+            output.push(element);
+          }
+        }
+      }
+    }
+    return output;
+  }
+  function querySelectorAllRegex2(regex, DomElem) {
+    const output = [];
+      for (let element of DomElem) {
+        if (regex.test(element.outerHTML)) {
+          output.push(element);
+        }
+      }
+   
+    return output;
+  }
 function moveToDestination(originsq, destsq, flag){
     let outerdest = destsq.outerHTML.split("class");
     let outerorig = originsq.outerHTML.split("class");
@@ -686,7 +666,6 @@ function moveToDestination(originsq, destsq, flag){
     }
 }
 function validateIsCaptureSquare(square){
-    // alert(square.classList);
     if ( !square.classList.contains("captureclass")){
         return false;
     }
@@ -716,13 +695,11 @@ function setClassByBGAttr(className, bgcAttr, squareId){
     if ( bgcAttr.includes('dark') ){
         className += 'dark';
     }
-    
     document.getElementById(squareId).classList.add(className);
 }
 function clearElementSelection(elem){
     document.getElementById(elem.id).removeAttribute('sltd');
     document.getElementById(elem.id).removeAttribute('mvsl');
-    
 }
 function setBGColorAsDOMAttributeAndRemove(elemId){
     let myClassName = bgBoardColors[DARK_BGCOLOR];
@@ -747,7 +724,6 @@ function clearAllElementSelection(){
         let bgcAttr = setBGColorAsDOMAttributeAndRemove(element.id);
         setClassByBGAttr("", bgcAttr, element.id);
     });  
-    
 }
 function isElementSelected(elem){
     return document.querySelector('[id="'+elem.id+'"][sltd]');
@@ -769,9 +745,9 @@ function matchMovementDirection(movType, direction){
 }
 function squareHandler(event){
     event.preventDefault();
-    // Validar contexto de algo ja selecionado
-    // Sem selecao previa + square com pecas 
-    // ou com selecao previua + square aliado
+
+    // Square aliado e
+    // SEM selecao previa ou COM selecao previua 
     if ( selectSquare(event.target) || changeSelectedSquare(event.target) ){
         if ( validateIsSelected() ){
             let oldelem = getFirstSelectedElement();
@@ -781,11 +757,10 @@ function squareHandler(event){
         setElementAsSelected(event.target);
         highlightSquares(event.target);
     }
-    // Selecao previa + square sem pecas
+    // Selecao previa + square sem pecas ou
     // Selecao previa + square com pecas inimigas
     else if ( moveSquare(event.target) || captureSquare(event.target) ){
         let oldelem = getFirstSelectedElement();
-        // alert(oldelem.innerHTML);
         event.target.innerHTML = oldelem.innerHTML;
         oldelem.innerHTML = "";
         if ( !validateIsBlank(event.target) ){
@@ -795,7 +770,6 @@ function squareHandler(event){
             + event.target.id[0] + " ";
         }
         
-        // clearElementSelection(oldelem);
         clearAllElementSelection();
         event.target.setAttribute("sqcolor", oldelem.getAttribute("sqcolor"))
         event.target.setAttribute("sqtype", oldelem.getAttribute("sqtype"))
@@ -803,7 +777,6 @@ function squareHandler(event){
         event.target.setAttribute("mvd", "1");
         oldelem.setAttribute("sqcolor", "0");
         oldelem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
-        // alert("moveSquare ou captureSquare");
     }
     drawSquareDetails();
 
@@ -811,10 +784,8 @@ function squareHandler(event){
 function readyHandler(event){
     event.preventDefault();
 
-    // const blanksquare  = drawSquare('a3', "");
-    // const piecesquare  = drawSquare('a1', 'WR1');
-    // const blanksquare  = drawSquare('a3', "asdad");
-    // const piecesquare  = drawSquare('a1', '');
+    if ( document.getElementById('a1') != null )
+        return;
     const board = document.getElementById('board');
     let marginLeft = 0;
     let marginTop = 0;
@@ -864,7 +835,6 @@ function readyHandler(event){
                 board.appendChild(newsquare.squareElem);
                 document.getElementById('container').appendChild(supervisor);
                 supervisorMarginTop += 20;
-                // console.log(newsquare);
 
             }
             catch(err){
@@ -900,7 +870,7 @@ function drawInitialBoard(boardId, buttonreadyHandler){
 }
 
 function drawSupervisorSelect(){
-    let selectElem = document.getElementById('supervisorselect');
+    // let selectElem = document.getElementById('supervisorselect');
     let radioElem = [-1,-1];
     let radioLbl = [-1,-1];
     let radioType = [-1,-1];
@@ -909,38 +879,14 @@ function drawSupervisorSelect(){
     let selectType = -1;
     let typeValue = -1
     let selectRow = -1;
-    let selectVal = -1; 
     let columnVal = -1;
     let rowVal = -1;
     let radioVal = -1;
-    let typeSelected = -1;
+    let typeSelected = false;
     let option = -1;
     filterDetails = [-1, -1,-1, -1, -1, -1, -1];
-    if ( selectElem != null ){
-        selectVal = selectElem.value;
-        document.getElementById("container").removeChild(selectElem);
-    }
-    else{    
-        document.querySelectorAll('[id^=spsb]').forEach(element => {
-            document.getElementById("container").removeChild(element);
-        });  
-    }
-    selectElem = document.createElement("select");
-    selectElem.id = "supervisorselect";
-    selectElem.addEventListener('change', drawSquareDetails);
-    selectElem.style.position = 'absolute';
-    selectElem.style.marginTop = '50px';
-    let filteropt  = ['Escolha', 'Row', 'Column', 'Color', 'Type', 'Selected', 'Not Selected', 'Empty'];
-    for (var i = 0; i < filteropt.length; i++) {
-        option = document.createElement("option");
-        option.value = i;
-        option.text = filteropt[i];
-        if (selectVal == i)
-            option.selected = 1;
+  
 
-        selectElem.appendChild(option);
-    }
-    if ( (selectVal-1) == FILTER_COLUMN ){
         selectColumn = document.getElementById('spsbselectcolumn');
         columnVal = -1;
         if ( selectColumn != null ){
@@ -948,18 +894,19 @@ function drawSupervisorSelect(){
             document.getElementById("container").removeChild(selectColumn);
         }
         else{    
-            document.querySelectorAll('[id^=spsb]').forEach(element => {
+            document.querySelectorAll('[id="spsbselectcolumn"]').forEach(element => {
                 document.getElementById("container").removeChild(element);
             });  
         }
         selectColumn = document.createElement("select");
         selectColumn.id = "spsbselectcolumn";
         selectColumn.style.position = 'absolute';
-        selectColumn.style.marginTop = '75px';
+        selectColumn.style.marginTop = '10px';
+        selectColumn.style.marginLeft = '780px';
         selectColumn.addEventListener('change', drawSquareDetails);
         option = document.createElement("option");
         option.value = -1;
-        option.text = "selecione";
+        option.text = "Coluna:";
         selectColumn.appendChild(option);
         for (var i = 0; i < columnArray.length; i++) {
             option = document.createElement("option");
@@ -971,9 +918,7 @@ function drawSupervisorSelect(){
                 
             selectColumn.appendChild(option);
         }
-        // selectColumn = selectElem;
-    }
-    else if ( (selectVal-1) == FILTER_ROW ){
+
         selectRow = document.getElementById('spsbselectrow');
         rowVal = -1;
         if ( selectRow != null ){
@@ -981,18 +926,19 @@ function drawSupervisorSelect(){
             document.getElementById("container").removeChild(selectRow);
         }
         else{    
-            document.querySelectorAll('[id^=spsb]').forEach(element => {
+            document.querySelectorAll('[id="spsbselectrow"]').forEach(element => {
                 document.getElementById("container").removeChild(element);
             });  
         }
         selectRow = document.createElement("select");
         selectRow.id = "spsbselectrow";
         selectRow.style.position = 'absolute';
-        selectRow.style.marginTop = '75px';
+        selectRow.style.marginTop = '10px';
+        selectRow.style.marginLeft = '920px';
         selectRow.addEventListener('change', drawSquareDetails);
         option = document.createElement("option");
         option.value = -1;
-        option.text = "selecione";
+        option.text = "Linha:";
         selectRow.appendChild(option);
         for (var i = 0; i < 8; i++) {
             option = document.createElement("option");
@@ -1004,13 +950,13 @@ function drawSupervisorSelect(){
                 
             selectRow.appendChild(option);
         }
-        // selectColumn = selectElem;
-    }
-    else if ( (selectVal-1) == FILTER_COLOR ){
+
         radioElem[0] = document.getElementById('spsbrdwhite');
         radioElem[1] = document.getElementById('spsbrdblack');
+        radioElem[2] = document.getElementById('spsbrdboth');
         radioLbl[0] = document.getElementById('spsblblrdwhite');
         radioLbl[1] = document.getElementById('spsblblrdblack');
+        radioLbl[2] = document.getElementById('spsblblrdboth');
         radioVal = -1;
         if ( radioElem[0] != null ){
             radioVal = (radioElem[0].checked) ? radioElem[0].value : -1;
@@ -1028,66 +974,121 @@ function drawSupervisorSelect(){
         if ( radioLbl[1] != null ){
             document.getElementById("container").removeChild(radioLbl[1]);
         }
+        if ( radioElem[2] != null ){
+            if ( radioVal == -1 ){
+                radioVal = (radioElem[2].checked) ? radioElem[2].value : -1;
+            }
+            document.getElementById("container").removeChild(radioElem[2]);
+        }
+        if ( radioLbl[2] != null ){
+            document.getElementById("container").removeChild(radioLbl[2]);
+        }
         if ( radioVal == -1 ) {    
-            document.querySelectorAll('[id^=spsb]').forEach(element => {
+            document.querySelectorAll('[id="spsbrdwhite"]').forEach(element => {
+                document.getElementById("container").removeChild(element);
+            });  
+            document.querySelectorAll('[id="spsbrdblack"]').forEach(element => {
+                document.getElementById("container").removeChild(element);
+            });  
+            document.querySelectorAll('[id="spsblblrdwhite"]').forEach(element => {
+                document.getElementById("container").removeChild(element);
+            });  
+            document.querySelectorAll('[id="spsblblrdblack"]').forEach(element => {
+                document.getElementById("container").removeChild(element);
+            }); 
+            document.querySelectorAll('[id="spsbrdboth"]').forEach(element => {
+                document.getElementById("container").removeChild(element);
+            });  
+            document.querySelectorAll('[id="spsblblrdboth"]').forEach(element => {
                 document.getElementById("container").removeChild(element);
             });  
         }
-
+        // Label
+        radioLbl[0] = document.createElement("label");
+        radioLbl[0].for = "spsbrdwhite";
+        radioLbl[0].id = "spsblblrdwhite";
+        radioLbl[0].innerHTML = "White:";
+        radioLbl[0].style.position = 'absolute';
+        radioLbl[0].style.marginTop = '10px';
+        radioLbl[0].style.marginLeft = '1200px';
+        // Radio button
         radioElem[0] = document.createElement("input");
         radioElem[0].type = 'radio';
         radioElem[0].id = "spsbrdwhite";
         radioElem[0].value = "WHITEPIECE";
         if ( radioVal == radioElem[0].value )
             radioElem[0].checked = true;
+
         radioElem[0].name="colors";
         radioElem[0].style.position = 'absolute';
+        radioElem[0].style.marginTop = '13px';
+        radioElem[0].style.marginLeft = '1245px';
         radioElem[0].addEventListener('change', drawSquareDetails);
-        radioLbl[0] = document.createElement("label");
-        radioLbl[0].for = "spsbrdwhite";
-        radioLbl[0].id = "spsblblrdwhite";
-        radioLbl[0].innerHTML = "White";
-        radioLbl[0].style.position = 'absolute';
-        radioLbl[0].style.marginTop = '75px';
+
+        // Label Black
+        radioLbl[1] = document.createElement("label");
+        radioLbl[1].for = "spsbrdblack";
+        radioLbl[1].id = "spsblblrdblack";
+        radioLbl[1].innerHTML = "Black:";
+        radioLbl[1].style.position = 'absolute';
+        radioLbl[1].style.marginTop = '10px';
+        radioLbl[1].style.marginLeft = '1273px';
+        // Radio button Black
         radioElem[1] = document.createElement("input");
         radioElem[1].type = 'radio';
         radioElem[1].id = "spsbrdblack";
         radioElem[1].value = "BLACKPIECE";  
         if ( radioVal == radioElem[1].value )
             radioElem[1].checked = true;
+
         radioElem[1].name="colors";
         radioElem[1].style.position = 'absolute';
-        radioElem[1].style.marginTop = '50px';
+        radioElem[1].style.marginTop = '13px';
+        radioElem[1].style.marginLeft = '1317px';
         radioElem[1].addEventListener('change', drawSquareDetails);
-        radioLbl[1] = document.createElement("label");
-        radioLbl[1].for = "spsbrdblack";
-        radioLbl[1].id = "spsblblrdblack";
-        radioLbl[1].innerHTML = "Black";
-        radioLbl[1].style.position = 'absolute';
-        radioLbl[1].style.marginTop = '50px';
-        radioLbl[1].style.marginLeft = '30px';
-    }
-    else if ( (selectVal-1) == FILTER_TYPE  ){
+
+        // // Label Ambos
+        // radioLbl[2] = document.createElement("label");
+        // radioLbl[2].for = "spsbrdboth";
+        // radioLbl[2].id = "spsblblrdboth";
+        // radioLbl[2].innerHTML = "Tudo:";
+        // radioLbl[2].style.position = 'absolute';
+        // radioLbl[2].style.marginTop = '10px';
+        // radioLbl[2].style.marginLeft = '1340px';
+        // // Radio button Ambos
+        // radioElem[2] = document.createElement("input");
+        // radioElem[2].type = 'radio';
+        // radioElem[2].id = "spsbrdboth";
+        // radioElem[2].value = "both";  
+        // if ( radioVal == radioElem[2].value )
+        //     radioElem[2].checked = true;
+
+        // radioElem[2].name="colors";
+        // radioElem[2].style.position = 'absolute';
+        // radioElem[2].style.marginTop = '13px';
+        // radioElem[2].style.marginLeft = '1395px';
+        // radioElem[2].addEventListener('change', drawSquareDetails);
+
         selectType = document.getElementById('spsbselecttype');
-        // selectType = selectElem;
         typeValue = -1;
         if ( selectType != null ){
             typeValue = selectType.value;
             document.getElementById("container").removeChild(selectType);
         }
         else{
-            document.querySelectorAll('[id^=spsb]').forEach(element => {
+            document.querySelectorAll('[id=spsbselecttype]').forEach(element => {
                 document.getElementById("container").removeChild(element);
             });  
         }
         selectType = document.createElement("select");
         selectType.id = "spsbselecttype";
         selectType.style.position = 'absolute';
-        selectType.style.marginTop = '25px';
+        selectType.style.marginTop = '10px';
+        selectType.style.marginLeft = '1050px';
         selectType.addEventListener('change', drawSquareDetails);
         option = document.createElement("option");
         option.value = -1;
-        option.text = "selecione";
+        option.text = "Peça:";
         selectType.appendChild(option);
         for (var i = 0; i < 5; i++) {
             option = document.createElement("option");
@@ -1106,54 +1107,93 @@ function drawSupervisorSelect(){
             option.selected = 1;
         }
         selectType.appendChild(option);
-    }
-    else if ( (selectVal-1) == FILTER_SELECTED ){
-        typeSelected = 'sltd';
-        typeSelected = '['+typeSelected+']';
-    }
-    else if ( (selectVal-1) == FILTER_NOT_SELECTED ){
-        typeSelected = 'sltd';                
-        typeSelected = ':not(['+typeSelected+'])';
-    }
-    else if ( (selectVal-1) == FILTER_EMPTY ){
-        radioVal = BLANK_SQUARE_COLOR;
-    }
-    else{
-        document.querySelectorAll('[id^=spsb]').forEach(element => {
-            document.getElementById("container").removeChild(element);
-        });   
-    }
+    
+        labelSelected = document.createElement("label");
+        labelSelected.for = "spsbcheckslt";
+        labelSelected.id = "spsblblcheck";
+        labelSelected.innerHTML = "Seleção:";
+        labelSelected.style.position = 'absolute';
+        labelSelected.style.marginTop = '10px';
+        labelSelected.style.marginLeft = '1273px';
+
+        checkSelected = document.getElementById('spsbcheckslt');
+        typeSelected = false;
+        if ( checkSelected != null ){
+            typeSelected = checkSelected.checked;
+            document.getElementById("container").removeChild(selectType);
+        }
+        else{
+            document.querySelectorAll('[id=spsbcheckslt]').forEach(element => {
+                document.getElementById("container").removeChild(element);
+            });
+            document.querySelectorAll('[id=spsblblcheck]').forEach(element => {
+                document.getElementById("container").removeChild(element);
+            });
+        }
+        checkSelected = document.createElement("input");
+        checkSelected.type = "checkbox";
+        checkSelected.id = "spsbcheckslt";
+        checkSelected.style.position = 'absolute';
+        checkSelected.style.marginTop = '10px';
+        checkSelected.style.marginLeft = '1200px';
+        if ( typeSelected )
+            checkSelected.checked = 1;
+        
+        checkSelected.addEventListener('change', drawSquareDetails);
+        
+        let sltd = '[sltd]';
+        if ( !typeSelected ){
+            typeSelected = ':not(['+sltd+'])';
+        }
+        else{
+            typeSelected = sltd;
+        }
+
+    // else if ( (selectVal-1) == FILTER_EMPTY ){
+        // radioVal = BLANK_SQUARE_COLOR;
+    // }
+    // else{
+    //     document.querySelectorAll('[id^=spsb]').forEach(element => {
+    //         document.getElementById("container").removeChild(element);
+    //     });   
+    // }
     filterDetails[FILTER_COLUMN] = columnVal;
     filterDetails[FILTER_ROW] = rowVal;
     filterDetails[FILTER_COLOR] = radioVal;
     filterDetails[FILTER_TYPE] = typeValue;
     filterDetails[FILTER_SELECTED] = typeSelected;
-    if ( selectElem != -1 && selectElem != null ){
-        document.getElementById("container").appendChild(selectElem);
-        if ( selectColumn != -1 && selectColumn != null )
-            document.getElementById("container").appendChild(selectColumn);
-        if ( selectRow != -1 && selectRow != null )
-            document.getElementById("container").appendChild(selectRow);
-        if ( radioElem[0] != -1 && radioElem[0] != null ){
-            document.getElementById("container").appendChild(radioElem[0]);
-            document.getElementById("container").appendChild(radioLbl[0]);
-        } 
-        if ( radioElem[1] != -1 && radioElem[1] != null ){
-            document.getElementById("container").appendChild(radioElem[1]);
-            document.getElementById("container").appendChild(radioLbl[1]);
-        }
-        if ( radioType[0] != -1 && radioType[0] != null ){
-            document.getElementById("container").appendChild(radioType[0]);
-            document.getElementById("container").appendChild(radioTpLbl[0]);
-        } 
-        if ( radioType[1] != -1 && radioType[1] != null ){
-            document.getElementById("container").appendChild(radioType[1]);
-            document.getElementById("container").appendChild(radioTpLbl[1]);
-        }
-        if ( selectType != -1 && selectType != null ){
-            document.getElementById("container").appendChild(selectType);
-            document.getElementById("container").appendChild(selectType);
-        }
+    
+    if ( selectColumn != -1 && selectColumn != null ){
+        document.getElementById("container").appendChild(selectColumn);
+    }
+    if ( selectRow != -1 && selectRow != null ){
+        document.getElementById("container").appendChild(selectRow);
+    }
+    if ( radioElem[0] != -1 && radioElem[0] != null ){
+        document.getElementById("container").appendChild(radioElem[0]);
+        document.getElementById("container").appendChild(radioLbl[0]);
+    } 
+    if ( radioElem[1] != -1 && radioElem[1] != null ){
+        document.getElementById("container").appendChild(radioElem[1]);
+        document.getElementById("container").appendChild(radioLbl[1]);
+    }
+    if ( radioElem[2] != -1 && radioElem[2] != null ){
+        document.getElementById("container").appendChild(radioElem[2]);
+        document.getElementById("container").appendChild(radioLbl[2]);
+    }
+    if ( radioType[0] != -1 && radioType[0] != null ){
+        document.getElementById("container").appendChild(radioType[0]);
+        document.getElementById("container").appendChild(radioTpLbl[0]);
+    } 
+    if ( radioType[1] != -1 && radioType[1] != null ){
+        document.getElementById("container").appendChild(radioType[1]);
+        document.getElementById("container").appendChild(radioTpLbl[1]);
+    }
+    if ( selectType != -1 && selectType != null ){
+        document.getElementById("container").appendChild(selectType);
+    }
+    if ( checkSelected != -1 && checkSelected != null ){
+        document.getElementById("container").appendChild(checkSelected);
     }
 
 }
@@ -1175,12 +1215,12 @@ function drawFullDiagonalSelect(){
     let selectElem = document.createElement("select");
     selectElem.id = "spsbdiagonalselect";
     selectElem.style.position = "absolute";
-    selectElem.style.marginTop = "120px";
-    selectElem.style.marginLeft = "75px";
+    selectElem.style.marginTop = "30px";
+    selectElem.style.marginLeft = "10px";
     selectElem.addEventListener('change', setDiagonalFromSelect);
     let option = document.createElement("option");
     option.value = -1;
-    option.text = "Sq:";
+    option.text = "Square:";
     selectElem.appendChild(option);
     
     for ( let rowNdx = 1; rowNdx < 9; rowNdx++ ){
@@ -1196,9 +1236,10 @@ function drawFullDiagonalSelect(){
     
     labelElem.for = "diagonalselect";
     labelElem.id = "spsblbldiagonalselect";
-    labelElem.innerHTML = "Diagonal:";
+    labelElem.innerHTML = "Pintar Diagonal:";
     labelElem.style.position = "absolute";
-    labelElem.style.marginTop = "120px";
+    labelElem.style.marginTop = "10px";
+    labelElem.style.marginLeft = "10px";
     document.getElementById("container").appendChild(labelElem);
     document.getElementById("container").appendChild(selectElem);
 }
@@ -1208,9 +1249,10 @@ function drawIntervalTimeSet(){
     });
     let ptextElem = document.createElement("p");
     ptextElem.id = 'spsbptextelem';
-    ptextElem.innerHTML = 'Refresh(seg):';
+    ptextElem.innerHTML = 'Frequencia de <br/>atualizacao do<br/> supervisor(seg):';
     ptextElem.style.position = "absolute";
-    ptextElem.style.marginTop = "160px";
+    ptextElem.style.marginTop = "60px";
+    ptextElem.style.marginLeft = "10px";
     document.getElementById("container").appendChild(ptextElem);
     let textElem = document.createElement("input");
     textElem.id = 'spsbtextelem';
@@ -1218,22 +1260,22 @@ function drawIntervalTimeSet(){
     textElem.setAttribute("maxlenght", "10");
     textElem.setAttribute("lenght", "10");
     textElem.style.position = "absolute";
-    textElem.style.marginTop = "180px";
+    textElem.style.marginTop = "120px";
+    textElem.style.marginLeft = "10px";
     textElem.style.width = "30px";
     document.getElementById("container").appendChild(textElem);
     let buttonText = document.createElement("input");
     buttonText.id = 'spsbbttextelem';
     buttonText.setAttribute("type", "button");
     buttonText.style.position = "absolute";
-    buttonText.style.marginTop = "180px";
-    buttonText.style.marginLeft = "30px";
+    buttonText.style.marginTop = "120px";
+    buttonText.style.marginLeft = "50px";
     buttonText.setAttribute("value", "Enviar");
     buttonText.addEventListener('click', setIntervalSeconds);
     document.getElementById("container").appendChild(buttonText);
 }
 function setIntervalSeconds(){
     let seconds = document.getElementById('spsbtextelem').value;
-    // alert(seconds);
     if (  (Number(seconds) > 1) && (Number(seconds) < 20) ){
         intervalSeconds = seconds;
         intervalTime = intervalSeconds * 1000;
@@ -1246,21 +1288,25 @@ function drawSquareDetails(){
     drawSupervisorSelect();
     drawFullDiagonalSelect();
     drawIntervalTimeSet();
-    let selector = ".square" ;
+    let selector = "[class*='square']" ;
     if ( filterDetails[FILTER_COLUMN] != -1 ){
-        selector = "[class*='square'][id*='"+columnArray[filterDetails[FILTER_COLUMN]]+"']";
+        selector += "[id*='"+columnArray[filterDetails[FILTER_COLUMN]]+"']";
     }
     if ( filterDetails[FILTER_ROW] != -1 ){
-        selector = "[class*='square'][id*='"+(Number(filterDetails[FILTER_ROW])+1)+"']";
+        selector += "[id*='"+(Number(filterDetails[FILTER_ROW])+1)+"']";
     }
     if ( filterDetails[FILTER_COLOR] != -1 ){
-        selector = "[class*='square'][sqcolor='"+filterDetails[FILTER_COLOR]+"']";
+        if ( filterDetails[FILTER_COLOR] == "both")
+            selector += "[sqcolor]";
+        else{
+            selector += "[sqcolor*='"+filterDetails[FILTER_COLOR]+"']";
+        }
     }
     if ( filterDetails[FILTER_TYPE] != -1 ){
-        selector = "[class*='square'][sqtype='"+filterDetails[FILTER_TYPE]+"']";
+        selector += "[sqtype*='"+filterDetails[FILTER_TYPE]+"']";
     }
     if ( filterDetails[FILTER_SELECTED] != -1 ){
-        selector = "[class*='square']"+filterDetails[FILTER_SELECTED]+"";
+        selector = filterDetails[FILTER_SELECTED];
     }
     document.querySelectorAll("[id*='slp']").forEach(element => {
         element.innerHTML = "";
@@ -1269,39 +1315,88 @@ function drawSquareDetails(){
     let supervisoridCtr=0;
     document.querySelectorAll(selector).forEach(element => {
         let supervisordiv = document.getElementById("slp" + (supervisoridCtr++));
-        // alert(supervisordiv);
         if ( supervisordiv == null )
             return;
+
         supervisordiv.innerHTML = "";
         supervisordiv.innerHTML += "<b>"+element.id +"</b>"; 
-        // supervisordiv.innerHTML +=" |- inner:"+ element.innerHTML; 
         supervisordiv.innerHTML +=" sqc: "+ element.getAttribute("sqcolor").split("PIECE")[0]; 
         supervisordiv.innerHTML +=" | intsq: "+ element.getAttribute("initsq");
         if ( element.getAttribute("tlsq") ) 
             supervisordiv.innerHTML +=" | tlsq: "+ element.getAttribute("tlsq"); 
         if ( element.getAttribute("trsq") ) 
-        supervisordiv.innerHTML +=" | trsq: "+ element.getAttribute("trsq"); 
+            supervisordiv.innerHTML +=" | trsq: "+ element.getAttribute("trsq"); 
         if ( element.getAttribute("brsq") ) 
-        supervisordiv.innerHTML +=" | brsq: "+ element.getAttribute("brsq"); 
+            supervisordiv.innerHTML +=" | brsq: "+ element.getAttribute("brsq"); 
         if ( element.getAttribute("blsq") ) 
-        supervisordiv.innerHTML +=" | blsq: "+ element.getAttribute("blsq"); 
+            supervisordiv.innerHTML +=" | blsq: "+ element.getAttribute("blsq"); 
         if ( element.getAttribute("lsq") ) 
-        supervisordiv.innerHTML +=" | lsq: "+ element.getAttribute("lsq");  
+            supervisordiv.innerHTML +=" | lsq: "+ element.getAttribute("lsq");  
         if ( element.getAttribute("rsq") ) 
-        supervisordiv.innerHTML +=" | rsq: "+ element.getAttribute("rsq"); 
+            supervisordiv.innerHTML +=" | rsq: "+ element.getAttribute("rsq"); 
         if ( element.getAttribute("tsq") ) 
-        supervisordiv.innerHTML +=" | tsq: "+ element.getAttribute("tsq"); 
+            supervisordiv.innerHTML +=" | tsq: "+ element.getAttribute("tsq"); 
         if ( element.getAttribute("bsq") ) 
-        supervisordiv.innerHTML +=" | bsq: "+ element.getAttribute("bsq"); 
-        supervisordiv.innerHTML +=" | sqtype: " + element.getAttribute("sqtype").split("PIECE")[0]; 
-        supervisordiv.innerHTML +=" | sltd: " + element.getAttribute("sltd");
-        if ( element.getAttribute("sltd") != null )
-            supervisordiv.style.fontWeight= 'bold'; 
+            supervisordiv.innerHTML +=" | bsq: "+ element.getAttribute("bsq"); 
 
+        supervisordiv.innerHTML +=" | sqtype: " + element.getAttribute("sqtype").split("PIECE")[0]; 
+        if ( element.getAttribute("sltd") != null ){
+            supervisordiv.innerHTML +=" | sltd: " + element.getAttribute("sltd");
+            supervisordiv.style.fontWeight= 'bold'; 
+        }
     });
     document.getElementById("captured").innerHTML = capturedPieces;
 }
+function matchColumnIntervalExcludingInterval(initialColumn, endColumn=null, initialInterval=null, endInterval=null){
+    let myColumn = initialColumn 
+    if ( endColumn != null )
+        myColumn  += "-" + endColumn;
+
+    let pattern = "(["+myColumn+"])"
+    let interval = -1
+    if ( initialInterval )
+        interval = initialInterval;
+    if ( endInterval )
+        interval  += "-" + endInterval;
+    if ( interval != -1){
+        pattern += "?[^"+interval+"]";
+    }
+    pattern += "([1-8])$";
+    // alert(pattern);
+    let re = new RegExp(pattern, "g");
+    // alert(re);
+    return $(querySelectorAllRegex(re, "id"));
+}
+function matchLineIntervalExcludingInterval(initial, endLine=null, initialInterval=null, endInterval=null){
+    let myColumn = initialColumn 
+    if ( endColumn != null )
+        myColumn  += "-" + endColumn;
+
+    let pattern = "([a-h])"
+    let interval = -1;
+    if ( initialInterval )
+        interval = initialInterval;
+    if ( endInterval )
+        interval  += "-" + endInterval;
+    if ( interval != -1){
+        pattern += "?[^"+interval+"]";
+    }
+    pattern += "([initial-8])$";
+    // alert(pattern);
+    let re = new RegExp(pattern, "g");
+    // alert(re);
+    return $(querySelectorAllRegex(re, "id"));
+}
 function setSupervisorPatrol(){
+    // $(querySelectorAllRegex(/^([a-h])?[^c-d]([1-8])?[^2-3]$/g, "id")).css("background-color","blue")
+    // let arrayrsl = querySelectorAllRegex2(/([a-z]+)(?:="([\s\S]+?)"(?:\/>|\s))?/g, document.documentElement.childNodes);
+    // let rsl = querySelectorAllRegex2(/(div+)(?:="([\s\S]+?)"(?:\/>|\s))?/g, arrayrsl);
+    // let rsl2 = querySelectorAllRegex2(/(div+)(?:="([\s\S]+?)"(?:\/>|\s))?/g, rsl[0].textContent());
+    // $(querySelectorAllRegex(/([a-h])?[^d]/g, "id")).css("background-color","blue")
+    // $(querySelectorAllRegex(/([a-h])?[^d]/g, "id")).css("background-color","blue")
+    // let jQuery = matchColumnIntervalExcludingInterval("a", "f", "d", "e").css("background-color","blue")
+    // console.debug(rsl[0]);
+    // console.debug(rsl2); 
     if ( !hasAnySquareDrew() )
         return;
         
@@ -1341,13 +1436,12 @@ function fixSquareTypeProprierties(){
             element.setAttribute("sqcolor", SQUARE_TYPE_WHITE_PIECE);
     });
 }
-let intervalSeconds = 5;
-let intervalTime = intervalSeconds * 1000;
-let myInterval;
+
 $(document).ready(function (){
     playerColor = avaliableColors[0];
     
     myInterval = window.setInterval(setSupervisorPatrol, intervalTime);
+    
 });
 
 drawInitialBoard("boardcreate", readyHandler);
