@@ -14,7 +14,7 @@ typedef struct {
   int iOptions;
   char* pszData;
   long lBytes;
-  FILE* pf;
+  int pf;
 }
   STRUCT_FILE2MEM_EXT;
 
@@ -99,7 +99,7 @@ int iOS_Prune(int iDirs, int iTars);
 int iOS_SetDefaultDisplayLogFileName(char* szName);
 
 int iOS_CreateUdpSocket();
-int iOS_GetSockName(SOCKET iSocket, char* szMyIP);
+// int iOS_GetSockName(SOCKET iSocket, char* szMyIP);
 int iOS_GetUdpMsg(int hSocketUDP, char *pszMsg, int iPrmBytes, void* pFrom, int* piFrom);
 int iOS_SendUdpMsg(int hSocketUDP, char *pszMsg, int iPrmBytes, void* pFrom, int iFrom);
 int iOS_UdpQuery(char* szIP, int iPort, char* szCmd, char* szRsl, int iRslLen, long lTimeout);
@@ -140,5 +140,3 @@ int iWriteMyPid(char* szWrkDir, char* szName);
 int iRemoveMyPid(char* szWrkDir, char* szName);
 int iOS_Fork();
 
-int iStartedChild(char *szFrom, pid_t iPid);
-int iChildNdx(pid_t iPid);

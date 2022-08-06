@@ -27,7 +27,9 @@
 #include "socketsrv.h"
 #include "socketapp.h"
 
-long glCurrentTime;
+char *gpszArgv0;
+
+long long int glCurrentTime;
 /////////////////////////////////////////////////////////////////////////////
 //
 //  main

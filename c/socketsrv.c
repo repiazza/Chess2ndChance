@@ -16,11 +16,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <process.h>
+#include <crtdbg.h>
+#include <ws2tcpip.h>
 #define pipe _pipe
 #define popen _popen
 #define pclose _pclose
 #define write _write
 
+#define STREAM_TIMEOUT_SECS 10
 
 #include <time.h>
 #define tzset _tzset
@@ -28,6 +31,7 @@
 #include "socketapp.h"
 #include "socketsrv.h"
 
+int hSocketClient;
 //////////////////////////////////////////////////////////////////////////////
 //
 //                                      General
@@ -61,8 +65,7 @@ int giUDP_ControlFrom;
 
 // meu nome vis?vel
 char* gpszArgv0 = NULL;
-
-#ifdef _WIN32
+char gszIP[256];
 //////////////////////////////////////////////////////////////////////////////
 //
 //                                      Win32
@@ -354,7 +357,7 @@ int iServerWaitAndHandleEvent() // Win32
   int iRsl = 1;
   DWORD dwWait;
   // gstGlobalPrm.ulServerPollDelay est? em milisegundos
-  dwWait = WSAWaitForMultipleEvents(3, hEvents, FALSE, gstGlobalPrm.ulServerPollDelay, TRUE);
+  dwWait = WSAWaitForMultipleEvents(3, hEvents, FALSE, 10000, TRUE);
   switch ( dwWait ) {
     case WSA_WAIT_TIMEOUT:
       iRsl = iProcessTicTac();
@@ -419,7 +422,7 @@ int iOS_CreateStreamSocket() // WIN32
   int iRsl;
   iRsl = socket(PF_INET, SOCK_STREAM, 0);
   if ( iRsl < 0 )
-    vError("socket");
+    return -1;
   return iRsl;
 }
 
@@ -645,19 +648,19 @@ int iOS_CreateUdpSocket(int iPort)  // WIN32
   return iSocket;
 }
 
-int iOS_GetUdpMsg(int hSocketUDP, char *pszMsg, int iPrmBytes, void* pFrom, int* piFrom)  // WIN32
+int iOS_GetUdpMsg(int ghSocketUDP, char *pszMsg, int iPrmBytes, void* pFrom, int* piFrom)  // WIN32
 {
   return 0;
 }
 
-int iOS_SendUdpMsg(int hSocketUDP, char *pszMsg, int iPrmBytes, void* pFrom, int iFrom)  // WIN32
+int iOS_SendUdpMsg(int ghSocketUDP, char *pszMsg, int iPrmBytes, void* pFrom, int iFrom)  // WIN32
 {
   return 0;
 }
 
 int iOS_UdpQuery(char* szIP, int iPort, char* szCmd, char* szRsl, int iRslLen, long lTimeout)  // WIN32
 {
-  u_int hSocketUDP;
+  u_int ghSocketUDP;
   struct sockaddr_in stSockInUDP;
   time_t lStart;
   time_t lNow;
@@ -670,7 +673,7 @@ int iOS_UdpQuery(char* szIP, int iPort, char* szCmd, char* szRsl, int iRslLen, l
   int iBytes;
   struct sockaddr_in stFrom;
   int iFromLen;
-  if ( (hSocketUDP = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET ) {
+  if ( (ghSocketUDP = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET ) {
     vError("socket UDP");
     return -1;
   }
@@ -687,7 +690,7 @@ int iOS_UdpQuery(char* szIP, int iPort, char* szCmd, char* szRsl, int iRslLen, l
   stLinger.l_onoff = 1;
   stLinger.l_linger = 30;
 
-  iRsl = sendto(hSocketUDP, szCmd, strlen(szCmd), 0, (const struct sockaddr*)&stSockInUDP, sizeof(stSockInUDP));
+  iRsl = sendto(ghSocketUDP, szCmd, strlen(szCmd), 0, (const struct sockaddr*)&stSockInUDP, sizeof(stSockInUDP));
   if ( iRsl < 0 ) {
     vError("sendto");
     return -5;
@@ -695,7 +698,7 @@ int iOS_UdpQuery(char* szIP, int iPort, char* szCmd, char* szRsl, int iRslLen, l
   time(&lStart);
   lNow = lStart;
   FD_ZERO(&active_fd_set);
-  FD_SET(hSocketUDP, &active_fd_set);
+  FD_SET(ghSocketUDP, &active_fd_set);
   memset(&stTimeout, 0, sizeof(stTimeout));
   stTimeout.tv_sec = lTimeout;
   stTimeout.tv_usec = 0;  // microseconds
@@ -714,7 +717,7 @@ int iOS_UdpQuery(char* szIP, int iPort, char* szCmd, char* szRsl, int iRslLen, l
       return 0;
 
     iFromLen = sizeof(struct sockaddr);
-    iBytes = recvfrom(hSocketUDP, szRsl, iRslLen-1, 0, (struct sockaddr *)&stFrom, &iFromLen);
+    iBytes = recvfrom(ghSocketUDP, szRsl, iRslLen-1, 0, (struct sockaddr *)&stFrom, &iFromLen);
     if ( iBytes == SOCKET_ERROR ) {
       int iError = WSAGetLastError();
       if ( iError == WSAECONNRESET ) {
@@ -727,7 +730,7 @@ int iOS_UdpQuery(char* szIP, int iPort, char* szCmd, char* szRsl, int iRslLen, l
       break;
     }
   }
-  closesocket(hSocketUDP);
+  closesocket(ghSocketUDP);
   return iBytes;
 }
 
@@ -941,37 +944,27 @@ int iWaitAndHandleEvent()
   return  1;
 }
 
-void vShutdown()
-{
-}
+// void vShutdown()
+// {
+// }
 
-void vServerShutdown()
-{
-  close(hSocketUDP);
-  close(hSocketStream);
-  if ( iFinishChildren() )
-    iWait4Children();
-}
-
-
-void vTraceSocketMsgWithPid(char* szFormat, char* achBuf)
-{
-  char szWrk[1024];
-  sprintf(szWrk, "%5d %s", (int)giMyPid, szFormat);
-  vTraceSocketMsg(szWrk, achBuf);
-}
+// void vServerShutdown()
+// {
+//   close(ghSocketUDP);
+//   close(hSocketStream);
+//   if ( iFinishChildren() )
+//     iWait4Children();
+// }
 
 
-int bOS_ExtraUnlockDir(int hExtraLock)
-{
-  struct flock stLock;
-  memset(&stLock, 0, sizeof(stLock));
-  stLock.l_type = F_UNLCK;
-  if ( fcntl(hExtraLock, F_SETLK, &stLock) == -1 ) {
-  }
-  close(hExtraLock);
-  return TRUE;
-}
+// void vTraceSocketMsgWithPid(char* szFormat, char* achBuf)
+// {
+//   char szWrk[1024];
+//   sprintf(szWrk, "%5d %s", (int)giMyPid, szFormat);
+//   vTraceSocketMsg(szWrk, achBuf);
+// }
+
+
 
 // forward -- external callbacks
 int iStreamMessage(SOCKET hSocketClient, char* achBuf, int iMyPid);
@@ -983,8 +976,8 @@ int iStreamSession()
   fd_set active_fd_set, read_fd_set;
   struct linger stLinger;
   struct sockaddr_in addrPeer;
-  size_t iAddrLen = sizeof(struct sockaddr);
-
+  size_t iAddrLen = sizeof(struct sockaddr); 
+  
   // set gszIP
   if ( getpeername(hSocketClient, (struct sockaddr*)&addrPeer, (socklen_t *) &iAddrLen) ) {
     switch ( errno ) {
@@ -1018,7 +1011,6 @@ int iStreamSession()
   }
 
   giMyPid = getpid();
-  gszVersion[0] = 0;
 
   memset(&stLinger, 0 , sizeof(stLinger));
   stLinger.l_onoff = 0;
@@ -1026,36 +1018,11 @@ int iStreamSession()
   if ( setsockopt(hSocketClient, SOL_SOCKET, SO_LINGER, &stLinger, sizeof(stLinger)) < 0) {
     vError("setsockopt Client");
   }
-  if ( sigaction(SIGCHLD, NULL, NULL) < 0 ) {
-    vError("action child in child");
-  }
-  if ( sigaction(SIGQUIT, NULL, NULL) < 0 ) {
-    vError("action quit in child");
-  }
-  if ( sigaction(SIGTERM, NULL, NULL) < 0 ) {
-    vError("action term in child");
-  }
 
   FD_ZERO(&active_fd_set);
   FD_SET(hSocketClient, &active_fd_set);
 
-  // Signal handlers
-  memset(&stSigChild, 0, sizeof(stSigChild));
-  stSigChild.sa_handler = pChild;
-  if ( sigaction(SIGCHLD, &stSigChild, NULL) < 0 ) {
-    vError ("action child");
-  }
-  memset(&stSigQUIT, 0, sizeof(stSigQUIT));
-  stSigQUIT.sa_handler = pQUIT;
-  if ( sigaction(SIGQUIT, &stSigQUIT, NULL) < 0 ) {
-    vError ("action quit");
-  }
-  memset(&stSigTERM, 0, sizeof(stSigTERM));
-  stSigTERM.sa_handler = pTERM;
-  if ( sigaction(SIGTERM, &stSigTERM, NULL) < 0 ) {
-    vError ("action term");
-  }
-
+ 
   while ( gbStop == FALSE ) {
     int iRsl;
     struct timeval stTimeout;
@@ -1115,7 +1082,7 @@ int iUDPMsg()
   char szPeerIP[32];
   struct sockaddr_in stFrom;
   socklen_t iFromLen;
-  iBytes = recvfrom(hSocketUDP, achBuf, sizeof(achBuf), 0, (struct sockaddr *)&stFrom, &iFromLen);
+  iBytes = recvfrom(ghSocketUDP, achBuf, sizeof(achBuf), 0, (struct sockaddr *)&stFrom, &iFromLen);
   if ( iBytes < 0 ) {
     vError("recvfrom");
     return 0;
@@ -1125,7 +1092,7 @@ int iUDPMsg()
     return 0;
   iBytes = iProcessUdpMsg(achBuf, iBytes, szPeerIP);
   if ( iBytes > 0 )
-    iRsl = sendto(hSocketUDP, achBuf, iBytes, 0, (struct sockaddr *)&stFrom, iFromLen);
+    iRsl = sendto(ghSocketUDP, achBuf, iBytes, 0, (struct sockaddr *)&stFrom, iFromLen);
   if ( iRsl < 0 )
     vError("sendto");
   return 1;
@@ -1246,8 +1213,7 @@ int iOS_GetSockName(SOCKET iSocket, char* szIP)
 int iGetActiveLock(char* szName)
 {
   char szTitle[_MAX_PATH];
-  sprintf(szTitle, "%s/%s.lck",
-    gstGlobalPrm.szWrkDir,
+  sprintf(szTitle, "%s.lck",
     szName
   );
   return hOS_LockFile(szTitle);
@@ -1259,9 +1225,7 @@ void vCheckVenditorPid()
   char szLine[32];
   FILE* pf;
   char szTitle[_MAX_PATH];
-  sprintf(szTitle, "%s/venditor.pid",
-    gstGlobalPrm.szWrkDir
-  );
+  sprintf(szTitle, "venditor.pid");
   if ( (pf = fopen(szTitle, "r")) == NULL ) return;
   if ( fgets(szLine, sizeof(szLine), pf) ) {
     int iReadPid = atoi(szLine);
@@ -1311,41 +1275,41 @@ int iRemoveMyPid(char* szWrkDir, char* szName)
 //  zip / unzip
 //
 
-void change_file_date(
-    const char *filename,
-    uLong dosdate,
-    tm_unz tmu_date )
-{
-  HANDLE hFile;
-  FILETIME ftm,ftLocal,ftCreate,ftLastAcc,ftLastWrite;
-  hFile = CreateFileA(filename,GENERIC_READ | GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
-  GetFileTime(hFile,&ftCreate,&ftLastAcc,&ftLastWrite);
-  DosDateTimeToFileTime((WORD)(dosdate>>16),(WORD)dosdate,&ftLocal);
-  LocalFileTimeToFileTime(&ftLocal,&ftm);
-  SetFileTime(hFile,&ftm,&ftLastAcc,&ftm);
-  CloseHandle(hFile);
+// void change_file_date(
+//     const char *filename,
+//     u_long dosdate,
+//     tm_unz tmu_date )
+// {
+//   HANDLE hFile;
+//   FILETIME ftm,ftLocal,ftCreate,ftLastAcc,ftLastWrite;
+//   hFile = CreateFileA(filename,GENERIC_READ | GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
+//   GetFileTime(hFile,&ftCreate,&ftLastAcc,&ftLastWrite);
+//   DosDateTimeToFileTime((WORD)(dosdate>>16),(WORD)dosdate,&ftLocal);
+//   LocalFileTimeToFileTime(&ftLocal,&ftm);
+//   SetFileTime(hFile,&ftm,&ftLastAcc,&ftm);
+//   CloseHandle(hFile);
 
-uLong filetime(f, tmzip, dt)
-    char *f;                /* name of file to get info on */
-    tm_zip *tmzip;             /* return value: access, modific. and creation times */
-    uLong *dt;             /* dostime */
-    {
-    int ret = 0;
-    {
-        FILETIME ftLocal;
-        HANDLE hFind;
-        WIN32_FIND_DATAA ff32;
+// u_long filetime(f, tmzip, dt)
+//     char *f;                /* name of file to get info on */
+//     tm_zip *tmzip;             /* return value: access, modific. and creation times */
+//     u_long *dt;             /* dostime */
+//     {
+//     int ret = 0;
+//     {
+//         FILETIME ftLocal;
+//         HANDLE hFind;
+//         WIN32_FIND_DATAA ff32;
 
-        hFind = FindFirstFileA(f,&ff32);
-        if (hFind != INVALID_HANDLE_VALUE)
-        {
-            FileTimeToLocalFileTime(&(ff32.ftLastWriteTime),&ftLocal);
-            FileTimeToDosDateTime(&ftLocal,((LPWORD)dt)+1,((LPWORD)dt)+0);
-            FindClose(hFind);
-            ret = 1;
-        }
-    }
-    return ret;
-    }
-}
+//         hFind = FindFirstFileA(f,&ff32);
+//         if (hFind != INVALID_HANDLE_VALUE)
+//         {
+//             FileTimeToLocalFileTime(&(ff32.ftLastWriteTime),&ftLocal);
+//             FileTimeToDosDateTime(&ftLocal,((LPWORD)dt)+1,((LPWORD)dt)+0);
+//             FindClose(hFind);
+//             ret = 1;
+//         }
+//     }
+//     return ret;
+//     }
+// }
 
