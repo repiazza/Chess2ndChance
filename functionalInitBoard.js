@@ -449,7 +449,6 @@ function highlightSelection(direction, elem){
     if ( bgcAttr.includes('dark') && myClass != bgcAttr ){
         myClass += 'dark';
     }
-    // alert(myClass)
     $(document.querySelectorAll('[mvsl]')).removeClass(bgcAttr);
     $(document.querySelectorAll('[mvsl]')).addClass(myClass);
 }
@@ -457,7 +456,6 @@ function highlightSelection(direction, elem){
 function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreColision=false){
     if ( Array.isArray(direction) && direction.length > 1 ){
         direction.map(myDir =>{
-            // alert(myDir)
             getDirectionFromSquare(square, myDir, range, ignoreColision);
         });
         return;
@@ -506,7 +504,7 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         else{
             nextSqElem.removeAttribute("mvsl");
         }
-        
+
         highlightSelection(direction, nextSqElem);
         movDir = nextSqElem.getAttribute(direction);
         i++;
@@ -514,6 +512,7 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
 
     return true;
 }
+
 // O array de highlight as 4 primeiras posicoes sao as classes
 // os nossos movimentos sao 4 bits de um byte, na mesma sequencia da respectiva classe
 // entao fazemos um shift right bem maroto.
@@ -683,7 +682,7 @@ function validateIsCaptureSquare(square){
     return true;
 }
 function hasAnySquareDrew(){
-    return (document.querySelectorAll('.square').length > 0);
+    return (document.querySelectorAll('[square="1"]').length > 0);
 }
 function moveSquare(square){
     return (validateIsSelected() &&  validateIsBlank(square) && validateIsOnRange(square));
@@ -789,7 +788,7 @@ function squareHandler(event){
         oldelem.setAttribute("sqcolor", "0");
         oldelem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
     }
-    drawSquareDetails();
+    //drawSquareDetails();
 
 }
 function readyHandler(event){
@@ -872,7 +871,7 @@ function readyHandler(event){
         document.getElementById('container').appendChild(subtitle);
         marginLeft += 81;
     });
-    drawSquareDetails();
+    //drawSquareDetails();
     
 }
 function drawInitialBoard(boardId, buttonreadyHandler){
@@ -1216,7 +1215,7 @@ function drawSupervisorSelect(){
 }
 function setDirectionFromSelect(e){  
     if ( e.target.value == -1){
-        document.querySelectorAll(".square").forEach(element => {
+        document.querySelectorAll("[square='1']").forEach(element => {
             element.innerHTML = "";
         });
         return ;
@@ -1241,11 +1240,21 @@ function setDirectionFromSelect(e){
     mySquare.removeAttribute('sltd');
 }
 function drawDirectionSelect(){
-    // document.querySelectorAll('[id^="spsbdiagonaldir"]').forEach(element => {
-    //     document.getElementById("container").removeChild(element);
-    // });
-    let selectElem = document.createElement("select");
-    selectElem.id = "spsbdiagonalselect";
+    // Select do square a partir do qual serao highlitadas as direcoes
+    
+    let directionSelected = false;
+    let selectElem = document.getElementById('spsbdirectionhlselect');
+    if ( selectElem != null ){
+        directionSelected = selectElem.value;
+        document.getElementById("container").removeChild(selectElem);
+    }
+    else{
+        document.querySelectorAll('[id=spsbdirectionhlselect]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });
+    }
+    selectElem = document.createElement("select");
+    selectElem.id = "spsbdirectionhlselect";
     selectElem.style.position = "absolute";
     selectElem.style.marginTop = "30px";
     selectElem.style.marginLeft = "10px";
@@ -1254,25 +1263,31 @@ function drawDirectionSelect(){
     option.value = -1;
     option.text = "Square:";
     selectElem.appendChild(option);
-    
     for ( let rowNdx = 1; rowNdx < 9; rowNdx++ ){
        columnArray.map( function (columnAlpha, clmndx){
             option = document.createElement("option");
             option.value = ""+columnAlpha+rowNdx;
+            // alert(option.value);
+            if ( directionSelected == option.value )
+                option.selected = 1;
+            
             option.text = option.value;
             selectElem.appendChild(option);
        }); 
     };
     
-    
+    document.querySelectorAll('[id=spsblbldiagonalselect]').forEach(element => {
+        document.getElementById("container").removeChild(element);
+    });
     let labelElem = document.createElement("label");
     labelElem.id = "spsblbldiagonalselect";
     labelElem.innerHTML = "Diagonal";
     labelElem.style.position = "absolute";
     labelElem.style.marginTop = "10px";
     labelElem.style.marginLeft = "10px";
+    
     let checkDirectionDiagonal = document.getElementById('spsbdiagonaldir');
-    let directionSelected = false;
+    directionSelected = false;
     if ( checkDirectionDiagonal != null ){
         directionSelected = checkDirectionDiagonal.checked;
         document.getElementById("container").removeChild(checkDirectionDiagonal);
@@ -1290,7 +1305,10 @@ function drawDirectionSelect(){
     checkDirectionDiagonal.style.marginLeft = '75px';
     if ( directionSelected )
         checkDirectionDiagonal.checked = 1;
-    
+
+    document.querySelectorAll('[id=spsblblcolumndir]').forEach(element => {
+        document.getElementById("container").removeChild(element);
+    });
     lblDirColumn = document.createElement("label");
     lblDirColumn.for = "spsbcolumndir";
     lblDirColumn.id = "spsblblcolumndir";
@@ -1321,7 +1339,9 @@ function drawDirectionSelect(){
     if ( directionSelected )
         checkDirectionColumn.checked = 1;
     
-    
+    document.querySelectorAll('[id=spsblbllinedir]').forEach(element => {
+        document.getElementById("container").removeChild(element);
+    });
     lblDirLine = document.createElement("label");
     lblDirLine.for = "spsblinedir";
     lblDirLine.id = "spsblbllinedir";
@@ -1361,7 +1381,7 @@ function drawDirectionSelect(){
     document.getElementById("container").appendChild(lblDirLine);
 }
 function drawIntervalTimeSet(){
-    document.querySelectorAll('[id^="textelem"]').forEach(element => {
+    document.querySelectorAll('[id*="textelem"]').forEach(element => {
         document.getElementById("container").removeChild(element);
     });
     let ptextElem = document.createElement("p");
@@ -1416,6 +1436,7 @@ function drawSquareDetails(){
     drawSupervisorSelect();
     drawDirectionSelect();
     drawIntervalTimeSet();
+
     let selector = "[class*='square']" ;
     if ( filterDetails[FILTER_COLUMN] != -1 ){
         selector += "[id*='"+columnArray[filterDetails[FILTER_COLUMN]]+"']";
@@ -1436,10 +1457,12 @@ function drawSquareDetails(){
     if ( filterDetails[FILTER_SELECTED] != -1 ){
         selector = filterDetails[FILTER_SELECTED];
     }
+
     document.querySelectorAll("[id*='slp']").forEach(element => {
         element.innerHTML = "";
         element.style.fontWeight= '';
     });
+
     let supervisoridCtr=0;
     document.querySelectorAll(selector).forEach(element => {
         let supervisordiv = document.getElementById("slp" + (supervisoridCtr++));
@@ -1467,7 +1490,7 @@ function drawSquareDetails(){
         if ( element.getAttribute("bsq") ) 
             supervisordiv.innerHTML +=" | bsq: "+ element.getAttribute("bsq"); 
 
-        supervisordiv.innerHTML +=" | sqtype: " + element.getAttribute("sqtype").split("PIECE")[0]; 
+        supervisordiv.innerHTML +=" | sqtype: " + element.getAttribute("sqtype").split("PIECE")[0];
         if ( element.getAttribute("sltd") != null ){
             supervisordiv.innerHTML +=" | sltd: " + element.getAttribute("sltd");
             supervisordiv.style.fontWeight= 'bold'; 
@@ -1490,9 +1513,7 @@ function matchColumnIntervalExcludingInterval(initialColumn, endColumn=null, ini
         pattern += "?[^"+interval+"]";
     }
     pattern += "([1-8])$";
-    // alert(pattern);
     let re = new RegExp(pattern, "g");
-    // alert(re);
     return $(querySelectorAllRegex(re, "id"));
 }
 function matchLineIntervalExcludingInterval(initial, endLine=null, initialInterval=null, endInterval=null){
@@ -1510,42 +1531,21 @@ function matchLineIntervalExcludingInterval(initial, endLine=null, initialInterv
         pattern += "?[^"+interval+"]";
     }
     pattern += "([initial-8])$";
-    // alert(pattern);
     let re = new RegExp(pattern, "g");
-    // alert(re);
     return $(querySelectorAllRegex(re, "id"));
 }
 function setSupervisorPatrol(){
-    // $(querySelectorAllRegex(/^([a-h])?[^c-d]([1-8])?[^2-3]$/g, "id")).css("background-color","blue")
-    // let arrayrsl = querySelectorAllRegex2(/([a-z]+)(?:="([\s\S]+?)"(?:\/>|\s))?/g, document.documentElement.childNodes);
-    // let rsl = querySelectorAllRegex2(/(div+)(?:="([\s\S]+?)"(?:\/>|\s))?/g, arrayrsl);
-    // let rsl2 = querySelectorAllRegex2(/(div+)(?:="([\s\S]+?)"(?:\/>|\s))?/g, rsl[0].textContent());
-    // $(querySelectorAllRegex(/([a-h])?[^d]/g, "id")).css("background-color","blue")
-    // $(querySelectorAllRegex(/([a-h])?[^d]/g, "id")).css("background-color","blue")
-    // let jQuery = matchColumnIntervalExcludingInterval("a", "f", "d", "e").css("background-color","blue")
-    // console.debug(rsl[0]);
-    // console.debug(rsl2); 
     if ( !hasAnySquareDrew() )
         return;
-        
-    
+
     drawSquareDetails();   
     // fixSquareTypeProprierties();
+}
 
-}
-function rotate(cx, cy, x, y, angle) {
-    var radians = (Math.PI / 180) * angle,
-        cos = Math.cos(radians),
-        sin = Math.sin(radians),
-        nx = (cos * (x - cx)) + (sin * (y - cy)) + cx,
-        ny = (cos * (y - cy)) - (sin * (x - cx)) + cy;
-    return [nx, ny];
-}
 function fixSquareTypeProprierties(){
     selector = "[class*='square'][sqtype='BLANK']";
     document.querySelectorAll(selector).forEach(element => {
         if ( element != null ){
-            // alert(element.id)
             document.getElementById(element.id).setAttribute("sqcolor", "0");
             document.getElementById(element.id).removeAttribute('sltd');
             element.innerHTML = "";
@@ -1566,9 +1566,8 @@ function fixSquareTypeProprierties(){
 }
 
 $(document).ready(function (){
+
     playerColor = avaliableColors[0];
-    
-    
     myInterval = window.setInterval(setSupervisorPatrol, intervalTime);
     
 });
