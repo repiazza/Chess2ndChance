@@ -151,10 +151,9 @@ int iServerSetup(int iMeuPort) // WIN32
   WORD wVersionRequested;
   int iNameLen;
 
-#ifdef _DEBUG
 //  _CrtMemState s1;
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
+
 
   // time zone
   tzset();
@@ -206,11 +205,6 @@ int iServerSetup(int iMeuPort) // WIN32
   gstAddrStream.sin_addr.s_addr = INADDR_ANY;
   if ( bind(ghListen, (PSOCKADDR)&gstAddrStream, sizeof(SOCKADDR_IN)) == SOCKET_ERROR ) {
     int iErrNo = WSAGetLastError();
-    if ( DEBUG_SOCKET_DETAILS ) {
-      char szDbg[128];
-      sprintf(szDbg, "iServerSetup bind ERR iErrNo=%d", iErrNo);
-      vTrace(szDbg);
-    }
     return 11;
   }
   listen(ghListen, 5);
@@ -232,7 +226,6 @@ int iUDP()
   char achBuffer[1024];
   unsigned long ulBytesDisponiveis;
   int iRsl;
-  if ( DEBUG_SOCKET_DETAILS ) vTrace("iUDP begin");
   iRsl = ioctlsocket(ghSocketUDP, FIONREAD, &ulBytesDisponiveis);
   if ( ulBytesDisponiveis == 0 )
     return -1;
@@ -245,12 +238,7 @@ int iUDP()
     return -3;
   iBytesRsl = iProcessUdpMsg(achBuffer, iBytes, NULL);
   if ( iBytesRsl < 1 ) {
-    if ( DEBUG_SOCKET_DETAILS ) {
-      char szDbg[256];
-      sprintf(szDbg, "iUDP iProcessUdpMsg err=%d", iBytesRsl);
-      vTrace(szDbg);
-    }
-    return -4;
+        return -4;
   }
   iRsl = sendto(
     ghSocketUDP,
@@ -261,12 +249,6 @@ int iUDP()
     iFromLen
   );
   achBuffer[iBytesRsl] = 0;
-  if ( DEBUG_SOCKET_DETAILS ) {
-    char szDbg[256];
-    sprintf(szDbg, "iUDP iProcessUdpMsg sendto rsl=%d UDP >> [%%s]%%d", iBytesRsl);
-    vTraceSocketMsg(szDbg, achBuffer);
-  }
-  if ( DEBUG_SOCKET_DETAILS ) vTrace("iUDP end rsl=1");
   return 1;
 } // iUDP
 
@@ -326,8 +308,6 @@ unsigned int _stdcall SessaoStream(PVOID pData)
     int iRsl;
     if ( (iRsl = iStreamMessage(s, szMsg, giMyPid)) < 0 ) break;
     if ( iRsl == 0 ) continue;
-    if ( DEBUG_DETAILS )
-      vTraceDmpStrN("send", szMsg, iRsl);
     if ( send(s, szMsg, iRsl, FALSE) == SOCKET_ERROR )
       break;
   }
@@ -437,7 +417,6 @@ void vOS_Tic(unsigned long ulMillisec) // WIN32
 int iOS_CreateStreamSocket() // WIN32
 {
   int iRsl;
-  if ( DEBUG_SOCKET_DETAILS ) vTrace("iOS_CreateStreamSocket");
   iRsl = socket(PF_INET, SOCK_STREAM, 0);
   if ( iRsl < 0 )
     vError("socket");
@@ -451,9 +430,6 @@ int iOS_ConnectStreamSocket(int iPrmSock, char* szIP, int iPort, int iTimeout) /
   u_long ulPrm = 1;
   struct timeval stTimeout;
   u_int iSock = (u_int)iPrmSock;
-
-  if ( DEBUG_SOCKET_DETAILS )
-    vTraceStr("iOS_ConnectStreamSocket [%s]", szIP);
 
   if ( ioctlsocket(iSock, FIONBIO, &ulPrm) == SOCKET_ERROR ) {
     vError("ioctlsocket");
@@ -472,8 +448,6 @@ int iOS_ConnectStreamSocket(int iPrmSock, char* szIP, int iPort, int iTimeout) /
     sizeof(stAddr)
   );
   if ( iRsl == SOCKET_ERROR ) {
-    if ( DEBUG_SOCKET_ALL )
-      vSocketError("connect");
   }
   FD_ZERO (&active_fd_set);
   FD_SET (iSock, &active_fd_set);
@@ -482,14 +456,10 @@ int iOS_ConnectStreamSocket(int iPrmSock, char* szIP, int iPort, int iTimeout) /
   stTimeout.tv_usec = 0;  // microseconds
 
   if ( (iRsl = select(FD_SETSIZE, NULL, &active_fd_set, NULL, &stTimeout)) < 0) {
-    if ( DEBUG_SOCKET_DETAILS )
-      vSocketError ("select");
     return -4;
   }
 
   if ( FD_ISSET(iSock, &active_fd_set) ) {
-    if ( DEBUG_SOCKET_DETAILS )
-      vTrace("connect OK");
     return 0;
   }
 
@@ -502,25 +472,19 @@ int iOS_ListenStreamSocket(int iSock, int iPort) // WIN32
   struct sockaddr    stSockAddrStream;
   int iNameLenStream;
   int iRsl;
-  if ( DEBUG_SOCKET_DETAILS )
-    vTraceInt("iOS_ListenStreamSocket(%d)", iSock);
   stSockInStream.sin_family      = AF_INET;
   stSockInStream.sin_addr.s_addr = htonl(INADDR_ANY);
   stSockInStream.sin_port        = htons((u_short)iPort);
   while ( bind(iSock, (struct sockaddr *)&stSockInStream, sizeof(stSockInStream)) < 0 ) {
-    if ( DEBUG_SOCKET_DETAILS )
-      vTraceInt("iOS_ListenStreamSocket(%d) bind wait", iSock);
     vSleepMillisec(5000);
   }
   iNameLenStream = sizeof(stSockAddrStream);
   if ( (iRsl = getsockname(iSock, &stSockAddrStream, &iNameLenStream)) < 0 ) {
-    if ( DEBUG_SOCKET_DETAILS )
-      vTraceInt("iOS_ListenStreamSocket(%d) getsockname error", iSock);
+    
     return iRsl;
   }
   if ( (iRsl = listen(iSock, 100)) < 0) {
-    if ( DEBUG_SOCKET_DETAILS )
-      vTraceInt("iOS_ListenStreamSocket(%d) listen error", iSock);
+   
     return iRsl;
   }
   return 0;
@@ -539,13 +503,10 @@ int iOS_WaitConnectStreamSocket(int iPrmSock, int iTimeout) // WIN32
   stTimeout.tv_sec = iTimeout;
   stTimeout.tv_usec = 0;  // microseconds
   if ( (iRsl = select(FD_SETSIZE, &listen_fd_set, NULL, NULL, &stTimeout)) < 0) {
-    if ( DEBUG_SOCKET_DETAILS )
-      vSocketError ("select");
+
     return -4;
   }
   if ( FD_ISSET(iSock, &listen_fd_set) ) {
-    if ( DEBUG_SOCKET_DETAILS )
-      vTrace("Got connection");
     iNameLenClient = sizeof(stSockAddrClient);
     iRsl = accept(
       iSock,
@@ -566,14 +527,7 @@ int iOS_ReadStreamSocketDlm(int iSock, char* achBuf, int iSize, int iTimeout, in
   time_t lTimeStart;
   time_t lTimeNow;
   int iErrNo;
-  if ( DEBUG_SOCKET_DETAILS ) {
-    char szDbg[128];
-    sprintf(szDbg, "iOS_ReadStreamSocketDlm timeout=%d bytes=%d",
-      iTimeout,
-      iSize
-    );
-    vTrace(szDbg);
-  }
+
   time(&lTimeStart);
   while ( iBytes < iSize ) {
     iRsl = recv(
@@ -584,11 +538,6 @@ int iOS_ReadStreamSocketDlm(int iSock, char* achBuf, int iSize, int iTimeout, in
     );
     if ( iRsl == SOCKET_ERROR ) {
       iErrNo = WSAGetLastError();
-      if ( DEBUG_SOCKET_DETAILS ) {
-        char szDbg[128];
-        sprintf(szDbg, "iOS_ReadStreamSocketLine ERR iRsl=%d iBytes=%d iErrNo=%d", iRsl, iBytes, iErrNo);
-        vTrace(szDbg);
-      }
       if ( iErrNo == WSAEWOULDBLOCK ) {
         time(&lTimeNow);
         if ( (lTimeNow - lTimeStart) > iTimeout )
@@ -596,14 +545,7 @@ int iOS_ReadStreamSocketDlm(int iSock, char* achBuf, int iSize, int iTimeout, in
         vSleepMillisec(100);
         continue;
       }
-      if ( DEBUG_SOCKET_DETAILS )
-        vSocketError("recv");
       return -1;
-    }
-    if ( DEBUG_SOCKET_DETAILS ) {
-      char szDbg[128];
-      sprintf(szDbg, "iOS_ReadStreamSocketDlm read iRsl=%d iBytes=%d", iRsl, iBytes);
-      vTrace(szDbg);
     }
     if ( (pTok = strchr(achBuf, iDlm)) ) {
       *pTok = 0;
@@ -631,8 +573,6 @@ int iOS_ReadStreamSocket(int iSock, char* achBuf, int iSize, int iTimeout) // WI
   time_t lTimeStart;
   time_t lTimeNow;
   int iErrNo = 0;
-  if ( DEBUG_SOCKET_DETAILS )
-    vTraceInt("iOS_ReadStreamSocket %d", iTimeout);
   time(&lTimeStart);
   while ( iBytes < iSize ) {
     iRsl = recv(
@@ -643,19 +583,10 @@ int iOS_ReadStreamSocket(int iSock, char* achBuf, int iSize, int iTimeout) // WI
     );
     if ( iRsl == SOCKET_ERROR ) {
       iErrNo = WSAGetLastError();
-      if ( DEBUG_SOCKET_DETAILS ) {
-        char szDbg[128];
-        sprintf(szDbg, "iOS_ReadStreamSocket ERR iRsl=%d iBytes=%d iRetry=%d iErrNo=%d", iRsl, iBytes, iRetry, iErrNo);
-        vTrace(szDbg);
-      }
       if ( iErrNo == WSAEWOULDBLOCK && iRetry < 255 ) {
         if ( iRetry == 0 )
           return iBytes;
         iRetry--;
-      }
-      else {
-        if ( DEBUG_SOCKET_DETAILS )
-          vSocketError("recv");
       }
       time(&lTimeNow);
       if ( (lTimeNow - lTimeStart) > iTimeout )
@@ -663,11 +594,6 @@ int iOS_ReadStreamSocket(int iSock, char* achBuf, int iSize, int iTimeout) // WI
       vSleepMillisec(300);
     }
     else {
-      if ( DEBUG_SOCKET_DETAILS ) {
-        char szDbg[128];
-        sprintf(szDbg, "iOS_ReadStreamSocket read iRsl=%d iBytes=%d iRetry=%d iErrNo=%d", iRsl, iBytes, iRetry, iErrNo);
-        vTrace(szDbg);
-      }
       iBytes += iRsl;
       if ( iBytes > 0 &&
            (achBuf[iBytes-1] == '\r' || achBuf[iBytes-1] == '\n') )
@@ -687,19 +613,13 @@ int iOS_WriteStreamSocket(int iSock, char* achBuf, int iSize) // WIN32
   iLeft = iSize;
   vSleepMillisec(200);
   for ( iRetry = 5;  iRetry && iLeft;  iRetry-- ) {
-    if ( DEBUG_SOCKET_ALL )
-      vTraceDmpN("iOS_WriteStreamSocket send", &achBuf[iSize-iLeft], iLeft);
     iRsl = send(
       iSock,
       &achBuf[iSize-iLeft],
       iLeft,
       0
     );
-    if ( DEBUG_SOCKET_DETAILS )
-      vTraceInt("iOS_WriteStreamSocket send iRsl=%d", iRsl);
     if ( iRsl == SOCKET_ERROR ) {
-      if ( DEBUG_SOCKET_DETAILS )
-        vError("send");
       if ( errno == WSAEWOULDBLOCK ) {
         vSleepMillisec(1000);
         continue;
@@ -713,8 +633,6 @@ int iOS_WriteStreamSocket(int iSock, char* achBuf, int iSize) // WIN32
 
 int iOS_CloseStreamSocket(int iSock) // WIN32
 {
-  if ( DEBUG_SOCKET_DETAILS )
-    vTraceInt("iOS_CloseStreamSocket %d", iSock);
   closesocket(iSock);
   return 0;
 }
@@ -784,21 +702,17 @@ int iOS_UdpQuery(char* szIP, int iPort, char* szCmd, char* szRsl, int iRslLen, l
 
   while ( 1 ) {
     read_fd_set = active_fd_set;
-    if ( DEBUG_SOCKET_DETAILS )
-      vTrace("select ...");
     if ( (iRsl = select(FD_SETSIZE, &read_fd_set, NULL, NULL, &stTimeout)) < 0 ) {
-      if ( DEBUG_SOCKET_DETAILS ) {
-        if ( errno == EINTR )
-          vTrace("interrupted select");
-        else
-          vError ("select");
-      }
+      if ( errno == EINTR )
+        vTrace("interrupted select");
+      else
+        vError ("select");
+
       return -6;
     }
     if ( iRsl == 0 )
       return 0;
-    if ( DEBUG_SOCKET_DETAILS )
-      vTrace("UDP");
+
     iFromLen = sizeof(struct sockaddr);
     iBytes = recvfrom(hSocketUDP, szRsl, iRslLen-1, 0, (struct sockaddr *)&stFrom, &iFromLen);
     if ( iBytes == SOCKET_ERROR ) {
@@ -858,27 +772,21 @@ int iOS_ExternalCommandExt(char* szCmd, int* piExitStatus, char* szPrmRsl, unsig
   FILE* pf;
   char szLineRsl[256];
   char* pWrk;
-  if ( DEBUG_DETAILS )
-    vTraceStr("iOS_ExternalCommandExt: [%s]", szCmd);
+
   *piExitStatus = 120;
   *szPrmRsl = 0;
   pWrk = (char*)malloc(strlen(szCmd)+256);
   if ( pWrk == NULL )
     return -11;
   sprintf(pWrk, "%s", szCmd);
-  if ( DEBUG_DETAILS )
-    vTraceStr(" [%s] ...", pWrk);
+  
   if ( (pf = popen(pWrk, "r")) == NULL ) {
     free(pWrk);
     return -10;
   }
   memset(szLineRsl, 0, sizeof(szLineRsl));
   while ( fgets(szLineRsl, sizeof(szLineRsl), pf) ) {
-    if ( DEBUG_DETAILS ) {
-      vTraceStrNoNL(" line=[%s]", szLineRsl);
-    }
     if ( (strlen(szPrmRsl) + strlen(szLineRsl) + 4) >= uRslBytes) {
-      if ( DEBUG_DETAILS ) vTrace(" (skip)");
       continue;
     }
     strcat(szPrmRsl, szLineRsl);
@@ -886,8 +794,7 @@ int iOS_ExternalCommandExt(char* szCmd, int* piExitStatus, char* szPrmRsl, unsig
   pclose(pf);
   free(pWrk);
   *piExitStatus = atoi(szLineRsl); // isto est? errado, deveria procurar "Everything is OK" ou algo assim
-  if ( DEBUG_DETAILS )
-    vTraceInt("iOS_ExternalCommandExt exit status: %d", *piExitStatus);
+
   return 0;
 }
 
@@ -897,38 +804,14 @@ int hOS_LockFile(char* szFile) // Win32 -- lock n?o funciona: teste de presen?a
   int hLock;
   if ( stat(szFile, &stStat) != 0 ) {
     if ( (hLock = open(szFile, _O_RDWR | _O_CREAT, _S_IREAD | _S_IWRITE)) < 0 ) {
-      if ( DEBUG_DETAILS ) {
-        char* pMsg;
-        char szMsg[512];
-        int iError;
-        iError = errno;
-        pMsg = strerror(iError);
-        sprintf(szMsg, "hOS_LockFile err CREAT [%s] [%d-%s]",
-          szFile,
-          iError,
-          pMsg
-        );
-        vTrace(szMsg);
-      }
+
       return -3;
     }
     write(hLock, "LOCK", 4);
     close(hLock);
   }
   if ( (hLock = open(szFile, _O_RDWR)) < 0 ) {
-    if ( DEBUG_DETAILS ) {
-      char* pMsg;
-      char szMsg[512];
-      int iError;
-      iError = errno;
-      pMsg = strerror(iError);
-      sprintf(szMsg, "hOS_LockFile err RDWR [%s] [%d-%s]",
-        szFile,
-        iError,
-        pMsg
-      );
-      vTrace(szMsg);
-    }
+   
     return -2;
   }
   return hLock;
@@ -1022,11 +905,8 @@ int iOS_DoBackupDB(char* szPrmPrefix, char* szPrmFileList, int iPrmMax)  // Win3
   struct tm *now;
   int iTotalBytes = 0;
   long lLeftKB;
-  if ( DEBUG_DETAILS ) vTraceStr("iOS_DoBackupDB prefix=[%s]", szPrmPrefix);
   if ( (lLeftKB = lOS_AvailableDiskKB("../BACKUP")) < 1000000 ) {
-    if ( DEBUG_DETAILS )
-      vTraceInt("Backup nao feito (%d KB restantes)", (int)lLeftKB);
-    return 0;
+    
   }
   time(&lTime);
   now = localtime(&lTime);
@@ -1041,11 +921,7 @@ int iOS_DoBackupDB(char* szPrmPrefix, char* szPrmFileList, int iPrmMax)  // Win3
   memset(achRsl, 0, sizeof(achRsl));
   memset(szLine, 0, sizeof(szLine));
   while ( fgets(szLine, sizeof(szLine)-1, pf) ) {
-    if ( DEBUG_DETAILS ) {
-      vTraceStrNoNL("  [%s]", szLine);
-    }
     if ( (strlen(szLine) + strlen(achRsl) + 4) >= sizeof(achRsl) ) {
-      if ( DEBUG_DETAILS ) vTrace(" (skip)");
       continue;
     }
     strcat(achRsl, szLine);
@@ -1092,9 +968,6 @@ int bOS_ExtraUnlockDir(int hExtraLock)
   memset(&stLock, 0, sizeof(stLock));
   stLock.l_type = F_UNLCK;
   if ( fcntl(hExtraLock, F_SETLK, &stLock) == -1 ) {
-    if ( DEBUG_FILES_DETAILS ) {
-      vTraceInt("extralock err SETLK NO [%d]", hExtraLock);
-    }
   }
   close(hExtraLock);
   return TRUE;
@@ -1147,17 +1020,6 @@ int iStreamSession()
   giMyPid = getpid();
   gszVersion[0] = 0;
 
-  if ( DEBUG_FILES_DETAILS ) {
-    char szDbg[128];
-    sprintf(szDbg, "%5d iStreamSession start - connection=%d socket=%d IP=[%s]",
-      (int)giMyPid,
-      giCtConnections,
-      hSocketClient,
-      gszIP
-    );
-    vTrace(szDbg);
-  }
-
   memset(&stLinger, 0 , sizeof(stLinger));
   stLinger.l_onoff = 0;
   stLinger.l_linger = 0;
@@ -1205,24 +1067,15 @@ int iStreamSession()
     stTimeout.tv_sec = 10;
 #endif
     stTimeout.tv_usec = 0;  // microseconds
-    if ( DEBUG_FILES_DETAILS )
-      vTrace("iStreamSession select ...");
     if ( (iRsl = select(FD_SETSIZE, &read_fd_set, NULL, NULL, &stTimeout)) < 0 ) {
-      if ( DEBUG_FILES_DETAILS ) {
-        if ( errno == EINTR )
-          vTrace("iStreamSession interrupted select");
-        else
-          vError ("iStreamSession select");
-      }
+     
     }
     else {
       if ( ! FD_ISSET(hSocketClient, &read_fd_set) ) {
-        if ( DEBUG_FILES_DETAILS )
-          vTrace("iStreamSession break");
+
         break;
       }
-      if ( DEBUG_FILES_DETAILS )
-        vTrace("iStreamSession read ...");
+     
       iBytes = recv(hSocketClient, achBuf, sizeof(achBuf), 0);
 #ifdef HENRY
       {
@@ -1239,25 +1092,18 @@ int iStreamSession()
       }
 #endif
       if ( iBytes == 0 ) {
-        if ( DEBUG_FILES_DETAILS )
-          vTrace("iStreamSession recv 0 bytes");
         break;
       }
     }
     achBuf[iBytes] = 0;
-    if ( DEBUG_FILES_DETAILS )
-      vTraceSocketMsgWithPid("iStreamSession: << [%s]%d", achBuf);
+  
     iRsl = iStreamMessage(hSocketClient, achBuf, giMyPid);
     if ( iRsl < 0 ) break;
     if ( iRsl > 0 ) {
-      if ( DEBUG_FILES_DETAILS )
-        vTraceSocketMsgWithPid("iStreamSession: >> [%s]%d", achBuf);
       send(hSocketClient, achBuf, iRsl, 0);
     }
   }
   close(hSocketClient);
-  if ( gstCmdLine.szDebugLevel[0] > '7' )
-    vTraceInt("%5d iStreamSession end", giMyPid);
   return 0;
 }
 
@@ -1348,8 +1194,6 @@ int iOS_UdpCmd(int hUDP_Socket, char *pszMsg, int iPrmBytes)
   int iRsl;
   if ( (iRsl = iOS_GetUdpMsg(hUDP_Socket, szMsg, sizeof(szMsg), gachUDP_ControlFrom, &giUDP_ControlFrom)) <= 0 )
     return iRsl;
-  if ( DEBUG_FILES_DETAILS )
-    vTraceStr("iFILES_UdpCmd [%s]", szMsg);
   if ( iRsl >= iPrmBytes ) {
     iRsl = iPrmBytes - 1;
   }
@@ -1392,8 +1236,6 @@ int iOS_GetSockName(SOCKET iSocket, char* szIP)
   unsigned int iNameLen;
   iNameLen = sizeof(stSockAddr);
   if ( (iRsl = getsockname(iSocket, (struct sockaddr*)&stSockAddr, &iNameLen)) < 0 ) {
-    if ( DEBUG_SOCKET_DETAILS )
-      vTraceInt("iOS_GetSockName(%d) getsockname error", iRsl);
     szIP[0] = 0;
     return iRsl;
   }
@@ -1425,17 +1267,11 @@ void vCheckVenditorPid()
     int iReadPid = atoi(szLine);
     if ( iVenditorPid < 0 ) {
       iVenditorPid = iReadPid;
-      if ( DEBUG_DETAILS )
-        vTraceInt("vCheckVenditorPid venditor pid = %d", iVenditorPid);
     }
     else {
       if ( iReadPid != iVenditorPid ) {
         gbStop = TRUE;
-        if ( DEBUG_DETAILS ) {
-          char szDbg[128];
-          sprintf(szDbg, "vCheckVenditorPid stop read=%d old=%d", iReadPid, iVenditorPid);
-          vTrace(szDbg);
-        }
+      
       }
     }
   }
