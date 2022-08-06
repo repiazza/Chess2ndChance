@@ -1564,7 +1564,9 @@ function fixSquareTypeProprierties(){
             element.setAttribute("sqcolor", SQUARE_TYPE_WHITE_PIECE);
     });
 }
-
+function hasMoved(squareId){
+    return (document.getElementById(squareId).getAttribute('mvd') == 1);
+}
 $(document).ready(function (){
 
     playerColor = avaliableColors[0];
