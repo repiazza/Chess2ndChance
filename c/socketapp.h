@@ -52,12 +52,8 @@ typedef struct
 //
 
 // Command line parameters
-extern STRUCT_CMDLINE gstCmdLine;
 
 // Global parameters
-extern STRUCT_GLOBAL_PRM gstGlobalPrm;
-
-extern STRUCT_CURSOR_SCOREBOARD gstCursorScoreBoard;
 
 // repeated message control
 extern STRUCT_TRANSACTION_CTL gstTransactionControl;
