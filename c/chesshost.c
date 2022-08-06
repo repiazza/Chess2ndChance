@@ -26,6 +26,8 @@
 
 #include "socketsrv.h"
 #include "socketapp.h"
+
+long glCurrentTime;
 /////////////////////////////////////////////////////////////////////////////
 //
 //  main
@@ -46,7 +48,6 @@ int main(int argc, char *argv[])
     return iRsl;
   }
   
-  if ( DEBUG_DETAILS ) vTraceInt("End main %d", getpid());
 
   return 0;
 }
