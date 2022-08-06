@@ -886,268 +886,270 @@ function drawSupervisorSelect(){
     let option = -1;
     filterDetails = [-1, -1,-1, -1, -1, -1, -1];
   
-
-        selectColumn = document.getElementById('spsbselectcolumn');
-        columnVal = -1;
-        if ( selectColumn != null ){
-            columnVal = selectColumn.value;
-            document.getElementById("container").removeChild(selectColumn);
-        }
-        else{    
-            document.querySelectorAll('[id="spsbselectcolumn"]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            });  
-        }
-        selectColumn = document.createElement("select");
-        selectColumn.id = "spsbselectcolumn";
-        selectColumn.style.position = 'absolute';
-        selectColumn.style.marginTop = '10px';
-        selectColumn.style.marginLeft = '780px';
-        selectColumn.addEventListener('change', drawSquareDetails);
+    // Coluna
+    selectColumn = document.getElementById('spsbselectcolumn');
+    columnVal = -1;
+    if ( selectColumn != null ){
+        columnVal = selectColumn.value;
+        document.getElementById("container").removeChild(selectColumn);
+    }
+    else{    
+        document.querySelectorAll('[id="spsbselectcolumn"]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });  
+    }
+    selectColumn = document.createElement("select");
+    selectColumn.id = "spsbselectcolumn";
+    selectColumn.style.position = 'absolute';
+    selectColumn.style.marginTop = '10px';
+    selectColumn.style.marginLeft = '780px';
+    selectColumn.addEventListener('change', drawSquareDetails);
+    option = document.createElement("option");
+    option.value = -1;
+    option.text = "Coluna:";
+    selectColumn.appendChild(option);
+    for (var i = 0; i < columnArray.length; i++) {
         option = document.createElement("option");
-        option.value = -1;
-        option.text = "Coluna:";
+        option.value = i;
+        option.text = columnArray[i];
+        if (columnVal == i){
+            option.selected = 1;
+        }         
         selectColumn.appendChild(option);
-        for (var i = 0; i < columnArray.length; i++) {
-            option = document.createElement("option");
-            option.value = i;
-            option.text = columnArray[i];
-            if (columnVal == i){
-                option.selected = 1;
-            }
-                
-            selectColumn.appendChild(option);
-        }
+    }
 
-        selectRow = document.getElementById('spsbselectrow');
-        rowVal = -1;
-        if ( selectRow != null ){
-            rowVal = selectRow.value;
-            document.getElementById("container").removeChild(selectRow);
-        }
-        else{    
-            document.querySelectorAll('[id="spsbselectrow"]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            });  
-        }
-        selectRow = document.createElement("select");
-        selectRow.id = "spsbselectrow";
-        selectRow.style.position = 'absolute';
-        selectRow.style.marginTop = '10px';
-        selectRow.style.marginLeft = '920px';
-        selectRow.addEventListener('change', drawSquareDetails);
+    // Linha
+    selectRow = document.getElementById('spsbselectrow');
+    rowVal = -1;
+    if ( selectRow != null ){
+        rowVal = selectRow.value;
+        document.getElementById("container").removeChild(selectRow);
+    }
+    else{    
+        document.querySelectorAll('[id="spsbselectrow"]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });  
+    }
+    selectRow = document.createElement("select");
+    selectRow.id = "spsbselectrow";
+    selectRow.style.position = 'absolute';
+    selectRow.style.marginTop = '10px';
+    selectRow.style.marginLeft = '920px';
+    selectRow.addEventListener('change', drawSquareDetails);
+    option = document.createElement("option");
+    option.value = -1;
+    option.text = "Linha:";
+    selectRow.appendChild(option);
+    for (var i = 0; i < 8; i++) {
         option = document.createElement("option");
-        option.value = -1;
-        option.text = "Linha:";
-        selectRow.appendChild(option);
-        for (var i = 0; i < 8; i++) {
-            option = document.createElement("option");
-            option.value = i;
-            option.text = i+1;
-            if (rowVal == i){
-                option.selected = 1;
-            }
-                
-            selectRow.appendChild(option);
-        }
-
-        radioElem[0] = document.getElementById('spsbrdwhite');
-        radioElem[1] = document.getElementById('spsbrdblack');
-        radioElem[2] = document.getElementById('spsbrdboth');
-        radioLbl[0] = document.getElementById('spsblblrdwhite');
-        radioLbl[1] = document.getElementById('spsblblrdblack');
-        radioLbl[2] = document.getElementById('spsblblrdboth');
-        radioVal = -1;
-        if ( radioElem[0] != null ){
-            radioVal = (radioElem[0].checked) ? radioElem[0].value : -1;
-            document.getElementById("container").removeChild(radioElem[0]);
-        }
-        if ( radioLbl[0] != null ){
-            document.getElementById("container").removeChild(radioLbl[0]);
-        }
-        if ( radioElem[1] != null ){
-            if ( radioVal == -1 ){
-                radioVal = (radioElem[1].checked) ? radioElem[1].value : -1;
-            }
-            document.getElementById("container").removeChild(radioElem[1]);
-        }
-        if ( radioLbl[1] != null ){
-            document.getElementById("container").removeChild(radioLbl[1]);
-        }
-        if ( radioElem[2] != null ){
-            if ( radioVal == -1 ){
-                radioVal = (radioElem[2].checked) ? radioElem[2].value : -1;
-            }
-            document.getElementById("container").removeChild(radioElem[2]);
-        }
-        if ( radioLbl[2] != null ){
-            document.getElementById("container").removeChild(radioLbl[2]);
-        }
-        if ( radioVal == -1 ) {    
-            document.querySelectorAll('[id="spsbrdwhite"]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            });  
-            document.querySelectorAll('[id="spsbrdblack"]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            });  
-            document.querySelectorAll('[id="spsblblrdwhite"]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            });  
-            document.querySelectorAll('[id="spsblblrdblack"]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            }); 
-            document.querySelectorAll('[id="spsbrdboth"]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            });  
-            document.querySelectorAll('[id="spsblblrdboth"]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            });  
-        }
-        // Label
-        radioLbl[0] = document.createElement("label");
-        radioLbl[0].for = "spsbrdwhite";
-        radioLbl[0].id = "spsblblrdwhite";
-        radioLbl[0].innerHTML = "White:";
-        radioLbl[0].style.position = 'absolute';
-        radioLbl[0].style.marginTop = '10px';
-        radioLbl[0].style.marginLeft = '1200px';
-        // Radio button
-        radioElem[0] = document.createElement("input");
-        radioElem[0].type = 'radio';
-        radioElem[0].id = "spsbrdwhite";
-        radioElem[0].value = "WHITEPIECE";
-        if ( radioVal == radioElem[0].value )
-            radioElem[0].checked = true;
-
-        radioElem[0].name="colors";
-        radioElem[0].style.position = 'absolute';
-        radioElem[0].style.marginTop = '13px';
-        radioElem[0].style.marginLeft = '1245px';
-        radioElem[0].addEventListener('change', drawSquareDetails);
-
-        // Label Black
-        radioLbl[1] = document.createElement("label");
-        radioLbl[1].for = "spsbrdblack";
-        radioLbl[1].id = "spsblblrdblack";
-        radioLbl[1].innerHTML = "Black:";
-        radioLbl[1].style.position = 'absolute';
-        radioLbl[1].style.marginTop = '10px';
-        radioLbl[1].style.marginLeft = '1273px';
-        // Radio button Black
-        radioElem[1] = document.createElement("input");
-        radioElem[1].type = 'radio';
-        radioElem[1].id = "spsbrdblack";
-        radioElem[1].value = "BLACKPIECE";  
-        if ( radioVal == radioElem[1].value )
-            radioElem[1].checked = true;
-
-        radioElem[1].name="colors";
-        radioElem[1].style.position = 'absolute';
-        radioElem[1].style.marginTop = '13px';
-        radioElem[1].style.marginLeft = '1317px';
-        radioElem[1].addEventListener('change', drawSquareDetails);
-
-        // // Label Ambos
-        // radioLbl[2] = document.createElement("label");
-        // radioLbl[2].for = "spsbrdboth";
-        // radioLbl[2].id = "spsblblrdboth";
-        // radioLbl[2].innerHTML = "Tudo:";
-        // radioLbl[2].style.position = 'absolute';
-        // radioLbl[2].style.marginTop = '10px';
-        // radioLbl[2].style.marginLeft = '1340px';
-        // // Radio button Ambos
-        // radioElem[2] = document.createElement("input");
-        // radioElem[2].type = 'radio';
-        // radioElem[2].id = "spsbrdboth";
-        // radioElem[2].value = "both";  
-        // if ( radioVal == radioElem[2].value )
-        //     radioElem[2].checked = true;
-
-        // radioElem[2].name="colors";
-        // radioElem[2].style.position = 'absolute';
-        // radioElem[2].style.marginTop = '13px';
-        // radioElem[2].style.marginLeft = '1395px';
-        // radioElem[2].addEventListener('change', drawSquareDetails);
-
-        selectType = document.getElementById('spsbselecttype');
-        typeValue = -1;
-        if ( selectType != null ){
-            typeValue = selectType.value;
-            document.getElementById("container").removeChild(selectType);
-        }
-        else{
-            document.querySelectorAll('[id=spsbselecttype]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            });  
-        }
-        selectType = document.createElement("select");
-        selectType.id = "spsbselecttype";
-        selectType.style.position = 'absolute';
-        selectType.style.marginTop = '10px';
-        selectType.style.marginLeft = '1050px';
-        selectType.addEventListener('change', drawSquareDetails);
-        option = document.createElement("option");
-        option.value = -1;
-        option.text = "Peça:";
-        selectType.appendChild(option);
-        for (var i = 0; i < 5; i++) {
-            option = document.createElement("option");
-            option.value = columnPieceType[i];
-            option.text = columnPieceType[i].split("PIECE")[0];
-            if (typeValue == columnPieceType[i]){
-                option.selected = 1;
-            }
-                
-            selectType.appendChild(option);
-        }
-        option = document.createElement("option");
-        option.value = 'PAWNPIECE';
-        option.text = 'PAWN';
-        if (typeValue == 'PAWNPIECE'){
+        option.value = i;
+        option.text = i+1;
+        if (rowVal == i){
             option.selected = 1;
         }
-        selectType.appendChild(option);
-    
-        labelSelected = document.createElement("label");
-        labelSelected.for = "spsbcheckslt";
-        labelSelected.id = "spsblblcheck";
-        labelSelected.innerHTML = "Seleção:";
-        labelSelected.style.position = 'absolute';
-        labelSelected.style.marginTop = '10px';
-        labelSelected.style.marginLeft = '1273px';
+            
+        selectRow.appendChild(option);
+    }
 
-        checkSelected = document.getElementById('spsbcheckslt');
-        typeSelected = false;
-        if ( checkSelected != null ){
-            typeSelected = checkSelected.checked;
-            document.getElementById("container").removeChild(selectType);
+    // Cores
+    radioElem[0] = document.getElementById('spsbrdwhite');
+    radioElem[1] = document.getElementById('spsbrdblack');
+    radioElem[2] = document.getElementById('spsbrdboth');
+    radioLbl[0]  = document.getElementById('spsblblrdwhite');
+    radioLbl[1]  = document.getElementById('spsblblrdblack');
+    radioLbl[2]  = document.getElementById('spsblblrdboth');
+    radioVal = -1;
+    if ( radioElem[0] != null ){
+        radioVal = (radioElem[0].checked) ? radioElem[0].value : -1;
+        document.getElementById("container").removeChild(radioElem[0]);
+    }
+    if ( radioLbl[0] != null ){
+        document.getElementById("container").removeChild(radioLbl[0]);
+    }
+    if ( radioElem[1] != null ){
+        if ( radioVal == -1 ){
+            radioVal = (radioElem[1].checked) ? radioElem[1].value : -1;
         }
-        else{
-            document.querySelectorAll('[id=spsbcheckslt]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            });
-            document.querySelectorAll('[id=spsblblcheck]').forEach(element => {
-                document.getElementById("container").removeChild(element);
-            });
+        document.getElementById("container").removeChild(radioElem[1]);
+    }
+    if ( radioLbl[1] != null ){
+        document.getElementById("container").removeChild(radioLbl[1]);
+    }
+    if ( radioElem[2] != null ){
+        if ( radioVal == -1 ){
+            radioVal = (radioElem[2].checked) ? radioElem[2].value : -1;
         }
-        checkSelected = document.createElement("input");
-        checkSelected.type = "checkbox";
-        checkSelected.id = "spsbcheckslt";
-        checkSelected.style.position = 'absolute';
-        checkSelected.style.marginTop = '10px';
-        checkSelected.style.marginLeft = '1200px';
-        if ( typeSelected )
-            checkSelected.checked = 1;
-        
-        checkSelected.addEventListener('change', drawSquareDetails);
-        
-        let sltd = '[sltd]';
-        if ( !typeSelected ){
-            typeSelected = ':not(['+sltd+'])';
+        document.getElementById("container").removeChild(radioElem[2]);
+    }
+    if ( radioLbl[2] != null ){
+        document.getElementById("container").removeChild(radioLbl[2]);
+    }
+    if ( radioVal == -1 ) {    
+        document.querySelectorAll('[id="spsbrdwhite"]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });  
+        document.querySelectorAll('[id="spsbrdblack"]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });  
+        document.querySelectorAll('[id="spsblblrdwhite"]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });  
+        document.querySelectorAll('[id="spsblblrdblack"]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        }); 
+        document.querySelectorAll('[id="spsbrdboth"]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });  
+        document.querySelectorAll('[id="spsblblrdboth"]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });  
+    }
+    // White Label
+    radioLbl[0] = document.createElement("label");
+    radioLbl[0].for = "spsbrdwhite";
+    radioLbl[0].id = "spsblblrdwhite";
+    radioLbl[0].innerHTML = "White:";
+    radioLbl[0].style.position = 'absolute';
+    radioLbl[0].style.marginTop = '10px';
+    radioLbl[0].style.marginLeft = '1200px';
+    // White Radio
+    radioElem[0] = document.createElement("input");
+    radioElem[0].type = 'radio';
+    radioElem[0].id = "spsbrdwhite";
+    radioElem[0].value = "WHITEPIECE";
+    if ( radioVal == radioElem[0].value )
+        radioElem[0].checked = true;
+
+    radioElem[0].name="colors";
+    radioElem[0].style.position = 'absolute';
+    radioElem[0].style.marginTop = '13px';
+    radioElem[0].style.marginLeft = '1245px';
+    radioElem[0].addEventListener('change', drawSquareDetails);
+
+    // Black Label
+    radioLbl[1] = document.createElement("label");
+    radioLbl[1].for = "spsbrdblack";
+    radioLbl[1].id = "spsblblrdblack";
+    radioLbl[1].innerHTML = "Black:";
+    radioLbl[1].style.position = 'absolute';
+    radioLbl[1].style.marginTop = '10px';
+    radioLbl[1].style.marginLeft = '1273px';
+    // Black Radio
+    radioElem[1] = document.createElement("input");
+    radioElem[1].type = 'radio';
+    radioElem[1].id = "spsbrdblack";
+    radioElem[1].value = "BLACKPIECE";  
+    if ( radioVal == radioElem[1].value )
+        radioElem[1].checked = true;
+
+    radioElem[1].name="colors";
+    radioElem[1].style.position = 'absolute';
+    radioElem[1].style.marginTop = '13px';
+    radioElem[1].style.marginLeft = '1317px';
+    radioElem[1].addEventListener('change', drawSquareDetails);
+
+    // // Label Ambos
+    // radioLbl[2] = document.createElement("label");
+    // radioLbl[2].for = "spsbrdboth";
+    // radioLbl[2].id = "spsblblrdboth";
+    // radioLbl[2].innerHTML = "Tudo:";
+    // radioLbl[2].style.position = 'absolute';
+    // radioLbl[2].style.marginTop = '10px';
+    // radioLbl[2].style.marginLeft = '1340px';
+    // // Radio button Ambos
+    // radioElem[2] = document.createElement("input");
+    // radioElem[2].type = 'radio';
+    // radioElem[2].id = "spsbrdboth";
+    // radioElem[2].value = "both";  
+    // if ( radioVal == radioElem[2].value )
+    //     radioElem[2].checked = true;
+
+    // radioElem[2].name="colors";
+    // radioElem[2].style.position = 'absolute';
+    // radioElem[2].style.marginTop = '13px';
+    // radioElem[2].style.marginLeft = '1395px';
+    // radioElem[2].addEventListener('change', drawSquareDetails);
+
+    // Tipo de peça
+    selectType = document.getElementById('spsbselecttype');
+    typeValue = -1;
+    if ( selectType != null ){
+        typeValue = selectType.value;
+        document.getElementById("container").removeChild(selectType);
+    }
+    else{
+        document.querySelectorAll('[id=spsbselecttype]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });  
+    }
+    selectType = document.createElement("select");
+    selectType.id = "spsbselecttype";
+    selectType.style.position = 'absolute';
+    selectType.style.marginTop = '10px';
+    selectType.style.marginLeft = '1050px';
+    selectType.addEventListener('change', drawSquareDetails);
+    option = document.createElement("option");
+    option.value = -1;
+    option.text = "Peça:";
+    selectType.appendChild(option);
+    for (var i = 0; i < 5; i++) {
+        option = document.createElement("option");
+        option.value = columnPieceType[i];
+        option.text = columnPieceType[i].split("PIECE")[0];
+        if (typeValue == columnPieceType[i]){
+            option.selected = 1;
         }
-        else{
-            typeSelected = sltd;
-        }
+            
+        selectType.appendChild(option);
+    }
+    option = document.createElement("option");
+    option.value = 'PAWNPIECE';
+    option.text = 'PAWN';
+    if (typeValue == 'PAWNPIECE'){
+        option.selected = 1;
+    }
+    selectType.appendChild(option);
+
+    // Label seleção
+    labelSelected = document.createElement("label");
+    labelSelected.for = "spsbcheckslt";
+    labelSelected.id = "spsblblcheck";
+    labelSelected.innerHTML = "Seleção:";
+    labelSelected.style.position = 'absolute';
+    labelSelected.style.marginTop = '10px';
+    labelSelected.style.marginLeft = '1350px';
+    // Checkbox Seleção
+    checkSelected = document.getElementById('spsbcheckslt');
+    typeSelected = false;
+    if ( checkSelected != null ){
+        typeSelected = checkSelected.checked;
+        document.getElementById("container").removeChild(selectType);
+    }
+    else{
+        document.querySelectorAll('[id=spsbcheckslt]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });
+        document.querySelectorAll('[id=spsblblcheck]').forEach(element => {
+            document.getElementById("container").removeChild(element);
+        });
+    }
+    checkSelected = document.createElement("input");
+    checkSelected.type = "checkbox";
+    checkSelected.id = "spsbcheckslt";
+    checkSelected.style.position = 'absolute';
+    checkSelected.style.marginTop = '13px';
+    checkSelected.style.marginLeft = '1415px';
+    if ( typeSelected )
+        checkSelected.checked = 1;
+    
+    checkSelected.addEventListener('change', drawSquareDetails);
+    let sltd = '[sltd]';
+    if ( !typeSelected ){
+        typeSelected = ':not(['+sltd+'])';
+    }
+    else{
+        typeSelected = sltd;
+    }
 
     // else if ( (selectVal-1) == FILTER_EMPTY ){
         // radioVal = BLANK_SQUARE_COLOR;
@@ -1193,6 +1195,7 @@ function drawSupervisorSelect(){
         document.getElementById("container").appendChild(selectType);
     }
     if ( checkSelected != -1 && checkSelected != null ){
+        document.getElementById("container").appendChild(labelSelected);
         document.getElementById("container").appendChild(checkSelected);
     }
 
