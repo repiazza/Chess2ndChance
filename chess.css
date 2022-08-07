@@ -2,7 +2,9 @@
     position: absolute;
     height: 100%;
     width: 100%;
-    border :1px solid blue;
+}
+.borderblue{
+    border :3px solid blue;
 }
 .board > div[square='1']{
     height: 80px;

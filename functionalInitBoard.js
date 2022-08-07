@@ -1,8 +1,10 @@
+///////////////////////////////////////////////////////////
+//
+//    Board block
+//
+//
 const DARK_BGCOLOR = 0;
 const LIGHT_BGCOLOR = 1;
-
-const CONSIDER_COLISION = 0;
-const IGNORE_COLISION = 1;
 
 const highlightClasses = 
 [
@@ -19,43 +21,42 @@ const highlightClasses =
     "orangehl",
     "orangeh1dark"
 ];
+
 const captureClasses =
 [
     "capturehl",
     "capturehldark"             
 ];
 
-
 const bgBoardColors = [
     "darksquarecolor",
     "lightsquarecolor"
 ];
 
-const SQUARE_RANGE        = 1;
-const DOUBLE_SQUARE_RANGE = 2;
-const L_RANGE             = 4;
-const LINE_OF_SIGHT       = 8;
-const MOVEMENT_TYPE_NONE  = 0;
-const RANGE_TYPE_NONE     = 0;
+const GAME_CONTEXT_INITIAL = 0;
+const GAME_CONTEXT_PLAYING = 1;
 
-const PIECE_TYPE_ROOK    = 'R';
-const PIECE_TYPE_KNIGHT  = 'N';
-const PIECE_TYPE_BISHOP  = 'B';
-const PIECE_TYPE_QUEEN   = 'Q';
-const PIECE_TYPE_KING    = 'K';
-const PIECE_TYPE_PAWN    = 'P';
-const PIECE_TYPE_NONE    =  0;
+const VISIBILITY_VISIBLE = "visible";
+const VISIBILITY_HIDDEN  = "hidden";
 
-const SQUARE_TYPE_BLANK = 'BLANK';
-const SQUARE_TYPE_PAWN_PIECE = 'PAWNPIECE';
+const SQUARE_TYPE_PAWN_PIECE      = 'PAWNPIECE';
 const SQUARE_TYPE_HIGHVALUE_PIECE = 'NOTPAWNPIECE';
-const SQUARE_TYPE_KNIGHT_PIECE = 'KNIGHTPIECE';
-const SQUARE_TYPE_BISHOP_PIECE = 'BISHOPPIECE';
-const SQUARE_TYPE_QUEEN_PIECE = 'QUEENPIECE';
-const SQUARE_TYPE_KING_PIECE = 'KINGPIECE';
-const SQUARE_TYPE_ROOK_PIECE = 'ROOKPIECE';
-    //                0   1   2    3
-    //                l   r   t    b
+const SQUARE_TYPE_KNIGHT_PIECE    = 'KNIGHTPIECE';
+const SQUARE_TYPE_BISHOP_PIECE    = 'BISHOPPIECE';
+const SQUARE_TYPE_QUEEN_PIECE     = 'QUEENPIECE';
+const SQUARE_TYPE_KING_PIECE      = 'KINGPIECE';
+const SQUARE_TYPE_ROOK_PIECE      = 'ROOKPIECE';
+const SQUARE_TYPE_BLANK           = 'BLANK';
+
+///////////////////////////////////////////////////////////
+//
+//    Movement Block
+//
+//
+const CONSIDER_COLISION = 0;
+const IGNORE_COLISION = 1;
+    //                0  1  2  3
+    //                l  r  t  b
 const TOP_LEFT     = [0 , 2];
 const TOP_RIGHT    = [1 , 2];
 const BOTTOM_LEFT  = [0 , 3];
@@ -65,79 +66,86 @@ const RIGHT        = 1 ;
 const TOP          = 2 ;
 const BOTTOM       = 3 ;
 const DIRECTION_ROTATE = [
-                            [[TOP_LEFT, TOP], [TOP_RIGHT, TOP]], 
-                            [[TOP_RIGHT, RIGHT], [BOTTOM_RIGHT, RIGHT]],
+                            [[TOP_LEFT, TOP]       , [TOP_RIGHT, TOP]], 
+                            [[TOP_RIGHT, RIGHT]    , [BOTTOM_RIGHT, RIGHT]],
                             [[BOTTOM_RIGHT, BOTTOM], [BOTTOM_LEFT, BOTTOM]],
-                            [[BOTTOM_LEFT, LEFT], [TOP_LEFT, LEFT]]
+                            [[BOTTOM_LEFT, LEFT]   ,  [TOP_LEFT, LEFT]]
                          ];
 
-let LSquares = [];
+const SQUARE_RANGE        = 1;
+const DOUBLE_SQUARE_RANGE = 2;
+const L_RANGE             = 4;
+const LINE_OF_SIGHT       = 8;
+const RANGE_TYPE_NONE     = 0;
 
-let intervalSeconds = 5;
-let intervalTime = intervalSeconds * 1000;
-let myInterval;
-
-let supervisorMode = false;
-const VISIBILITY_VISIBLE = "visible";
-const VISIBILITY_HIDDEN  = "hidden";
-
-      
-        
+const MOVEMENT_TYPE_NONE = 0;
+//
+// Main movement notation
+//
 const MOVEMENT_DIRECTION_COLUMN   = 0x01;
 const MOVEMENT_DIRECTION_LINE     = 0x02; 
 const MOVEMENT_DIRECTION_DIAGONAL = 0x04; 
 const MOVEMENT_DIRECTION_L        = 0x08;
-
+//
+// Segemented movement notation
+//
 const SUBTYPE_DIAG_MAIN_BEGIN     = 0x10;
 const SUBTYPE_DIAG_MAIN_END       = 0x20;
 const SUBTYPE_DIAG_OPPOSITE_BEGIN = 0x40;
 const SUBTYPE_DIAG_OPPOSITE_END   = 0x80;
-
-const SUBTYPE_COLUMN_TOP      = 1024; 
-const SUBTYPE_COLUMN_BOTTOM   = 2048;
-const SUBTYPE_LINE_LEFT       = 4096;
-const SUBTYPE_LINE_RIGHT      = 8192;
-
-const SPECIAL_MOVEMENT_CASTLE     = 16384; 
-const SPECIAL_MOVEMENT_EN_PASSANT = 32768; 
-const SPECIAL_MOVEMENT_ALL = SPECIAL_MOVEMENT_CASTLE | SPECIAL_MOVEMENT_EN_PASSANT; 
-
-const MAIN_DIAGONAL        = SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END;
-const OPPOSITE_DIAGONAL    = SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
-const DIAGONAL_FOUR_SQUARE = MAIN_DIAGONAL | OPPOSITE_DIAGONAL;
-
-const MOVEMENT_DIRECTION_ALL = MOVEMENT_DIRECTION_COLUMN 
-                                | MOVEMENT_DIRECTION_LINE 
-                                | MOVEMENT_DIRECTION_DIAGONAL
-                                | MOVEMENT_DIRECTION_L;
                                        
 const SUBTYPE_DIAG_ALL = SUBTYPE_DIAG_MAIN_BEGIN 
                          | SUBTYPE_DIAG_MAIN_END 
                          | SUBTYPE_DIAG_OPPOSITE_BEGIN 
                          | SUBTYPE_DIAG_OPPOSITE_END;
 
-const SUBTYPE_COLUMN_ALL = SUBTYPE_COLUMN_TOP | SUBTYPE_COLUMN_BOTTOM;  
-const SUBTYPE_LINE_ALL   = SUBTYPE_LINE_LEFT  | SUBTYPE_LINE_RIGHT;            
+const SUBTYPE_COLUMN_TOP          = 1024; 
+const SUBTYPE_COLUMN_BOTTOM       = 2048;
+const SUBTYPE_LINE_LEFT           = 4096;
+const SUBTYPE_LINE_RIGHT          = 8192;
+//
+// Special movement notation
+//
+const SPECIAL_MOVEMENT_CASTLE     = 16384; 
+const SPECIAL_MOVEMENT_EN_PASSANT = 32768; 
+const SPECIAL_MOVEMENT_ALL        = SPECIAL_MOVEMENT_CASTLE | SPECIAL_MOVEMENT_EN_PASSANT; 
+//
+// Compount movement notation
+//
+const MAIN_DIAGONAL        = SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END;
+const OPPOSITE_DIAGONAL    = SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
+//
+// Full movement notation
+//
+const MOVEMENT_DIAGONAL_X    = MAIN_DIAGONAL | OPPOSITE_DIAGONAL;
+const MOVEMENT_DIRECTION_ALL = MOVEMENT_DIRECTION_COLUMN 
+                                | MOVEMENT_DIRECTION_LINE 
+                                | MOVEMENT_DIRECTION_DIAGONAL
+                                | MOVEMENT_DIRECTION_L;
 
-const SUBTYPE_ALL        = SUBTYPE_COLUMN_ALL | SUBTYPE_LINE_ALL | SUBTYPE_DIAG_ALL;
+const MOVEMENT_COLUMN_ALL = SUBTYPE_COLUMN_TOP | SUBTYPE_COLUMN_BOTTOM;  
+const MOVEMENT_LINE_ALL   = SUBTYPE_LINE_LEFT  | SUBTYPE_LINE_RIGHT;            
+const MOVEMENT_MAIN_ALL   = MOVEMENT_COLUMN_ALL | MOVEMENT_LINE_ALL | SUBTYPE_DIAG_ALL;
 
-const MOVEMENT_DIRECTION_SUBTYPE_ALL  = MOVEMENT_DIRECTION_ALL | SUBTYPE_ALL;
+const MOVEMENT_DIRECTION_SUBTYPE_ALL  = MOVEMENT_DIRECTION_ALL | MOVEMENT_MAIN_ALL;
+const MOVEMENT_TYPE_ALL               = MOVEMENT_DIRECTION_ALL | MOVEMENT_MAIN_ALL | SPECIAL_MOVEMENT_ALL;
 
-const MOVEMENT_TYPE_ALL  = MOVEMENT_DIRECTION_ALL | SUBTYPE_ALL | SPECIAL_MOVEMENT_ALL;
+//
+// Piece movement
+//
 
-
-//ROOK
+// ROOK
 const ROOK_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_COLUMN
                                 | MOVEMENT_DIRECTION_LINE
                                 | SPECIAL_MOVEMENT_CASTLE;
 const ROOK_CASTLED_MOVEMENT = (ROOK_INITIAL_MOVEMENT ^ SPECIAL_MOVEMENT_CASTLE)
-const ROOK_MOVEMENT_RANGE = LINE_OF_SIGHT;
+const ROOK_MOVEMENT_RANGE   = LINE_OF_SIGHT;
 
-//KNIGHT  
+// KNIGHT  
 const KNIGHT_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_L;
 const KNIGHT_MOVEMENT_RANGE   = L_RANGE; // 2 movements 4way expressed
 
-//BISHOP
+// BISHOP
 const BISHOP_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_DIAGONAL
 const BISHOP_MOVEMENT_RANGE   = LINE_OF_SIGHT;
 
@@ -147,7 +155,7 @@ const QUEEN_INITIAL_MOVEMENT =  MOVEMENT_DIRECTION_COLUMN
                             | MOVEMENT_DIRECTION_DIAGONAL;
 const QUEEN_MOVEMENT_RANGE  = LINE_OF_SIGHT;
 
-//KING
+// KING
 const KING_INITIAL_MOVEMENT = SPECIAL_MOVEMENT_CASTLE
                             | MOVEMENT_DIRECTION_COLUMN
                             | MOVEMENT_DIRECTION_LINE
@@ -155,7 +163,7 @@ const KING_INITIAL_MOVEMENT = SPECIAL_MOVEMENT_CASTLE
 const KING_CASTLED_MOVEMENT = (KING_INITIAL_MOVEMENT ^ SPECIAL_MOVEMENT_CASTLE)
 const KING_MOVEMENT_RANGE   =  SQUARE_RANGE;
 
-//PAWN
+// PAWN
 const PAWN_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_COLUMN
                                 | SUBTYPE_COLUMN_TOP
                             | MOVEMENT_DIRECTION_DIAGONAL
@@ -164,6 +172,34 @@ const PAWN_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_COLUMN
 const PAWN_INITIAL_RANGE = DOUBLE_SQUARE_RANGE;
 const PAWN_MOVED_RANGE   = SQUARE_RANGE;
 
+const PIECE_TYPE_ROOK    = 'R';
+const PIECE_TYPE_KNIGHT  = 'N';
+const PIECE_TYPE_BISHOP  = 'B';
+const PIECE_TYPE_QUEEN   = 'Q';
+const PIECE_TYPE_KING    = 'K';
+const PIECE_TYPE_PAWN    = 'P';
+const PIECE_TYPE_NONE    =  0;
+
+const pieceColumnLookup = [
+    PIECE_TYPE_ROOK,
+    PIECE_TYPE_KNIGHT,
+    PIECE_TYPE_BISHOP,
+    PIECE_TYPE_QUEEN, 
+    PIECE_TYPE_KING, 
+    PIECE_TYPE_PAWN,  
+    PIECE_TYPE_NONE 
+];
+
+const pieceTypeByColumn = [
+    SQUARE_TYPE_ROOK_PIECE,     // a
+    SQUARE_TYPE_KNIGHT_PIECE,   // b
+    SQUARE_TYPE_BISHOP_PIECE,   // c  
+    SQUARE_TYPE_QUEEN_PIECE,    // d 
+    SQUARE_TYPE_KING_PIECE,     // e 
+    SQUARE_TYPE_BISHOP_PIECE,   // f  
+    SQUARE_TYPE_KNIGHT_PIECE,   // g   
+    SQUARE_TYPE_ROOK_PIECE      // h     
+];
 
 const TOP_RIGHT_DIRECTION = 'trsq';
 const TOP_LEFT_DIRECTION = 'tlsq';
@@ -183,36 +219,26 @@ const CROSS_DIRECTION             = LINE_DIRECTION.concat(COLUMN_DIRECTION);
 const STAR_DIRECTION              = CROSS_DIRECTION.concat(MAIN_DIAGONAL_DIRECTION).concat(OPPOSITE_DIAGONAL_DIRECTION);
 
 const BLANK_ON_ORIGIN = 'BLKORIGIN';
-const FULL_SWAP = 'FULLSWAP';
+const FULL_SWAP       = 'FULLSWAP';
 
-const FRIENDLY_SIDE = 'FRIENDLY';
-const ENEMY_SIDE = 'ENEMY';
+const FRIENDLY_SIDE   = 'FRIENDLY';
+const ENEMY_SIDE      = 'ENEMY';
 
 const SQUARE_TYPE_BLACK_PIECE = 'BLACKPIECE';
 const SQUARE_TYPE_WHITE_PIECE = 'WHITEPIECE';
 
-const PAWN_INIT_ROWS = ["2", "7"];
+const PAWN_INIT_ROWS      = ["2", "7"];
 const HIGHVALUE_INIT_ROWS = ["1", "8"];
 
-const WHITEPIECE_ROWS = ["1", "2"];
-const BLACKPIECE_ROWS = ["7", "8"];
+const WHITEPIECE_ROWS  = ["1", "2"];
+const BLACKPIECE_ROWS  = ["7", "8"];
 const BLANKSQUARE_ROWS = ["3", "4", "5", "6"];
 
-let playerColor = 'BLACKPIECE';
 const avaliableColors = ['WHITEPIECE','BLACKPIECE'];
 const BLANK_SQUARE_COLOR = 0;
 
 const columnArray = ['a','b','c','d','e','f','g','h'];
-const columnPieceType = [
-                            SQUARE_TYPE_ROOK_PIECE,
-                            SQUARE_TYPE_KNIGHT_PIECE,
-                            SQUARE_TYPE_BISHOP_PIECE,
-                            SQUARE_TYPE_QUEEN_PIECE,
-                            SQUARE_TYPE_KING_PIECE,
-                            SQUARE_TYPE_BISHOP_PIECE,
-                            SQUARE_TYPE_KNIGHT_PIECE,
-                            SQUARE_TYPE_ROOK_PIECE
-                        ];
+
 const FILTER_ROW = 0;
 const FILTER_COLUMN = 1;
 const FILTER_COLOR = 2
@@ -222,7 +248,18 @@ const FILTER_NOT_SELECTED = 5
 const FILTER_EMPTY = 6
                   //  'row', 'column', 'color', 'type', 'selected', 'notselected', 'empty'
 let filterDetails = [  -1,     -1,       -1,     -1,       -1,         -1,           -1];
+
 let capturedPieces = "";
+
+let LSquares = [];
+
+let intervalSeconds = 5;
+let intervalTime = intervalSeconds * 1000;
+let myInterval;
+
+let playerColor = 'BLACKPIECE';
+let supervisorMode = false;
+
 
 function toggleSupervisor(){
     supervisorMode = !supervisorMode;
@@ -360,7 +397,7 @@ function createSquare(square){
     else if ( validateSquare(square, SQUARE_TYPE_PAWN_PIECE) )
         sqType = SQUARE_TYPE_PAWN_PIECE;
     else if (validateSquare(square, SQUARE_TYPE_HIGHVALUE_PIECE) )
-        sqType = columnPieceType[columnArray.indexOf(square.id[0])];
+        sqType = pieceTypeByColumn[columnArray.indexOf(square.id[0])];
     else{
         throw new Error(
             "Square invalido"
@@ -556,8 +593,8 @@ function validateIsOnRange(square){
             getDirectionFromSquare(getFirstSelectedElement(), TOP_RIGHT_DIRECTION, myMovRange);
     }
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_COLUMN) ){
-        if ( matchMovementDirection(myMovType, SUBTYPE_COLUMN_ALL) == 0 )
-            myMovType = myMovType | SUBTYPE_COLUMN_ALL;
+        if ( matchMovementDirection(myMovType, MOVEMENT_COLUMN_ALL) == 0 )
+            myMovType = myMovType | MOVEMENT_COLUMN_ALL;
 
         if ( matchMovementDirection(myMovType, SUBTYPE_COLUMN_TOP) )
             getDirectionFromSquare(getFirstSelectedElement(), TOP_DIRECTION, myMovRange);            
@@ -566,8 +603,8 @@ function validateIsOnRange(square){
         
     }
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_LINE) ){
-        if ( matchMovementDirection(myMovType, SUBTYPE_LINE_ALL) == 0 )
-            myMovType = myMovType | SUBTYPE_LINE_ALL;
+        if ( matchMovementDirection(myMovType, MOVEMENT_LINE_ALL) == 0 )
+            myMovType = myMovType | MOVEMENT_LINE_ALL;
 
         if ( matchMovementDirection(myMovType, SUBTYPE_LINE_LEFT) )
             getDirectionFromSquare(getFirstSelectedElement(), LEFT_DIRECTION, myMovRange);            
@@ -791,37 +828,110 @@ function squareHandler(event){
     //drawSquareDetails();
 
 }
+function drawHorizontalSubtitles(){
+    marginLeft = 140;
+    columnArray.map(function (columnAlpha,clmndx){        
+        let subtitle  =  document.createElement('div');
+        subtitle.innerHTML = columnAlpha;
+        subtitle.style.marginLeft = marginLeft+"px";
+        subtitle.style.marginTop = "690px";
+        subtitle.style.position = 'absolute'; 
+        subtitle.style.color= 'black'; 
+        subtitle.style.fontWeight= 'bold';
+        subtitle.style.fontSize= "20px";
+        document.getElementById('container').appendChild(subtitle);
+        marginLeft += 81;
+    });
+}
 function readyHandler(event){
     event.preventDefault();
 
     if ( document.getElementById('a1') != null )
         return;
+
+    drawBoardSquares(GAME_CONTEXT_INITIAL, null);
+
+    $('#board').css("transform", "scaleY(-1)");
+
+    drawHorizontalSubtitles();
+}
+// function saveBoardOnLocalStorage(){
+//     for ( let rowNdx = 1; rowNdx < 9; rowNdx++ ){
+//         columnArray.map( function (columnAlpha, clmndx){
+//             try{
+//                 var squareColorSeq = DARK_BGCOLOR;
+//                 if ( clmndx % 2 != rowColorToggle ) {
+//                     squareColorSeq = LIGHT_BGCOLOR;
+//                 }
+//                 let candidateElem = drawSquare(columnAlpha+rowNdx, "");
+//                 const newsquare = createSquare(candidateElem);
+                
+//                 marginLeft += 80;
+//                 newsquare.squareElem.style.position = 'absolute';
+//                 newsquare.squareElem.style.marginLeft = marginLeft+"px";
+//                 newsquare.squareElem.style.marginTop = marginTop+"px";
+//                 newsquare.squareElem.style.color = 'black';
+//                 newsquare.squareElem.classList.add(bgBoardColors[squareColorSeq]);
+//                 newsquare.squareElem.setAttribute("bgc", bgBoardColors[squareColorSeq]); 
+//                 newsquare.squareElem.setAttribute("sqtype", newsquare.squareType);
+//                 newsquare.squareElem.setAttribute("sqcolor", newsquare.squareColor);
+//                 newsquare.squareElem.setAttribute("tlsq", newsquare.topLeftSquare);
+//                 newsquare.squareElem.setAttribute("trsq", newsquare.topRightSquare);
+//                 newsquare.squareElem.setAttribute("brsq", newsquare.bottomRightSquare);
+//                 newsquare.squareElem.setAttribute("blsq", newsquare.bottomLeftSquare);
+//                 newsquare.squareElem.setAttribute("tsq", newsquare.topSquare);
+//                 newsquare.squareElem.setAttribute("bsq", newsquare.bottomSquare);
+//                 newsquare.squareElem.setAttribute("lsq", newsquare.leftSquare);
+//                 newsquare.squareElem.setAttribute("rsq", newsquare.rightSquare);
+//                 newsquare.squareElem.innerHTML = newsquare.squareType.split("PIECE")[0];
+//                 if (  newsquare.squareColor != BLANK_SQUARE_COLOR ){
+//                     newsquare.squareElem.setAttribute("ptype", getPieceTypeFromSquareType(newsquare.squareType));
+//                     newsquare.squareElem.setAttribute("initsq", newsquare.initSquareId);
+//                 }
+//                 else{
+//                     newsquare.squareElem.innerHTML = "";
+//                 } 
+//             }
+//         }
+//     }
+// }
+
+function setSuperVisorDiv(divId, mgTop){
+    let supervisor = document.createElement('div');
+    supervisor.style.position = 'absolute'; 
+    supervisor.id = "slp" + (divId);
+    supervisor.style.marginLeft = "780px";
+    supervisor.style.marginTop = mgTop+"px";
+    supervisor.classList.add('supervisordiv');
+    document.getElementById('container').appendChild(supervisor);
+}
+function drawBoardSquares(context, objSquareArr=null){
     const board = document.getElementById('board');
+    let storageSquares = [];
     let marginLeft = 0;
     let marginTop = 0;
     let supervisorMarginTop = 40;
     let supervisoridCtr = 0;
-    
-    let mongoSquares = []
-    let i=0;
     let rowColorToggle = false;
+    let i = 0;
+    destroySquares();
     for ( let rowNdx = 1; rowNdx < 9; rowNdx++ ){
-        columnArray.map( function (columnAlpha, clmndx){
+        columnArray.map(function (columnAlpha, clmndx){
             try{
-                let candidateElem = drawSquare(columnAlpha+rowNdx, "");
-                const newsquare = createSquare(candidateElem);
-                marginLeft += 80;
                 var squareColorSeq = DARK_BGCOLOR;
-                if ( clmndx%2 != rowColorToggle ) {
+                if ( clmndx % 2 != rowColorToggle ) {
                     squareColorSeq = LIGHT_BGCOLOR;
                 }
+                let candidateElem = drawSquare(columnAlpha+rowNdx, "");
+                const newsquare = createSquare(candidateElem);
+                
+                marginLeft += 80;
                 newsquare.squareElem.style.position = 'absolute';
                 newsquare.squareElem.style.marginLeft = marginLeft+"px";
                 newsquare.squareElem.style.marginTop = marginTop+"px";
+                newsquare.squareElem.style.color = 'black';
                 newsquare.squareElem.classList.add(bgBoardColors[squareColorSeq]);
                 newsquare.squareElem.setAttribute("bgc", bgBoardColors[squareColorSeq]); 
-                // newsquare.squareElem.style.backgroundColor = ((clmndx+rowNdx)%2) ? 'red':'yellow';
-                newsquare.squareElem.style.color = 'black';
                 newsquare.squareElem.setAttribute("sqtype", newsquare.squareType);
                 newsquare.squareElem.setAttribute("sqcolor", newsquare.squareColor);
                 newsquare.squareElem.setAttribute("tlsq", newsquare.topLeftSquare);
@@ -832,22 +942,21 @@ function readyHandler(event){
                 newsquare.squareElem.setAttribute("bsq", newsquare.bottomSquare);
                 newsquare.squareElem.setAttribute("lsq", newsquare.leftSquare);
                 newsquare.squareElem.setAttribute("rsq", newsquare.rightSquare);
-                if (  newsquare.squareColor != BLANK_SQUARE_COLOR )
+                newsquare.squareElem.innerHTML = newsquare.squareType.split("PIECE")[0];
+                if ( newsquare.squareColor != BLANK_SQUARE_COLOR ){
+                    newsquare.squareElem.setAttribute(getPieceTypeFromSquareType(newsquare.squareType),"1");
                     newsquare.squareElem.setAttribute("initsq", newsquare.initSquareId);
-                newsquare.squareElem.innerHTML = newsquare.squareElem.getAttribute("sqtype").split("PIECE")[0];
-                // newsquare.squareElem.classList.add('rotate90');
-                newsquare.squareElem.innerHTML == 'BLANK' ? 
-                    newsquare.squareElem.innerHTML = "" : "";  
-                let supervisor  =  document.createElement('div');
-                supervisor.style.position = 'absolute'; 
-                supervisor.id = "slp" + (supervisoridCtr++);
-                supervisor.style.marginLeft = "780px";
-                supervisor.style.marginTop = supervisorMarginTop+"px";
-                supervisor.classList.add('supervisordiv');
+                }
+                else{
+                    newsquare.squareElem.innerHTML = ""
+                } 
                 board.appendChild(newsquare.squareElem);
-                document.getElementById('container').appendChild(supervisor);
+
+                setSuperVisorDiv(supervisoridCtr, supervisorMarginTop)
+                supervisoridCtr++
                 supervisorMarginTop += 20;
-                mongoSquares[i++] = newsquare;
+                
+                storageSquares[i++] = newsquare;
             }
             catch(err){
                 alert(err.message);
@@ -858,26 +967,9 @@ function readyHandler(event){
         
         rowColorToggle = !rowColorToggle;
     }
- 
-    window.localStorage.setItem("myObject", JSON.stringify( { ...mongoSquares} ));
-    $('#board').css("transform", "scaleY(-1)");
-    
-    marginLeft = 140;
-    columnArray.map( function (columnAlpha,clmndx){        
-        let subtitle  =  document.createElement('div');
-        subtitle.style.marginLeft = marginLeft+"px";
-        subtitle.style.marginTop = "690px";
-        subtitle.innerHTML = columnAlpha;
-        subtitle.style.position = 'absolute'; 
-        subtitle.style.color= 'black'; 
-        subtitle.style.fontWeight= 'bold';
-        subtitle.style.fontSize= "20px";
-        document.getElementById('container').appendChild(subtitle);
-        marginLeft += 81;
-    });
-    //drawSquareDetails();
-    
+    window.localStorage.setItem("gameBoard", JSON.stringify( { ...storageSquares} ));
 }
+
 function drawInitialBoard(boardId, buttonreadyHandler){
      const createbtn = document.getElementById(boardId);
      createbtn.addEventListener('click', buttonreadyHandler);
@@ -888,12 +980,14 @@ function destroySupervisorFrame(){
     });   
     setSupervisorListVisibility(VISIBILITY_HIDDEN);
 }
+function destroySquares(){
+    document.querySelectorAll('[square]').forEach(element => {
+        $(element).remove();
+    });
+}
 function drawSupervisorSelect(){
-    // let selectElem = document.getElementById('supervisorselect');
     let radioElem = [-1,-1];
     let radioLbl = [-1,-1];
-    let radioType = [-1,-1];
-    let radioTpLbl = [-1,-1];
     let selectColumn = -1;
     let selectType = -1;
     let typeValue = -1
@@ -1044,7 +1138,8 @@ function drawSupervisorSelect(){
     radioElem[1].name="colors";
     radioElem[1].style.position = 'absolute';
     radioElem[1].style.marginTop = '13px';
-    radioElem[1].style.marginLeft = '1030px;';
+    radioElem[1].style.marginLeft = '1050px';
+    radioElem[1].style.border = '10px blue solid';
     radioElem[1].addEventListener('change', drawSquareDetails);
 
     // // Label Ambos
@@ -1072,12 +1167,15 @@ function drawSupervisorSelect(){
     // Tipo de peça
     let pieceTypeChkbox = [];
     let labelType = [];
-    let marginLeftOffset = 60;
-    let initialOffset = 1080;
+    let typeSelection = -1;
+    let marginLeftOffset = 55;
+    let initialOffset = 1075;
+    let marginTop = -2;
     for (var i = 0; i < 5; i++) {
         pieceTypeChkbox[i] = document.getElementById('spsbchkboxtype'+i);
         if ( pieceTypeChkbox[i] != null ){
-            typeValue = pieceTypeChkbox[i].checked;
+            typeValue[i].selected = 1;
+            typeSelection
         }
         document.querySelectorAll('[id=spsbchkboxtype'+i+']').forEach(element => {
             document.getElementById("container").removeChild(element);
@@ -1086,38 +1184,42 @@ function drawSupervisorSelect(){
             document.getElementById("container").removeChild(element);
         });
 
-        initialOffset += marginLeftOffset * i;
         labelType[i] = document.createElement("label");
         labelType[i].for = "spsbchkboxtype"+i;
         labelType[i].id = "spsblbltype"+i;
-        labelType[i].innerHTML = columnPieceType[i].split("PIECE")[0];+":";
+        labelType[i].innerHTML = pieceTypeByColumn[i].split("PIECE")[0]+":";
         labelType[i].style.position = 'absolute';
-        labelType[i].style.marginTop = '10px';
+        labelType[i].style.marginTop = marginTop+'px';
         labelType[i].style.marginLeft = initialOffset+"px";
 
-        initialOffset = 1110 + marginLeftOffset;
+        initialOffset += marginLeftOffset
         pieceTypeChkbox[i] = document.createElement("input");
         pieceTypeChkbox[i].type = "checkbox";
         pieceTypeChkbox[i].id = "spsbchkboxtype"+i;
         pieceTypeChkbox[i].style.position = 'absolute';
-        pieceTypeChkbox[i].style.marginTop = '13px';
+        pieceTypeChkbox[i].style.marginTop = (marginTop+3)+'px';
         pieceTypeChkbox[i].style.marginLeft = initialOffset+"px";
         
         if ( typeValue ){
           pieceTypeChkbox[i].selected = 1;
         }
+        initialOffset = (initialOffset + 20);
+        marginLeftOffset = (marginLeftOffset + 10);
+        if ( i == 2 ){
+            marginTop = 15;
+            initialOffset = 1075;
+            marginLeftOffset = 55;
+        } 
     }
 
-   
-    initialOffset += 60;
     labelType[i] = document.createElement("label");
     labelType[i].for = "spsbchkboxtype"+i;
     labelType[i].id = "spsblbltype"+i;
-    labelType[i].innerHTML = columnPieceType[i].split("PIECE")[0];+":";
+    labelType[i].innerHTML = SQUARE_TYPE_PAWN_PIECE + ":";
     labelType[i].style.position = 'absolute';
-    labelType[i].style.marginTop = '10px';
+    labelType[i].style.marginTop = '15px';
     labelType[i].style.marginLeft = initialOffset+"px";
-    initialOffset += 60;
+    initialOffset += 95;
     pieceTypeChkbox[i] = document.getElementById('spsbchkboxtype'+i);
     if ( pieceTypeChkbox[i] != null ){
         typeValue = pieceTypeChkbox[i].checked;
@@ -1133,7 +1235,7 @@ function drawSupervisorSelect(){
     pieceTypeChkbox[i].type = "checkbox";
     pieceTypeChkbox[i].id = "spsbchkboxtype"+i;
     pieceTypeChkbox[i].style.position = 'absolute';
-    pieceTypeChkbox[i].style.marginTop = '13px';
+    pieceTypeChkbox[i].style.marginTop = '18px';
     pieceTypeChkbox[i].style.marginLeft = initialOffset+"px";
     if ( typeValue ){
         pieceTypeChkbox[i].selected = 1;
@@ -1188,36 +1290,16 @@ function drawSupervisorSelect(){
     filterDetails[FILTER_TYPE] = typeValue;
     filterDetails[FILTER_SELECTED] = typeSelected;
     
-    if ( selectColumn != -1 && selectColumn != null ){
-        document.getElementById("container").appendChild(selectColumn);
-    }
-    if ( selectRow != -1 && selectRow != null ){
-        document.getElementById("container").appendChild(selectRow);
-    }
-    if ( radioElem[0] != -1 && radioElem[0] != null ){
-        document.getElementById("container").appendChild(radioElem[0]);
-        document.getElementById("container").appendChild(radioLbl[0]);
-    } 
-    if ( radioElem[1] != -1 && radioElem[1] != null ){
-        document.getElementById("container").appendChild(radioElem[1]);
-        document.getElementById("container").appendChild(radioLbl[1]);
-    }
-    // if ( radioElem[2] != -1 && radioElem[2] != null ){
-    //     document.getElementById("container").appendChild(radioElem[2]);
-    //     document.getElementById("container").appendChild(radioLbl[2]);
-    // }
-    // if ( radioType[0] != -1 && radioType[0] != null ){
-    //     document.getElementById("container").appendChild(radioType[0]);
-    //     document.getElementById("container").appendChild(radioTpLbl[0]);
-    // } 
-    // if ( radioType[1] != -1 && radioType[1] != null ){
-    //     document.getElementById("container").appendChild(radioType[1]);
-    //     document.getElementById("container").appendChild(radioTpLbl[1]);
-    // }
+
+    document.getElementById("container").appendChild(selectColumn);
+    document.getElementById("container").appendChild(selectRow);
+    document.getElementById("container").appendChild(radioElem[0]);
+    document.getElementById("container").appendChild(radioLbl[0]);
+    document.getElementById("container").appendChild(radioElem[1]);
+    document.getElementById("container").appendChild(radioLbl[1]);
     pieceTypeChkbox.map((val, ndx) => {
         document.getElementById("container").appendChild(labelType[ndx]);
         document.getElementById("container").appendChild(val);
-        
     });
     if ( selectType != -1 && selectType != null ){
         document.getElementById("container").appendChild(selectType);
@@ -1226,7 +1308,6 @@ function drawSupervisorSelect(){
         document.getElementById("container").appendChild(labelSelected);
         document.getElementById("container").appendChild(checkSelected);
     }
-
 }
 function setDirectionFromSelect(e){  
     if ( e.target.value == -1){
@@ -1395,7 +1476,6 @@ function drawDirectionSelect(){
     document.getElementById("container").appendChild(checkDirectionLine);
     document.getElementById("container").appendChild(lblDirLine);
     
-    document.getElementById("container").appendChild(lblDirLine);
     
 }
 function drawIntervalTimeSet(){
@@ -1571,7 +1651,7 @@ function fixSquareTypeProprierties(){
     });
     selector = "[class*='square']:not([sqcolor='0'])";
     document.querySelectorAll(selector).forEach(element => {
-        element.setAttribute("sqtype", columnPieceType[columnArray.indexOf(element.getAttribute('initsq')[0])]);
+        element.setAttribute("sqtype", pieceTypeByColumn[columnArray.indexOf(element.getAttribute('initsq')[0])]);
         obj = {
             id : element.initsq,
             objname : ""
