@@ -700,6 +700,7 @@ function moveToDestination(originsq, destsq, flag){
     let outerorig = originsq.outerHTML.split("class");
     let newdestouter = outerdest[0] + " class" + outerorig[1];
     let newouterorig = "";
+    // Movimento
     if ( flag == FULL_SWAP ){
         newouterorig = outerorig[0] + " class" + outerdest[1];
     }
@@ -707,6 +708,7 @@ function moveToDestination(originsq, destsq, flag){
     if ( newouterorig != "" )
         outerorig.outerHTML = newouterorig;
 
+    // Captura
     if ( flag == BLANK_ON_ORIGIN ){
         outerorig.setAttribute("sqcolor", "0");
         outerorig.setAttribute("sqtype", SQUARE_TYPE_BLANK);
