@@ -188,7 +188,7 @@ const pieceColumnLookup = [
     PIECE_TYPE_KING, 
     PIECE_TYPE_PAWN,  
     PIECE_TYPE_NONE 
-];
+]
 
 const pieceTypeByColumn = [
     SQUARE_TYPE_ROOK_PIECE,     // a
@@ -403,7 +403,6 @@ function createSquare(square){
             "Square invalido"
         );
     }
-
     if ( validateSquareColor(square, SQUARE_TYPE_BLACK_PIECE) )
         sqColor = SQUARE_TYPE_BLACK_PIECE;
     if ( validateSquareColor(square, SQUARE_TYPE_WHITE_PIECE) )
@@ -652,7 +651,9 @@ function validatePlayerColorSquare(square){
     return (square.getAttribute("sqcolor") == playerColor);
 }
 function selectSquare(square){
-        return (!validateIsSelected() && validateIsNotBlank(square) && validatePlayerColorSquare(square));
+        return (!validateIsSelected()
+               && validateIsNotBlank(square)
+               && validatePlayerColorSquare(square));
 }
 function drawSquare(squareId, myInner=""){
     let divSquare = document.createElement('div');
@@ -722,10 +723,13 @@ function hasAnySquareDrew(){
     return (document.querySelectorAll('[square="1"]').length > 0);
 }
 function moveSquare(square){
-    return (validateIsSelected() &&  validateIsBlank(square) && validateIsOnRange(square));
+    return (validateIsSelected() 
+           && validateIsBlank(square)
+           && validateIsOnRange(square));
 }
 function changeSelectedSquare(square){
-    return validateIsSelected() &&  (validateSelectedPieceSquare(square) == FRIENDLY_SIDE);
+    return validateIsSelected() &&
+     (validateSelectedPieceSquare(square) == FRIENDLY_SIDE);
 }
 function captureSquare(square){
     return (
@@ -739,7 +743,7 @@ function setElementAsSelected(elem){
     elem.setAttribute("sltd", "1");
 }
 function setClassByBGAttr(className, bgcAttr, squareId){
-    if ( bgcAttr.includes('dark') && className != bgcAttr ){
+    if ( className != bgcAttr && bgcAttr.includes('dark') ){
         className += 'dark';
     }
     document.getElementById(squareId).classList.add(className);
@@ -768,7 +772,8 @@ function clearAllElementSelection(){
         element.removeAttribute('mvsl');
     });
     document.querySelectorAll('[bgc]').forEach(element => {
-        let bgcAttr = setBGColorAsDOMAttributeAndRemove(element.id);
+        //let bgcAttr = setBGColorAsDOMAttributeAndRemove(element.id);
+        let bgcAttr = document.getElementById(elementId).getAttribute("bgc");
         setClassByBGAttr(bgcAttr, bgcAttr, element.id);
     });  
 }
@@ -794,11 +799,10 @@ function squareHandler(event){
     event.preventDefault();
 
     // Square aliado e
-    // SEM selecao previa ou COM selecao previua 
-    if ( selectSquare(event.target) || changeSelectedSquare(event.target) ){
+    // SEM selecao previa ou COM selecao previa 
+    if ( selectSquare(event.target) /*|| changeSelectedSquare(event.target)*/ ){
         if ( validateIsSelected() ){
             let oldelem = getFirstSelectedElement();
-            // oldelem.innerHTML = "";
             clearElementSelection(oldelem);
         }
         setElementAsSelected(event.target);
@@ -922,6 +926,7 @@ function drawBoardSquares(context, objSquareArr=null){
                 if ( clmndx % 2 != rowColorToggle ) {
                     squareColorSeq = LIGHT_BGCOLOR;
                 }
+                
                 let candidateElem = drawSquare(columnAlpha+rowNdx, "");
                 const newsquare = createSquare(candidateElem);
                 
@@ -944,7 +949,8 @@ function drawBoardSquares(context, objSquareArr=null){
                 newsquare.squareElem.setAttribute("rsq", newsquare.rightSquare);
                 newsquare.squareElem.innerHTML = newsquare.squareType.split("PIECE")[0];
                 if ( newsquare.squareColor != BLANK_SQUARE_COLOR ){
-                    newsquare.squareElem.setAttribute(getPieceTypeFromSquareType(newsquare.squareType),"1");
+                    let attrPieceType = "pc"+getPieceTypeFromSquareType(newsquare.squareType).toUpperCase();
+                    newsquare.squareElem.setAttribute(attrPieceType,"1");
                     newsquare.squareElem.setAttribute("initsq", newsquare.initSquareId);
                 }
                 else{
@@ -952,8 +958,8 @@ function drawBoardSquares(context, objSquareArr=null){
                 } 
                 board.appendChild(newsquare.squareElem);
 
-                setSuperVisorDiv(supervisoridCtr, supervisorMarginTop)
-                supervisoridCtr++
+                setSuperVisorDiv(supervisoridCtr, supervisorMarginTop);
+                supervisoridCtr++;
                 supervisorMarginTop += 20;
                 
                 storageSquares[i++] = newsquare;
@@ -995,7 +1001,7 @@ function drawSupervisorSelect(){
     let columnVal = -1;
     let rowVal = -1;
     let radioVal = -1;
-    let typeSelected = false;
+    let typePieceSelected = false;
     let option = -1;
     filterDetails = [-1, -1,-1, -1, -1, -1, -1];
   
@@ -1167,15 +1173,15 @@ function drawSupervisorSelect(){
     // Tipo de peça
     let pieceTypeChkbox = [];
     let labelType = [];
-    let typeSelection = -1;
+    let pieceTypeFilter = "";
     let marginLeftOffset = 55;
     let initialOffset = 1075;
     let marginTop = -2;
     for (var i = 0; i < 5; i++) {
         pieceTypeChkbox[i] = document.getElementById('spsbchkboxtype'+i);
         if ( pieceTypeChkbox[i] != null ){
-            typeValue[i].selected = 1;
-            typeSelection
+            typeValue.selected = 1;
+            pieceTypeFilter = "[pc" + pieceColumnLookup[i]+ "='1']"
         }
         document.querySelectorAll('[id=spsbchkboxtype'+i+']').forEach(element => {
             document.getElementById("container").removeChild(element);
@@ -1202,6 +1208,7 @@ function drawSupervisorSelect(){
         
         if ( typeValue ){
           pieceTypeChkbox[i].selected = 1;
+          pieceTypeFilter += "[pc" + pieceColumnLookup[i] + "='1']"
         }
         initialOffset = (initialOffset + 20);
         marginLeftOffset = (marginLeftOffset + 10);
@@ -1223,6 +1230,7 @@ function drawSupervisorSelect(){
     pieceTypeChkbox[i] = document.getElementById('spsbchkboxtype'+i);
     if ( pieceTypeChkbox[i] != null ){
         typeValue = pieceTypeChkbox[i].checked;
+        pieceTypeFilter += "[" + pieceColumnLookup[i]+ "='1']"
     }
     document.querySelectorAll('[id=spsbchkboxtype'+i+']').forEach(element => {
         document.getElementById("container").removeChild(element);
@@ -1251,9 +1259,9 @@ function drawSupervisorSelect(){
     labelSelected.style.marginLeft = '1350px';
     // Checkbox Seleção
     checkSelected = document.getElementById('spsbcheckslt');
-    typeSelected = false;
+    typePieceSelected = false;
     if ( checkSelected != null ){
-        typeSelected = checkSelected.checked;
+        typePieceSelected = checkSelected.checked;
     }
     document.querySelectorAll('[id=spsbcheckslt]').forEach(element => {
         document.getElementById("container").removeChild(element);
@@ -1268,27 +1276,27 @@ function drawSupervisorSelect(){
     checkSelected.style.position = 'absolute';
     checkSelected.style.marginTop = '13px';
     checkSelected.style.marginLeft = '1415px';
-    if ( typeSelected )
+    if ( typePieceSelected )
         checkSelected.checked = 1;
     
     checkSelected.addEventListener('change', drawSquareDetails);
     let sltd = '[sltd]';
-    if ( !typeSelected ){
-        typeSelected = ':not(sltd)';
+    if ( !typePieceSelected ){
+        typePieceSelected = ':not([sltd])';
     }
     else{
-        typeSelected = sltd;
+        typePieceSelected = sltd;
     }
 
     // else if ( (selectVal-1) == FILTER_EMPTY ){
     //     radioVal = BLANK_SQUARE_COLOR;
     // }
 
-    filterDetails[FILTER_COLUMN] = columnVal;
-    filterDetails[FILTER_ROW] = rowVal;
-    filterDetails[FILTER_COLOR] = radioVal;
-    filterDetails[FILTER_TYPE] = typeValue;
-    filterDetails[FILTER_SELECTED] = typeSelected;
+    filterDetails[FILTER_COLUMN]   = columnVal;
+    filterDetails[FILTER_ROW]      = rowVal;
+    filterDetails[FILTER_COLOR]    = radioVal;
+    filterDetails[FILTER_TYPE]     = pieceTypeFilter;
+    filterDetails[FILTER_SELECTED] = typePieceSelected;
     
 
     document.getElementById("container").appendChild(selectColumn);
@@ -1535,7 +1543,7 @@ function drawSquareDetails(){
     drawDirectionSelect();
     drawIntervalTimeSet();
 
-    let selector = "[class*='square']" ;
+    let selector = "[square]" ;
     if ( filterDetails[FILTER_COLUMN] != -1 ){
         selector += "[id*='"+columnArray[filterDetails[FILTER_COLUMN]]+"']";
     }
@@ -1550,12 +1558,11 @@ function drawSquareDetails(){
         }
     }
     if ( filterDetails[FILTER_TYPE] != -1 ){
-        selector += "[sqtype*='"+filterDetails[FILTER_TYPE]+"']";
+        selector += filterDetails[FILTER_TYPE];
     }
     if ( filterDetails[FILTER_SELECTED] != -1 ){
         selector += filterDetails[FILTER_SELECTED];
     }
-
     document.querySelectorAll("[id*='slp']").forEach(element => {
         element.innerHTML = "";
         element.style.fontWeight= '';
@@ -1669,7 +1676,6 @@ $(document).ready(function (){
 
     playerColor = avaliableColors[0];
     myInterval = window.setInterval(setSupervisorPatrol, intervalTime);
-    // let obj = new Object(JSON.parse(window.localStorage.getItem("myObject")));
     
 });
 

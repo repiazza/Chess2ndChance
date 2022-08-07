@@ -3,5 +3,7 @@
     "zenMode.fullScreen": true,
     "files.associations": {
         "crtdbg.h": "c"
-    }
+    },
+    "javascript.inlayHints.parameterTypes.enabled": false,
+    "debug.javascript.breakOnConditionalError": false
 }
