@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
 //
 //    Board block
 //
@@ -415,25 +415,25 @@ function createSquare(square){
         brSquare = getSquare(square, BOTTOM_RIGHT);
         tlSquare = getSquare(square, TOP_LEFT);
         trSquare = getSquare(square, TOP_RIGHT);
-        lSquare = getSquare(square, LEFT);
-        rSquare = getSquare(square, RIGHT);
-        tSquare = getSquare(square, TOP);
-        bSquare = getSquare(square, BOTTOM);
+        lSquare  = getSquare(square, LEFT);
+        rSquare  = getSquare(square, RIGHT);
+        tSquare  = getSquare(square, TOP);
+        bSquare  = getSquare(square, BOTTOM);
     
     return {
-        squareElem: square,
-        squareId: square.id,
-        topLeftSquare: tlSquare,
-        topRightSquare: trSquare,
-        bottomLeftSquare: blSquare,
-        bottomRightSquare: brSquare,
-        topSquare: tSquare,
-        rightSquare: rSquare,
-        leftSquare: lSquare,
-        bottomSquare: bSquare,
-        initSquareId: square.id,
-        squareType: sqType,
-        squareColor: sqColor
+        squareElem:          square,
+        squareId:            square.id,
+        topLeftSquare:       tlSquare,
+        topRightSquare:      trSquare,
+        bottomLeftSquare:    blSquare,
+        bottomRightSquare:   brSquare,
+        topSquare:           tSquare,
+        rightSquare:         rSquare,
+        leftSquare:          lSquare,
+        bottomSquare:        bSquare,
+        initSquareId:        square.id,
+        squareType:          sqType,
+        squareColor:         sqColor
     };
 }
 function getSquare(square, relativePosition){
