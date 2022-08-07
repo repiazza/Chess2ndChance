@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
 //
 //    Board block
 //
@@ -414,25 +414,25 @@ function createSquare(square){
         brSquare = getSquare(square, BOTTOM_RIGHT);
         tlSquare = getSquare(square, TOP_LEFT);
         trSquare = getSquare(square, TOP_RIGHT);
-        lSquare = getSquare(square, LEFT);
-        rSquare = getSquare(square, RIGHT);
-        tSquare = getSquare(square, TOP);
-        bSquare = getSquare(square, BOTTOM);
+        lSquare  = getSquare(square, LEFT);
+        rSquare  = getSquare(square, RIGHT);
+        tSquare  = getSquare(square, TOP);
+        bSquare  = getSquare(square, BOTTOM);
     
     return {
-        squareElem: square,
-        squareId: square.id,
-        topLeftSquare: tlSquare,
-        topRightSquare: trSquare,
-        bottomLeftSquare: blSquare,
-        bottomRightSquare: brSquare,
-        topSquare: tSquare,
-        rightSquare: rSquare,
-        leftSquare: lSquare,
-        bottomSquare: bSquare,
-        initSquareId: square.id,
-        squareType: sqType,
-        squareColor: sqColor
+        squareElem:          square,
+        squareId:            square.id,
+        topLeftSquare:       tlSquare,
+        topRightSquare:      trSquare,
+        bottomLeftSquare:    blSquare,
+        bottomRightSquare:   brSquare,
+        topSquare:           tSquare,
+        rightSquare:         rSquare,
+        leftSquare:          lSquare,
+        bottomSquare:        bSquare,
+        initSquareId:        square.id,
+        squareType:          sqType,
+        squareColor:         sqColor
     };
 }
 function getSquare(square, relativePosition){
@@ -454,10 +454,10 @@ function getSquare(square, relativePosition){
         bottomPos = indexNotation-1;
         
     allPos = [ leftPos, rightPos, topPos, bottomPos ];
-    if ( relativePosition.length > 1 )
-    {
+    if ( relativePosition.length > 1 ) {
         if ( allPos[relativePosition[0]] == -1 || allPos[relativePosition[1]] == -1 )
             return false; 
+        
     
         return "" + allPos[relativePosition[0]] + allPos[relativePosition[1]];
     }
@@ -561,7 +561,7 @@ function getClassNameFromMovementDirection(baseMovementDirection){
 }
 
 function validateIsSelected(){
-    return getAllSelectedElements()
+    return getAllSelectedElements();
 }
 function validateIsBlank(square){
     return square.getAttribute("sqtype") == SQUARE_TYPE_BLANK;
