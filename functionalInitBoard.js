@@ -455,10 +455,10 @@ function getSquare(square, relativePosition){
         bottomPos = indexNotation-1;
         
     allPos = [ leftPos, rightPos, topPos, bottomPos ];
-    if ( relativePosition.length > 1 )
-    {
+    if ( relativePosition.length > 1 ) {
         if ( allPos[relativePosition[0]] == -1 || allPos[relativePosition[1]] == -1 )
             return false; 
+        
     
         return "" + allPos[relativePosition[0]] + allPos[relativePosition[1]];
     }
@@ -562,7 +562,7 @@ function getClassNameFromMovementDirection(baseMovementDirection){
 }
 
 function validateIsSelected(){
-    return getAllSelectedElements()
+    return getAllSelectedElements();
 }
 function validateIsBlank(square){
     return square.getAttribute("sqtype") == SQUARE_TYPE_BLANK;
