@@ -1118,7 +1118,7 @@ function drawSupervisorSelect(){
     labelType[i].style.marginTop = '10px';
     labelType[i].style.marginLeft = initialOffset+"px";
     initialOffset += 60;
-    pieceTypeChkbox[i] = document.createElement("input");
+    pieceTypeChkbox[i] = document.getElementById('spsbchkboxtype'+i);
     if ( pieceTypeChkbox[i] != null ){
         typeValue = pieceTypeChkbox[i].checked;
     }
