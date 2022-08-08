@@ -482,9 +482,9 @@ function highlightSelection(direction, elem){
         myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
     
     let bgcAttr = elem.getAttribute('bgc');
-    if ( bgcAttr.includes('dark') && myClass != bgcAttr ){
-        myClass += 'dark';
-    }
+    // if ( bgcAttr.includes('dark') && myClass != bgcAttr ){
+    //     myClass += 'dark';
+    // }
     $(document.querySelectorAll('[mvsl]')).removeClass(bgcAttr);
     $(document.querySelectorAll('[mvsl]')).addClass(myClass);
 }
@@ -662,7 +662,7 @@ function drawSquare(squareId, myInner=""){
     divSquare.setAttribute("square", "1");
     divSquare.setAttribute("clm", squareId[0]);
     divSquare.setAttribute("ldnx", squareId[1]);
-    divSquare.addEventListener('click', squareHandler)
+    divSquare.addEventListener('click', squareHandler);
 
     return divSquare;
 }
@@ -695,24 +695,83 @@ function querySelectorAllRegex(regex, attributeToSearch) {
    
     return output;
   }
+
+//   peca
+//   id
+//   square
+//   clm
+//   ldnx 
+//   style
+//   class
+//   tlsq
+//   trsq 
+//   brsqd2" 
+//   blsqb2" 
+//   tsqc4" 
+//   bsqc2" 
+//   lsqb3" 
+//   rsqd3"
+  
+  
+//   PECA tem que carregar/naopeca
+//   sqtype
+//   sqcolor
+//   pcp
+//   initsq
+//   mvd
+  
+//   nao perpetuados/devem ser esquecdos
+//   mvsl
+function removeNonRelevantAttributesFromSquare(){
+
+}
+function savePieceCoreAttrOnLocalStorage(square, fromsq=null){
+    let pieceDiv;
+    if (fromsq == null)
+        pieceDiv = square.outerHTML.split("pc")[1];
+    else
+        pieceDiv = fromsq
+    // pcp="1" initsq="c2" sqtype="PAWNPIECE" sqcolor="WHITEPIECE">PAWN</div>
+    
+    objCoreAttr = new Object({
+        pieceDivToReplace: pieceDiv
+    });
+    window.localStorage.removeItem("p"+square.id);
+    window.localStorage.setItem("p"+square.id, JSON.stringify( { ...objCoreAttr} ));
+}
+function removeNonRelevantAttributesFromSquare(square){
+    document.getElementById(square.id).removeAttribute('mvsl');
+}
 function moveToDestination(originsq, destsq, flag){
-    let outerdest = destsq.outerHTML.split("class");
-    let outerorig = originsq.outerHTML.split("class");
-    let newdestouter = outerdest[0] + " class" + outerorig[1];
-    let newouterorig = "";
+    var objSquare = JSON.parse(window.localStorage.getItem(originsq.id));
+    // alert("p"+originsq.id);
+    var objPiece = JSON.parse(window.localStorage.getItem("p"+originsq.id));
+    // console.debug(originsq);
+    // console.debug(destsq);
+    // console.debug(objPiece);
     // Movimento
     if ( flag == FULL_SWAP ){
-        newouterorig = outerorig[0] + " class" + outerdest[1];
+        let outerdest = destsq.outerHTML.split("sqtype")[0];
+        originsq.outerHTML = objSquare.divStringToReplace;
+        destsq.outerHTML = outerdest + objPiece.pieceDivToReplace;
+        let neworigin = document.getElementById(originsq.id)
+        let newdest = document.getElementById(destsq.id)
+        neworigin.addEventListener('click', squareHandler);
+        newdest.addEventListener('click', squareHandler);
+        // console.debug(neworigin);
+        console.debug(newdest);
+        saveSquareCoreAttrOnLocalStorage(neworigin);
+        savePieceCoreAttrOnLocalStorage(newdest,objPiece.pieceDivToReplace);
+        destsq.outerHTML = outerdest + objPiece.pieceDivToReplace;
     }
-    outerdest.outerHTML = newdestouter;
-    if ( newouterorig != "" )
-        outerorig.outerHTML = newouterorig;
-
     // Captura
-    if ( flag == BLANK_ON_ORIGIN ){
-        outerorig.setAttribute("sqcolor", "0");
-        outerorig.setAttribute("sqtype", SQUARE_TYPE_BLANK);
-        outerorig.innerHTML = "";
+    else if ( flag == BLANK_ON_ORIGIN ){
+        objSquare = JSON.parse(window.localStorage.getItem(destsq.id));
+        let outerdest = objSquare.divStringToReplace.split("pc");
+        originsq.outerHTML = JSON.parse(window.localStorage.getItem(originsq.id)).divStringToReplace;
+        destsq.outerHTML = outerdest + objPiece.pieceDivToReplace;
+        let newdest = document.getElementById(destsq.id);
+        newdest.addEventListener('click', squareHandler);
     }
 }
 function validateIsCaptureSquare(square){
@@ -744,28 +803,28 @@ function captureSquare(square){
 function setElementAsSelected(elem){
     elem.setAttribute("sltd", "1");
 }
-function setClassByBGAttr(className, bgcAttr, squareId){
-    if ( className != bgcAttr && bgcAttr.includes('dark') ){
-        className += 'dark';
-    }
-    document.getElementById(squareId).classList.add(className);
-}
+// function setClassByBGAttr(className, bgcAttr, squareId){
+//     if ( className != bgcAttr && bgcAttr.includes('dark') ){
+//         className += 'dark';
+//     }
+//     document.getElementById(squareId).classList.add(className);
+// }
 function clearElementSelection(elem){
     document.getElementById(elem.id).removeAttribute('sltd');
     document.getElementById(elem.id).removeAttribute('mvsl');
 }
-function setBGColorAsDOMAttributeAndRemove(elemId){
-    let myClassName = bgBoardColors[DARK_BGCOLOR];
-    let myElem = document.getElementById(elemId);
-    if ( !myElem.classList.contains(myClassName) )
-        myClassName = bgBoardColors[LIGHT_BGCOLOR];
+// function setBGColorAsDOMAttributeAndRemove(elemId){
+//     let myClassName = bgBoardColors[DARK_BGCOLOR];
+//     let myElem = document.getElementById(elemId);
+//     if ( !myElem.classList.contains(myClassName) )
+//         myClassName = bgBoardColors[LIGHT_BGCOLOR];
 
-    if ( myElem.classList.contains(myClassName) ) {
-        myElem.setAttribute("bgc", myClassName);
-        myElem.classList.remove(myClassName);
-    }
-    return myClassName;
-}
+//     if ( myElem.classList.contains(myClassName) ) {
+//         myElem.setAttribute("bgc", myClassName);
+//         myElem.classList.remove(myClassName);
+//     }
+//     return myClassName;
+// }
 function clearAllElementSelection(){
     document.querySelectorAll('[sltd]').forEach(element => {
         element.removeAttribute('sltd');
@@ -773,11 +832,11 @@ function clearAllElementSelection(){
     document.querySelectorAll('[mvsl]').forEach(element => {
         element.removeAttribute('mvsl');
     });
-    document.querySelectorAll('[bgc]').forEach(element => {
-        //let bgcAttr = setBGColorAsDOMAttributeAndRemove(element.id);
-        let bgcAttr = document.getElementById(elementId).getAttribute("bgc");
-        setClassByBGAttr(bgcAttr, bgcAttr, element.id);
-    });  
+    // document.querySelectorAll('[bgc]').forEach(element => {
+    //     //let bgcAttr = setBGColorAsDOMAttributeAndRemove(element.id);
+    //     let bgcAttr = document.getElementById(elementId).getAttribute("bgc");
+    //     setClassByBGAttr(bgcAttr, bgcAttr, element.id);
+    // });  
 }
 function isElementSelected(elem){
     return document.querySelector('[id="'+elem.id+'"][sltd]');
@@ -814,22 +873,26 @@ function squareHandler(event){
     // Selecao previa + square com pecas inimigas
     else if ( moveSquare(event.target) || captureSquare(event.target) ){
         let oldelem = getFirstSelectedElement();
-        event.target.innerHTML = oldelem.innerHTML;
-        oldelem.innerHTML = "";
+        // event.target.innerHTML = oldelem.innerHTML;
+        // oldelem.innerHTML = "";
         if ( !validateIsBlank(event.target) ){
-            capturedPieces +=  
-            event.target.getAttribute('sqcolor').split("PIECE")[0][0] 
-            + event.target.getAttribute('sqtype').split("PIECE")[0][0]
-            + event.target.id[0] + " ";
+            
+        //     capturedPieces +=  
+        //     event.target.getAttribute('sqcolor').split("PIECE")[0][0] 
+        //     + event.target.getAttribute('sqtype').split("PIECE")[0][0]
+        //     + event.target.id[0] + " ";
         }
+        console.debug(oldelem);
+        console.debug(event.target);
+        moveToDestination(oldelem, event.target, FULL_SWAP);
         
         clearAllElementSelection();
-        event.target.setAttribute("sqcolor", oldelem.getAttribute("sqcolor"))
-        event.target.setAttribute("sqtype", oldelem.getAttribute("sqtype"))
-        event.target.setAttribute("initsq", oldelem.getAttribute("initsq"))
+        // event.target.setAttribute("sqcolor", oldelem.getAttribute("sqcolor"))
+        // event.target.setAttribute("sqtype", oldelem.getAttribute("sqtype"))
+        // event.target.setAttribute("initsq", oldelem.getAttribute("initsq"))
         event.target.setAttribute("mvd", "1");
-        oldelem.setAttribute("sqcolor", "0");
-        oldelem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
+        // oldelem.setAttribute("sqcolor", "0");
+        // oldelem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
     }
     //drawSquareDetails();
 
@@ -850,6 +913,7 @@ function drawHorizontalSubtitles(){
     });
 }
 function readyHandler(event){
+    
     event.preventDefault();
 
     if ( document.getElementById('a1') != null )
@@ -860,6 +924,7 @@ function readyHandler(event){
     $('#board').css("transform", "scaleY(-1)");
 
     drawHorizontalSubtitles();
+    
 }
 // function saveBoardOnLocalStorage(){
 //     for ( let rowNdx = 1; rowNdx < 9; rowNdx++ ){
@@ -911,6 +976,7 @@ function setSuperVisorDiv(divId, mgTop){
     supervisor.classList.add('supervisordiv');
     document.getElementById('container').appendChild(supervisor);
 }
+
 function drawBoardSquares(context, objSquareArr=null){
     const board = document.getElementById('board');
     let storageSquares = [];
@@ -920,7 +986,9 @@ function drawBoardSquares(context, objSquareArr=null){
     let supervisoridCtr = 0;
     let rowColorToggle = false;
     let i = 0;
+    
     destroySquares();
+    
     for ( let rowNdx = 1; rowNdx < 9; rowNdx++ ){
         columnArray.map(function (columnAlpha, clmndx){
             try{
@@ -939,8 +1007,6 @@ function drawBoardSquares(context, objSquareArr=null){
                 newsquare.squareElem.style.color = 'black';
                 newsquare.squareElem.classList.add(bgBoardColors[squareColorSeq]);
                 newsquare.squareElem.setAttribute("bgc", bgBoardColors[squareColorSeq]); 
-                newsquare.squareElem.setAttribute("sqtype", newsquare.squareType);
-                newsquare.squareElem.setAttribute("sqcolor", newsquare.squareColor);
                 newsquare.squareElem.setAttribute("tlsq", newsquare.topLeftSquare);
                 newsquare.squareElem.setAttribute("trsq", newsquare.topRightSquare);
                 newsquare.squareElem.setAttribute("brsq", newsquare.bottomRightSquare);
@@ -958,13 +1024,17 @@ function drawBoardSquares(context, objSquareArr=null){
                 else{
                     newsquare.squareElem.innerHTML = ""
                 } 
+                newsquare.squareElem.setAttribute("sqtype", newsquare.squareType);
+                newsquare.squareElem.setAttribute("sqcolor", newsquare.squareColor);
                 board.appendChild(newsquare.squareElem);
-
                 setSuperVisorDiv(supervisoridCtr, supervisorMarginTop);
                 supervisoridCtr++;
                 supervisorMarginTop += 20;
                 
-                storageSquares[i++] = newsquare;
+                saveSquareCoreAttrOnLocalStorage(newsquare.squareElem);
+                savePieceCoreAttrOnLocalStorage(newsquare.squareElem)
+
+                storageSquares[i++] = newsquare.squareElem;
             }
             catch(err){
                 alert(err.message);
@@ -975,6 +1045,7 @@ function drawBoardSquares(context, objSquareArr=null){
         
         rowColorToggle = !rowColorToggle;
     }
+    window.localStorage.removeItem("gameBoard");
     window.localStorage.setItem("gameBoard", JSON.stringify( { ...storageSquares} ));
 }
 
@@ -1607,11 +1678,11 @@ function drawSquareDetails(){
 }
 function matchColumnIntervalExcludingInterval(initialColumn, endColumn=null, initialInterval=null, endInterval=null){
     let myColumn = initialColumn 
-    if ( endColumn != null )
+    if ( endColumn != null ) 
         myColumn  += "-" + endColumn;
 
     let pattern = "(["+myColumn+"])"
-    let interval = -1
+    let interval = -1``
     if ( initialInterval )
         interval = initialInterval;
     if ( endInterval )
@@ -1622,6 +1693,17 @@ function matchColumnIntervalExcludingInterval(initialColumn, endColumn=null, ini
     pattern += "([1-8])$";
     let re = new RegExp(pattern, "g");
     return $(querySelectorAllRegex(re, "id"));
+}
+function saveSquareCoreAttrOnLocalStorage(square){
+    let divToReplace = square.outerHTML.split("pc")[0];
+    if ( divToReplace.includes("</div>") == false )
+        divToReplace += " ></div>";
+
+    objCoreAttr = new Object({
+        divStringToReplace: divToReplace
+    });
+    window.localStorage.removeItem(square.id);
+    window.localStorage.setItem(square.id, JSON.stringify( { ...objCoreAttr} ));
 }
 function matchLineIntervalExcludingInterval(initialLine, endLine=null, initialInterval=null, endInterval=null){
     let myLine = initialLine 
@@ -1678,7 +1760,6 @@ $(document).ready(function (){
 
     playerColor = avaliableColors[0];
     myInterval = window.setInterval(setSupervisorPatrol, intervalTime);
-    
 });
 
 drawInitialBoard("boardcreate", readyHandler);

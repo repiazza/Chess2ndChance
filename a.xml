@@ -14,7 +14,7 @@
 
 
 
-peca
+casa
 id
 square
 clm
@@ -37,6 +37,7 @@ sqcolor
 pcp
 initsq
 mvd
+inner
 
 nao perpetuados/devem ser esquecdos
 mvsl
