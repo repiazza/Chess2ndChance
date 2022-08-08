@@ -218,8 +218,8 @@ const DIAGONAL_DIRECTION          = [ MAIN_DIAGONAL_DIRECTION, OPPOSITE_DIAGONAL
 const CROSS_DIRECTION             = LINE_DIRECTION.concat(COLUMN_DIRECTION);
 const STAR_DIRECTION              = CROSS_DIRECTION.concat(MAIN_DIAGONAL_DIRECTION).concat(OPPOSITE_DIAGONAL_DIRECTION);
 
-const BLANK_ON_ORIGIN = 'BLKORIGIN';
-const FULL_SWAP       = 'FULLSWAP';
+// const BLANK_ON_ORIGIN = 'BLKORIGIN';
+// const FULL_SWAP       = 'FULLSWAP';
 
 const FRIENDLY_SIDE   = 'FRIENDLY';
 const ENEMY_SIDE      = 'ENEMY';
@@ -273,30 +273,61 @@ function validateAndSetCaptureSquare(mySquare){
         mySquare.classList.add("captureclass");
     }
 }
+function setSelection(squareId){
+    let sqElem = document.getElementById(squareId);
+    sqElem.setAttribute("sltd", "1");
+    sqElem.innerHTML = "<b>"+sqElem.innerHTML+"</b>";
+}
+function clearSelection(squareId){
+    let sqElem = document.getElementById(squareId);
+    sqElem.removeAttribute("sltd");
+
+    if ( sqElem.innerHTML.indexOf('<b>') === -1 )
+        return;
+
+    let myInner = sqElem.innerHTML.split('<b>')[1];
+    myInner = myInner.split('</b>')[0];
+    sqElem.innerHTML = myInner;
+}
+function setMoveSelection(squareId){
+    let sqElem = document.getElementById(squareId);
+    sqElem.setAttribute("mvsl", "1");
+}
+function clearMoveSelection(squareId){
+    let sqElem = document.getElementById(squareId);
+    sqElem.removeAttribute("mvsl");
+}
 function getLSquaresFromSquare(square, ignoreColision=false){
     LSquares = [];
     let mySquareLeft = 0;
     let mySquareRight = 0;
+
     DIRECTION_ROTATE.map(pair => {
+                                         //   TL T
         mySquareLeft = getSquare(square, pair[0][0]);
-        if ( mySquareLeft ){
-            mySquareLeft = getSquare(document.getElementById(mySquareLeft), pair[0][1]);
-            if ( mySquareLeft && (!ignoreColision && !validateFriendlyPieceSquare(document.getElementById(mySquareLeft))) ){
+        if ( mySquareLeft ){                                       //  TR  T   
+            mySquareLeft = getSquare(document.getElementById(mySquareLeft), pair[0][1]);                                     
+            if ( mySquareLeft && 
+                ( !ignoreColision && 
+                  !validateFriendlyPieceSquare(document.getElementById(mySquareLeft))) ){  
                 validateAndSetCaptureSquare(mySquareLeft);
                 LSquares.push(mySquareLeft);
-                document.getElementById(mySquareLeft).setAttribute("mvsl","1");
+                setMoveSelection(mySquareLeft);
             }
         }
-        mySquareRight = getSquare(square,pair[1][0])
+        mySquareRight = getSquare(square,pair[1][0]);
         if ( mySquareRight ){
             mySquareRight = getSquare(document.getElementById(mySquareRight),pair[1][1]);
-            
-            if ( mySquareRight ){
+            if ( mySquareRight && 
+                ( !ignoreColision && 
+                  !validateFriendlyPieceSquare(document.getElementById(mySquareRight))) ){ 
+                validateAndSetCaptureSquare(mySquareRight);
                 LSquares.push(mySquareRight);
-                document.getElementById(mySquareRight).setAttribute("mvsl","1");
+                setMoveSelection(mySquareRight);
             }
         }
     });
+    
 }                
 
 function movementMatchesAnyDirection(movementType){
@@ -496,53 +527,62 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         });
         return;
     }
-    square.setAttribute("mvsl","1");
-    let movDir = square.getAttribute(direction);
+    setMoveSelection(square.id);
+    //
+    // Pegamos o square de movimento a partir direcao.
+    //
+    let destSquareId = square.getAttribute(direction);
     let i = 0;
-    while ( document.getElementById(movDir) != null ){
+    while ( document.getElementById(destSquareId) != null ){
         if ( i >= range )
             break;
 
-        let nextSqElem = document.getElementById(movDir);
-      
-        let nextSq = document.getElementById(movDir).getAttribute('sqtype');
+        let nextSqElem = document.getElementById(destSquareId);
+        let nextSqType = document.getElementById(destSquareId).getAttribute('sqtype');
         let mySquarePiece = getFirstSelectedElement().getAttribute('sqtype');
         let moved = getFirstSelectedElement().getAttribute('mvd');
         let mySquareType = getPieceTypeFromSquareType(mySquarePiece, moved);
         
-        if ( (!ignoreColision && nextSq != SQUARE_TYPE_BLANK )){
+        // console.debug(nextSqType);
+        // console.debug(ignoreColision);
+        if ( (!ignoreColision && nextSqType != SQUARE_TYPE_BLANK )){
             if ( direction == TOP_DIRECTION
                  && mySquareType != PIECE_TYPE_PAWN)
-                validateAndSetCaptureSquare(movDir);
+                validateAndSetCaptureSquare(destSquareId);
             else if ( (direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION)
                         && mySquareType == PIECE_TYPE_PAWN ){
-                validateAndSetCaptureSquare(movDir);
+                validateAndSetCaptureSquare(destSquareId);
             }
             else if ( mySquareType != PIECE_TYPE_PAWN){
-                validateAndSetCaptureSquare(movDir);
+                validateAndSetCaptureSquare(destSquareId);
             }
-
             break;
         }
+        // console.debug(ignoreColision);
+        // console.debug(nextSqElem);
+        // console.debug(direction);
+        // console.debug(mySquareType);
+        // console.debug(destSquareId);
+        
         if ( 
             !(
                 (direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION)  
                 && mySquareType == PIECE_TYPE_PAWN
-            ) 
+             ) 
             )
         {
-            nextSqElem.setAttribute("mvsl", "1");
+            setMoveSelection(nextSqElem.id);
         }
         else if ( !(direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION) ){
             
-            nextSqElem.setAttribute("mvsl", "1");
+            setMoveSelection(nextSqElem.id);
         }
         else{
-            nextSqElem.removeAttribute("mvsl");
+            clearMoveSelection(nextSqElem.id)
         }
 
         highlightSelection(direction, nextSqElem);
-        movDir = nextSqElem.getAttribute(direction);
+        destSquareId = nextSqElem.getAttribute(direction);
         i++;
     }
 
@@ -578,7 +618,9 @@ function validateIsOnRange(square){
 
     let myMovType = getMovementTypeFromPieceType(getPieceTypeFromSquareType(myPieceType), moved);
     let myMovRange = getMovementRangeFromPieceType(getPieceTypeFromSquareType(myPieceType), moved);
+    console.debug(myMovType+" "+myMovRange);
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_DIAGONAL) ){
+        // Possui movimento absoluto? Se sim, nao possui subtipos
         if ( matchMovementDirection(myMovType, SUBTYPE_DIAG_ALL) == 0 )
             myMovType = myMovType | SUBTYPE_DIAG_ALL;
 
@@ -696,82 +738,62 @@ function querySelectorAllRegex(regex, attributeToSearch) {
     return output;
   }
 
-//   peca
-//   id
-//   square
-//   clm
-//   ldnx 
-//   style
-//   class
-//   tlsq
-//   trsq 
-//   brsqd2" 
-//   blsqb2" 
-//   tsqc4" 
-//   bsqc2" 
-//   lsqb3" 
-//   rsqd3"
-  
-  
-//   PECA tem que carregar/naopeca
-//   sqtype
-//   sqcolor
-//   pcp
-//   initsq
-//   mvd
-  
-//   nao perpetuados/devem ser esquecdos
-//   mvsl
 function removeNonRelevantAttributesFromSquare(){
 
 }
-function savePieceCoreAttrOnLocalStorage(square, fromsq=null){
-    let pieceDiv;
-    if (fromsq == null)
-        pieceDiv = square.outerHTML.split("pc")[1];
-    else
-        pieceDiv = fromsq
+function saveSquareCoreAttrOnLocalStorage(square){
+    let divToReplace = square.outerHTML.split("pc")[0];
+    if ( divToReplace.includes("</div>") == false )
+        divToReplace += "></div>";
+
+
+}
+function saveCoreAttrOnLocalStorage(square){
+    let wrkDiv;
+    let piecePrefix = "";
     // pcp="1" initsq="c2" sqtype="PAWNPIECE" sqcolor="WHITEPIECE">PAWN</div>
-    
+    // alert(square.outerHTML);
+    if (square.outerHTML.indexOf('BLANK') === -1){
+        wrkDiv = "pc"+square.outerHTML.split("pc")[1];
+        piecePrefix = 'p';
+    }
+    else{
+        wrkDiv = "sqtype"+square.outerHTML.split("sqtype")[1];
+    }
+    // alert(wrkDiv);
     objCoreAttr = new Object({
-        pieceDivToReplace: pieceDiv
+        divStringToReplace: wrkDiv
     });
-    window.localStorage.removeItem("p"+square.id);
-    window.localStorage.setItem("p"+square.id, JSON.stringify( { ...objCoreAttr} ));
+    let sqName = piecePrefix+square.id;
+    window.localStorage.removeItem(sqName);
+    window.localStorage.setItem(sqName, JSON.stringify({ ...objCoreAttr}));
 }
 function removeNonRelevantAttributesFromSquare(square){
-    document.getElementById(square.id).removeAttribute('mvsl');
+    clearMoveSelection(square.id);
+    // document.getElementById(square.id).removeAttribute('mvsl');
 }
-function moveToDestination(originsq, destsq, flag){
-    var objSquare = JSON.parse(window.localStorage.getItem(originsq.id));
-    // alert("p"+originsq.id);
-    var objPiece = JSON.parse(window.localStorage.getItem("p"+originsq.id));
-    // console.debug(originsq);
-    // console.debug(destsq);
-    // console.debug(objPiece);
-    // Movimento
-    if ( flag == FULL_SWAP ){
-        let outerdest = destsq.outerHTML.split("sqtype")[0];
-        originsq.outerHTML = objSquare.divStringToReplace;
-        destsq.outerHTML = outerdest + objPiece.pieceDivToReplace;
-        let neworigin = document.getElementById(originsq.id)
-        let newdest = document.getElementById(destsq.id)
-        neworigin.addEventListener('click', squareHandler);
-        newdest.addEventListener('click', squareHandler);
-        // console.debug(neworigin);
-        console.debug(newdest);
-        saveSquareCoreAttrOnLocalStorage(neworigin);
-        savePieceCoreAttrOnLocalStorage(newdest,objPiece.pieceDivToReplace);
-        destsq.outerHTML = outerdest + objPiece.pieceDivToReplace;
+function moveToDestination(originsq, destsq){
+    var objSquare = JSON.parse(window.localStorage.getItem(destsq.id));
+    var objPiece  = JSON.parse(window.localStorage.getItem("p"+originsq.id));
+    let pieceStr = "";
+    let elm = document.getElementById(destsq.id);
+    let org = document.getElementById(originsq.id);
+
+    if    (elm.outerHTML.indexOf('BLANK') === -1){
+        pieceStr = elm.outerHTML.split("pc")[0];
+        elm.outerHTML = pieceStr + objPiece.divStringToReplace;
     }
-    // Captura
-    else if ( flag == BLANK_ON_ORIGIN ){
-        objSquare = JSON.parse(window.localStorage.getItem(destsq.id));
-        let outerdest = objSquare.divStringToReplace.split("pc");
-        originsq.outerHTML = JSON.parse(window.localStorage.getItem(originsq.id)).divStringToReplace;
-        destsq.outerHTML = outerdest + objPiece.pieceDivToReplace;
-        let newdest = document.getElementById(destsq.id);
-        newdest.addEventListener('click', squareHandler);
+    else {
+        pieceStr = elm.outerHTML.split("sqtype")[0];
+        elm.outerHTML = pieceStr + objPiece.divStringToReplace;
+    }
+    if (org.outerHTML.indexOf('BLANK') === -1){
+        pieceStr = org.outerHTML.split("pc")[0];
+        org.outerHTML = pieceStr + objSquare.divStringToReplace;
+    }
+    else  {
+        pieceStr = org.outerHTML.split("sqtype")[0];
+        org.outerHTML = pieceStr + objSquare.divStringToReplace;
     }
 }
 function validateIsCaptureSquare(square){
@@ -801,7 +823,7 @@ function captureSquare(square){
     );
 }
 function setElementAsSelected(elem){
-    elem.setAttribute("sltd", "1");
+    setSelection(elem.id);
 }
 // function setClassByBGAttr(className, bgcAttr, squareId){
 //     if ( className != bgcAttr && bgcAttr.includes('dark') ){
@@ -810,8 +832,9 @@ function setElementAsSelected(elem){
 //     document.getElementById(squareId).classList.add(className);
 // }
 function clearElementSelection(elem){
-    document.getElementById(elem.id).removeAttribute('sltd');
-    document.getElementById(elem.id).removeAttribute('mvsl');
+    clearSelection(elem.id);
+    clearMoveSelection(elem.id)
+    // document.getElementById(elem.id).removeAttribute('mvsl');
 }
 // function setBGColorAsDOMAttributeAndRemove(elemId){
 //     let myClassName = bgBoardColors[DARK_BGCOLOR];
@@ -827,10 +850,10 @@ function clearElementSelection(elem){
 // }
 function clearAllElementSelection(){
     document.querySelectorAll('[sltd]').forEach(element => {
-        element.removeAttribute('sltd');
+        clearSelection(element.id);
     });
     document.querySelectorAll('[mvsl]').forEach(element => {
-        element.removeAttribute('mvsl');
+        clearMoveSelection(element.id);
     });
     // document.querySelectorAll('[bgc]').forEach(element => {
     //     //let bgcAttr = setBGColorAsDOMAttributeAndRemove(element.id);
@@ -862,10 +885,10 @@ function squareHandler(event){
     // Square aliado e
     // SEM selecao previa ou COM selecao previa 
     if ( selectSquare(event.target) /*|| changeSelectedSquare(event.target)*/ ){
-        if ( validateIsSelected() ){
-            let oldelem = getFirstSelectedElement();
-            clearElementSelection(oldelem);
-        }
+        // if ( validateIsSelected() ){
+        // let oldelem = getFirstSelectedElement();
+        // clearElementSelection(oldelem);
+        // }
         setElementAsSelected(event.target);
         highlightSquares(event.target);
     }
@@ -876,23 +899,17 @@ function squareHandler(event){
         // event.target.innerHTML = oldelem.innerHTML;
         // oldelem.innerHTML = "";
         if ( !validateIsBlank(event.target) ){
+    
             
         //     capturedPieces +=  
         //     event.target.getAttribute('sqcolor').split("PIECE")[0][0] 
         //     + event.target.getAttribute('sqtype').split("PIECE")[0][0]
         //     + event.target.id[0] + " ";
         }
-        console.debug(oldelem);
-        console.debug(event.target);
-        moveToDestination(oldelem, event.target, FULL_SWAP);
+        moveToDestination(oldelem, event.target);
         
         clearAllElementSelection();
-        // event.target.setAttribute("sqcolor", oldelem.getAttribute("sqcolor"))
-        // event.target.setAttribute("sqtype", oldelem.getAttribute("sqtype"))
-        // event.target.setAttribute("initsq", oldelem.getAttribute("initsq"))
         event.target.setAttribute("mvd", "1");
-        // oldelem.setAttribute("sqcolor", "0");
-        // oldelem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
     }
     //drawSquareDetails();
 
@@ -1031,8 +1048,7 @@ function drawBoardSquares(context, objSquareArr=null){
                 supervisoridCtr++;
                 supervisorMarginTop += 20;
                 
-                saveSquareCoreAttrOnLocalStorage(newsquare.squareElem);
-                savePieceCoreAttrOnLocalStorage(newsquare.squareElem)
+                saveCoreAttrOnLocalStorage(newsquare.squareElem);
 
                 storageSquares[i++] = newsquare.squareElem;
             }
@@ -1403,7 +1419,7 @@ function setDirectionFromSelect(e){
     let drawLine = document.getElementById('spsblinedir').checked;
 
     clearAllElementSelection();
-    mySquare.setAttribute('sltd', '1');
+    setSelection(mySquare.id);
     if ( drawDiag == true ){
         getDirectionFromSquare(mySquare, MAIN_DIAGONAL_DIRECTION, LINE_OF_SIGHT, IGNORE_COLISION);
         getDirectionFromSquare(mySquare, OPPOSITE_DIAGONAL_DIRECTION, LINE_OF_SIGHT, IGNORE_COLISION);
@@ -1412,9 +1428,9 @@ function setDirectionFromSelect(e){
         getDirectionFromSquare(mySquare, COLUMN_DIRECTION, LINE_OF_SIGHT, IGNORE_COLISION);
     }
     if ( drawLine == true ){
-        getDirectionFromSquare(mySquare, LINE_DIRECTION, LINE_OF_SIGHT, IGNORE_COLISION);;
+        getDirectionFromSquare(mySquare, LINE_DIRECTION, LINE_OF_SIGHT, IGNORE_COLISION);
     }
-    mySquare.removeAttribute('sltd');
+    clearSelection(mySquare.id);
 }
 function drawDirectionSelect(){
     // Select do square a partir do qual serao highlitadas as direcoes
@@ -1694,17 +1710,7 @@ function matchColumnIntervalExcludingInterval(initialColumn, endColumn=null, ini
     let re = new RegExp(pattern, "g");
     return $(querySelectorAllRegex(re, "id"));
 }
-function saveSquareCoreAttrOnLocalStorage(square){
-    let divToReplace = square.outerHTML.split("pc")[0];
-    if ( divToReplace.includes("</div>") == false )
-        divToReplace += " ></div>";
 
-    objCoreAttr = new Object({
-        divStringToReplace: divToReplace
-    });
-    window.localStorage.removeItem(square.id);
-    window.localStorage.setItem(square.id, JSON.stringify( { ...objCoreAttr} ));
-}
 function matchLineIntervalExcludingInterval(initialLine, endLine=null, initialInterval=null, endInterval=null){
     let myLine = initialLine 
     if ( endLine != null )
@@ -1736,7 +1742,7 @@ function fixSquareTypeProprierties(){
     document.querySelectorAll(selector).forEach(element => {
         if ( element != null ){
             document.getElementById(element.id).setAttribute("sqcolor", "0");
-            document.getElementById(element.id).removeAttribute('sltd');
+            clearSelection(element.id);
             element.innerHTML = "";
         }
     });
