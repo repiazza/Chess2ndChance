@@ -17,9 +17,7 @@ const highlightClasses =
     "diagonalmovhldark",
     "knightmovhldark",
     "capturehl",
-    "capturehldark",
-    "orangehl",
-    "orangeh1dark"
+    "capturehldark"
 ];
 
 const captureClasses =
@@ -500,7 +498,22 @@ function getSquare(square, relativePosition){
     
     return "" + columnNotation + allPos[relativePosition];
 }
-
+function lowlightSelection(){
+    document.querySelectorAll('[mvsl]').forEach(element =>{
+        highlightClasses.forEach(myClass => {
+             element.classList.remove(myClass);
+        });
+        let bgcAttr = element.getAttribute('bgc');
+        element.classList.add(bgcAttr);
+    });
+}
+function lowlightElement(element){
+    highlightClasses.forEach(myClass => {
+        element.classList.remove(myClass);
+    });
+    let bgcAttr = element.getAttribute('bgc');
+    element.classList.add(bgcAttr);
+}
 function highlightSelection(direction, elem){
     let myClass = -1 ;
     if ( LINE_DIRECTION.includes(direction) )
@@ -777,6 +790,8 @@ function moveToDestination(originsq, destsq){
     let pieceStr = "";
     let newDestSquare = document.getElementById(destsq.id);
     let newOrigSquare = document.getElementById(originsq.id);
+    lowlightElement(newDestSquare);newDestSquare
+    lowlightElement(newOrigSquare);
     if    (newDestSquare.outerHTML.indexOf('BLANK') === -1){
         pieceStr = newDestSquare.outerHTML.split("pc")[0];
         newDestSquare.outerHTML = pieceStr + objPiece.divStringToReplace;
@@ -831,16 +846,9 @@ function captureSquare(square){
 function setElementAsSelected(elem){
     setSelection(elem.id);
 }
-// function setClassByBGAttr(className, bgcAttr, squareId){
-//     if ( className != bgcAttr && bgcAttr.includes('dark') ){
-//         className += 'dark';
-//     }
-//     document.getElementById(squareId).classList.add(className);
-// }
 function clearElementSelection(elem){
     clearSelection(elem.id);
     clearMoveSelection(elem.id)
-    // document.getElementById(elem.id).removeAttribute('mvsl');
 }
 // function setBGColorAsDOMAttributeAndRemove(elemId){
 //     let myClassName = bgBoardColors[DARK_BGCOLOR];
@@ -855,17 +863,14 @@ function clearElementSelection(elem){
 //     return myClassName;
 // }
 function clearAllElementSelection(){
+    lowlightSelection();
     document.querySelectorAll('[sltd]').forEach(element => {
         clearSelection(element.id);
     });
     document.querySelectorAll('[mvsl]').forEach(element => {
         clearMoveSelection(element.id);
     });
-    // document.querySelectorAll('[bgc]').forEach(element => {
-    //     //let bgcAttr = setBGColorAsDOMAttributeAndRemove(element.id);
-    //     let bgcAttr = document.getElementById(elementId).getAttribute("bgc");
-    //     setClassByBGAttr(bgcAttr, bgcAttr, element.id);
-    // });  
+
 }
 function isElementSelected(elem){
     return document.querySelector('[id="'+elem.id+'"][sltd]');
