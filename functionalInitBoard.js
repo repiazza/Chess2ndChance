@@ -790,7 +790,7 @@ function moveToDestination(originsq, destsq){
     let pieceStr = "";
     let newDestSquare = document.getElementById(destsq.id);
     let newOrigSquare = document.getElementById(originsq.id);
-    lowlightElement(newDestSquare);newDestSquare
+    lowlightElement(newDestSquare);
     lowlightElement(newOrigSquare);
     if    (newDestSquare.outerHTML.indexOf('BLANK') === -1){
         pieceStr = newDestSquare.outerHTML.split("pc")[0];
