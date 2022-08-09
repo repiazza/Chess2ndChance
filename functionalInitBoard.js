@@ -778,21 +778,26 @@ function moveToDestination(originsq, destsq){
     let pieceStr = "";
     let elm = document.getElementById(destsq.id);
     let org = document.getElementById(originsq.id);
-
     if    (elm.outerHTML.indexOf('BLANK') === -1){
         pieceStr = elm.outerHTML.split("pc")[0];
         elm.outerHTML = pieceStr + objPiece.divStringToReplace;
+        elm = document.getElementById(destsq.id);
+        elm.addEventListener('click', squareHandler); 
     }
     else {
         pieceStr = elm.outerHTML.split("sqtype")[0];
         elm.outerHTML = pieceStr + objPiece.divStringToReplace;
+        elm = document.getElementById(destsq.id);
+        elm.addEventListener('click', squareHandler);
     }
     if (org.outerHTML.indexOf('BLANK') === -1){
         pieceStr = org.outerHTML.split("pc")[0];
+        org.removeEventListener('click', squareHandler);
         org.outerHTML = pieceStr + objSquare.divStringToReplace;
     }
     else  {
         pieceStr = org.outerHTML.split("sqtype")[0];
+        org.removeEventListener('click', squareHandler);
         org.outerHTML = pieceStr + objSquare.divStringToReplace;
     }
 }
