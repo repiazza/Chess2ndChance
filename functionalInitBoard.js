@@ -770,36 +770,37 @@ function saveCoreAttrOnLocalStorage(square){
 }
 function removeNonRelevantAttributesFromSquare(square){
     clearMoveSelection(square.id);
-    // document.getElementById(square.id).removeAttribute('mvsl');
 }
 function moveToDestination(originsq, destsq){
     var objSquare = JSON.parse(window.localStorage.getItem(destsq.id));
     var objPiece  = JSON.parse(window.localStorage.getItem("p"+originsq.id));
     let pieceStr = "";
-    let elm = document.getElementById(destsq.id);
-    let org = document.getElementById(originsq.id);
-    if    (elm.outerHTML.indexOf('BLANK') === -1){
-        pieceStr = elm.outerHTML.split("pc")[0];
-        elm.outerHTML = pieceStr + objPiece.divStringToReplace;
-        elm = document.getElementById(destsq.id);
-        elm.addEventListener('click', squareHandler); 
+    let newDestSquare = document.getElementById(destsq.id);
+    let newOrigSquare = document.getElementById(originsq.id);
+    if    (newDestSquare.outerHTML.indexOf('BLANK') === -1){
+        pieceStr = newDestSquare.outerHTML.split("pc")[0];
+        newDestSquare.outerHTML = pieceStr + objPiece.divStringToReplace;
+        newDestSquare = document.getElementById(destsq.id);
+        newDestSquare.addEventListener('click', squareHandler); 
     }
     else {
-        pieceStr = elm.outerHTML.split("sqtype")[0];
-        elm.outerHTML = pieceStr + objPiece.divStringToReplace;
-        elm = document.getElementById(destsq.id);
-        elm.addEventListener('click', squareHandler);
+        pieceStr = newDestSquare.outerHTML.split("sqtype")[0];
+        newDestSquare.outerHTML = pieceStr + objPiece.divStringToReplace;
+        newDestSquare = document.getElementById(destsq.id);
+        newDestSquare.addEventListener('click', squareHandler);
     }
-    if (org.outerHTML.indexOf('BLANK') === -1){
-        pieceStr = org.outerHTML.split("pc")[0];
-        org.removeEventListener('click', squareHandler);
-        org.outerHTML = pieceStr + objSquare.divStringToReplace;
+    if (newOrigSquare.outerHTML.indexOf('BLANK') === -1){
+        pieceStr = newOrigSquare.outerHTML.split("pc")[0];
+        newOrigSquare.removeEventListener('click', squareHandler);
+        newOrigSquare.outerHTML = pieceStr + objSquare.divStringToReplace;
     }
     else  {
-        pieceStr = org.outerHTML.split("sqtype")[0];
-        org.removeEventListener('click', squareHandler);
-        org.outerHTML = pieceStr + objSquare.divStringToReplace;
+        pieceStr = newOrigSquare.outerHTML.split("sqtype")[0];
+        newOrigSquare.removeEventListener('click', squareHandler);
+        newOrigSquare.outerHTML = pieceStr + objSquare.divStringToReplace;
     }
+    saveCoreAttrOnLocalStorage(newDestSquare);
+    saveCoreAttrOnLocalStorage(newOrigSquare);
 }
 function validateIsCaptureSquare(square){
     if ( !square.classList.contains("captureclass")){
