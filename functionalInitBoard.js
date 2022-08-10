@@ -89,11 +89,11 @@ const THIRD_L_QUADRANT  = [[BOTTOM_RIGHT, BOTTOM], [BOTTOM_LEFT, BOTTOM]];
 const FOURTH_L_QUADRANT = [[BOTTOM_LEFT, LEFT]   , [TOP_LEFT, LEFT]];
 
 const L_ROTATE = [
-                            FIRST_L_QUADRANT, 
-                            SECOND_L_QUADRANT,
-                            THIRD_L_QUADRANT,
-                            FOURTH_L_QUADRANT
-                         ];
+                    FIRST_L_QUADRANT, 
+                    SECOND_L_QUADRANT,
+                    THIRD_L_QUADRANT,
+                    FOURTH_L_QUADRANT
+                 ];
 
 const SQUARE_RANGE        = 1;
 const DOUBLE_SQUARE_RANGE = 2;
@@ -283,7 +283,7 @@ let capturedPieces = "";
 
 let LSquares = [];
 
-let intervalSeconds = 5;
+let intervalSeconds = 10;
 let intervalTime = intervalSeconds * 1000;
 let myInterval;
 
@@ -378,6 +378,9 @@ function clearDirectionSelection(elemSquare){
 function setMovedElem(elemSquare){
     let mySquare = getElementFromSquareOrSquareId(elemSquare);
     mySquare.setAttribute("mvd", "1");
+}
+function hasMoved(squareId){
+    return document.getElementById(squareId).hasAttribute('mvd');
 }
 function clearMoveSelection(elemSquare){
     let mySquare = getElementFromSquareOrSquareId(elemSquare);
@@ -735,7 +738,7 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         if ( 
             !(
                 (direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION)  
-                && mySquareType == PIECE_TYPE_PAWN
+                && mySquareType == PIECE_TYPE_PAWN && !ignoreColision
              ) 
             )
         {
@@ -1040,7 +1043,6 @@ function clearAllElementSelection(){
     document.querySelectorAll('[cpt]').forEach(element => {
         clearCaptureSelection(element.id);
     });
-
 }
 function isElementSelected(elem){
     return document.querySelector('[id="'+elem.id+'"][sltd]');
@@ -1273,7 +1275,6 @@ function drawSupervisorSelect(){
     let typePieceSelected = false;
     let option = -1;
     filterDetails = [-1, -1,-1, -1, -1, -1, -1];
-  
     // Coluna
     selectColumn = document.getElementById('spsbselectcolumn');
     columnVal = -1;
@@ -1378,7 +1379,7 @@ function drawSupervisorSelect(){
     radioLbl[0].id = "spsblblrdwhite";
     radioLbl[0].innerHTML = "White:";
     radioLbl[0].style.position = 'absolute';
-    radioLbl[0].style.marginTop = '10px';
+    radioLbl[0].style.marginTop = '12px';
     radioLbl[0].style.marginLeft = '940px';
     // White Radio
     radioElem[0] = document.createElement("input");
@@ -1390,7 +1391,7 @@ function drawSupervisorSelect(){
 
     radioElem[0].name="colors";
     radioElem[0].style.position = 'absolute';
-    radioElem[0].style.marginTop = '13px';
+    radioElem[0].style.marginTop = '15px';
     radioElem[0].style.marginLeft = '985px';
     radioElem[0].addEventListener('change', drawSquareDetails);
 
@@ -1400,7 +1401,7 @@ function drawSupervisorSelect(){
     radioLbl[1].id = "spsblblrdblack";
     radioLbl[1].innerHTML = "Black:";
     radioLbl[1].style.position = 'absolute';
-    radioLbl[1].style.marginTop = '10px';
+    radioLbl[1].style.marginTop = '12px';
     radioLbl[1].style.marginLeft = '1005px';
     // Black Radio
     radioElem[1] = document.createElement("input");
@@ -1412,32 +1413,31 @@ function drawSupervisorSelect(){
 
     radioElem[1].name="colors";
     radioElem[1].style.position = 'absolute';
-    radioElem[1].style.marginTop = '13px';
+    radioElem[1].style.marginTop = '15px';
     radioElem[1].style.marginLeft = '1050px';
-    radioElem[1].style.border = '10px blue solid';
     radioElem[1].addEventListener('change', drawSquareDetails);
 
-    // // Label Ambos
-    // radioLbl[2] = document.createElement("label");
-    // radioLbl[2].for = "spsbrdboth";
-    // radioLbl[2].id = "spsblblrdboth";
-    // radioLbl[2].innerHTML = "Tudo:";
-    // radioLbl[2].style.position = 'absolute';
-    // radioLbl[2].style.marginTop = '10px';
-    // radioLbl[2].style.marginLeft = '1340px';
-    // // Radio button Ambos
-    // radioElem[2] = document.createElement("input");
-    // radioElem[2].type = 'radio';
-    // radioElem[2].id = "spsbrdboth";
-    // radioElem[2].value = "both";  
-    // if ( radioVal == radioElem[2].value )
-    //     radioElem[2].checked = true;
+    // Label Ambos
+    radioLbl[2] = document.createElement("label");
+    radioLbl[2].for = "spsbrdboth";
+    radioLbl[2].id = "spsblblrdboth";
+    radioLbl[2].innerHTML = "Tudo:";
+    radioLbl[2].style.position = 'absolute';
+    radioLbl[2].style.marginTop = '-5px';
+    radioLbl[2].style.marginLeft = '945px';
+    // Radio button Ambos
+    radioElem[2] = document.createElement("input");
+    radioElem[2].type = 'radio';
+    radioElem[2].id = "spsbrdboth";
+    radioElem[2].value = "both";  
+    if ( radioVal == radioElem[2].value )
+        radioElem[2].checked = true;
 
-    // radioElem[2].name="colors";
-    // radioElem[2].style.position = 'absolute';
-    // radioElem[2].style.marginTop = '13px';
-    // radioElem[2].style.marginLeft = '1395px';
-    // radioElem[2].addEventListener('change', drawSquareDetails);
+    radioElem[2].name="colors";
+    radioElem[2].style.position = 'absolute';
+    radioElem[2].style.marginTop = '-2px';
+    radioElem[2].style.marginLeft = '985px';
+    radioElem[2].addEventListener('change', drawSquareDetails);
 
     // Tipo de peça
     let pieceTypeChkbox = [];
@@ -1446,12 +1446,18 @@ function drawSupervisorSelect(){
     let marginLeftOffset = 55;
     let initialOffset = 1075;
     let marginTop = -2;
+    let virgAdd = '';
     for (var i = 0; i < 5; i++) {
-        pieceTypeChkbox[i] = document.getElementById('spsbchkboxtype'+i);
-        if ( pieceTypeChkbox[i] != null ){
-            typeValue.selected = 1;
-            pieceTypeFilter = "[pc" + pieceColumnLookup[i]+ "='1']"
+        typeValue = 0;
+        pieceTypeChkbox[i] = document.getElementById('spsbchkboxtype' + i);
+        if ( pieceTypeChkbox[i] != null && pieceTypeChkbox[i].checked ){
+            typeValue = 1;
+            pieceTypeFilter += virgAdd + "[pc" + pieceColumnLookup[i] + "]";
+            virgAdd = ',';
         }
+        else
+            virgAdd = '';
+
         document.querySelectorAll('[id=spsbchkboxtype'+i+']').forEach(element => {
             document.getElementById("container").removeChild(element);
         });
@@ -1476,8 +1482,7 @@ function drawSupervisorSelect(){
         pieceTypeChkbox[i].style.marginLeft = initialOffset+"px";
         
         if ( typeValue ){
-          pieceTypeChkbox[i].selected = 1;
-          pieceTypeFilter += "[pc" + pieceColumnLookup[i] + "='1']"
+          pieceTypeChkbox[i].checked = 1;
         }
         initialOffset = (initialOffset + 20);
         marginLeftOffset = (marginLeftOffset + 10);
@@ -1487,19 +1492,21 @@ function drawSupervisorSelect(){
             marginLeftOffset = 55;
         } 
     }
-
+    typeValue  = 0;
     labelType[i] = document.createElement("label");
     labelType[i].for = "spsbchkboxtype"+i;
     labelType[i].id = "spsblbltype"+i;
-    labelType[i].innerHTML = SQUARE_TYPE_PAWN_PIECE + ":";
+    labelType[i].innerHTML = SQUARE_TYPE_PAWN_PIECE.split("PIECE")[0]+":" ;
     labelType[i].style.position = 'absolute';
     labelType[i].style.marginTop = '15px';
     labelType[i].style.marginLeft = initialOffset+"px";
-    initialOffset += 95;
+    initialOffset += 70;
     pieceTypeChkbox[i] = document.getElementById('spsbchkboxtype'+i);
-    if ( pieceTypeChkbox[i] != null ){
-        typeValue = pieceTypeChkbox[i].checked;
-        pieceTypeFilter += "[" + pieceColumnLookup[i]+ "='1']"
+    if ( pieceTypeChkbox[i] != null && pieceTypeChkbox[i].checked ){
+        typeValue = 1;
+        if ( pieceTypeFilter != "" )
+            virgAdd = ',';
+        pieceTypeFilter += virgAdd + "[pc" + pieceColumnLookup[i]+ "]";
     }
     document.querySelectorAll('[id=spsbchkboxtype'+i+']').forEach(element => {
         document.getElementById("container").removeChild(element);
@@ -1515,7 +1522,7 @@ function drawSupervisorSelect(){
     pieceTypeChkbox[i].style.marginTop = '18px';
     pieceTypeChkbox[i].style.marginLeft = initialOffset+"px";
     if ( typeValue ){
-        pieceTypeChkbox[i].selected = 1;
+        pieceTypeChkbox[i].checked = 1;
     }
     
     // Label seleção
@@ -1529,7 +1536,7 @@ function drawSupervisorSelect(){
     // Checkbox Seleção
     checkSelected = document.getElementById('spsbcheckslt');
     typePieceSelected = false;
-    if ( checkSelected != null ){
+    if ( checkSelected != null && checkSelected.checked ){
         typePieceSelected = checkSelected.checked;
     }
     document.querySelectorAll('[id=spsbcheckslt]').forEach(element => {
@@ -1557,10 +1564,6 @@ function drawSupervisorSelect(){
         typePieceSelected = sltd;
     }
 
-    // else if ( (selectVal-1) == FILTER_EMPTY ){
-    //     radioVal = BLANK_SQUARE_COLOR;
-    // }
-
     filterDetails[FILTER_COLUMN]   = columnVal;
     filterDetails[FILTER_ROW]      = rowVal;
     filterDetails[FILTER_COLOR]    = radioVal;
@@ -1574,6 +1577,8 @@ function drawSupervisorSelect(){
     document.getElementById("container").appendChild(radioLbl[0]);
     document.getElementById("container").appendChild(radioElem[1]);
     document.getElementById("container").appendChild(radioLbl[1]);
+    document.getElementById("container").appendChild(radioElem[2]);
+    document.getElementById("container").appendChild(radioLbl[2]);
     pieceTypeChkbox.map((val, ndx) => {
         document.getElementById("container").appendChild(labelType[ndx]);
         document.getElementById("container").appendChild(val);
@@ -1587,19 +1592,18 @@ function drawSupervisorSelect(){
     }
 }
 function setDirectionFromSelect(e){  
-    if ( e.target.value == -1){
-        document.querySelectorAll("[square='1']").forEach(element => {
-            element.innerHTML = "";
-        });
+    clearAllElementSelection();
+
+    if ( e.target.value == -1 && e.target.checked == false){
         return ;
     }
-    let mySquare = document.getElementById(e.target.value);
+
+    let mySquare = document.getElementById('spsbdirectionhlselect');
     let drawDiag = document.getElementById('spsbdiagonaldir').checked;
     let drawColumn = document.getElementById('spsbcolumndir').checked;
     let drawLine = document.getElementById('spsblinedir').checked;
 
-    clearAllElementSelection();
-    setSelection(mySquare.id);
+    setSelection(document.getElementById(mySquare.value));
     if ( drawDiag == true ){
         getDirectionFromSquare(mySquare, MAIN_DIAGONAL_DIRECTION, LINE_OF_SIGHT, IGNORE_COLISION);
         getDirectionFromSquare(mySquare, OPPOSITE_DIAGONAL_DIRECTION, LINE_OF_SIGHT, IGNORE_COLISION);
@@ -1610,7 +1614,7 @@ function setDirectionFromSelect(e){
     if ( drawLine == true ){
         getDirectionFromSquare(mySquare, LINE_DIRECTION, LINE_OF_SIGHT, IGNORE_COLISION);
     }
-    // clearSelection(mySquare.id);
+    highlightSelection()
 }
 function drawDirectionSelect(){
     // Select do square a partir do qual serao highlitadas as direcoes
@@ -1658,8 +1662,8 @@ function drawDirectionSelect(){
     labelElem.style.marginTop = "10px";
     labelElem.style.marginLeft = "10px";
     
-    let checkDirectionDiagonal = document.getElementById('spsbdiagonaldir');
     directionSelected = false;
+    let checkDirectionDiagonal = document.getElementById('spsbdiagonaldir');
     if ( checkDirectionDiagonal != null ){
         directionSelected = checkDirectionDiagonal.checked;
         document.getElementById("container").removeChild(checkDirectionDiagonal);
@@ -1669,12 +1673,14 @@ function drawDirectionSelect(){
             document.getElementById("container").removeChild(element);
         });
     }
+    
     checkDirectionDiagonal = document.createElement("input");
     checkDirectionDiagonal.type = "checkbox";
     checkDirectionDiagonal.id = "spsbdiagonaldir";
     checkDirectionDiagonal.style.position = 'absolute';
     checkDirectionDiagonal.style.marginTop = '13px';
     checkDirectionDiagonal.style.marginLeft = '75px';
+    checkDirectionDiagonal.addEventListener('change', setDirectionFromSelect);
     if ( directionSelected )
         checkDirectionDiagonal.checked = 1;
 
@@ -1689,6 +1695,8 @@ function drawDirectionSelect(){
     lblDirColumn.style.marginTop = '10px';
     lblDirColumn.style.marginLeft = '97px';
 
+    
+    directionSelected = false;
     let checkDirectionColumn = document.getElementById('spsbcolumndir');
     if ( checkDirectionColumn != null ){
         directionSelected = checkDirectionColumn.checked;
@@ -1708,6 +1716,7 @@ function drawDirectionSelect(){
     checkDirectionColumn.style.position = 'absolute';
     checkDirectionColumn.style.marginTop = '13px';
     checkDirectionColumn.style.marginLeft = '147px';
+    checkDirectionColumn.addEventListener('change', setDirectionFromSelect);
     if ( directionSelected )
         checkDirectionColumn.checked = 1;
     
@@ -1722,6 +1731,7 @@ function drawDirectionSelect(){
     lblDirLine.style.marginTop = '10px';
     lblDirLine.style.marginLeft = '173px';
 
+    directionSelected = false;
     let checkDirectionLine = document.getElementById('spsblinedir');
     if ( checkDirectionLine != null ){
         directionSelected = checkDirectionLine.checked;
@@ -1741,6 +1751,7 @@ function drawDirectionSelect(){
     checkDirectionLine.style.position = 'absolute';
     checkDirectionLine.style.marginTop = '13px';
     checkDirectionLine.style.marginLeft = '215px';
+    checkDirectionLine.addEventListener('change', setDirectionFromSelect);
     if ( directionSelected )
         checkDirectionLine.checked = 1;
     
@@ -1770,6 +1781,7 @@ function drawIntervalTimeSet(){
     textElem.setAttribute("type", "text");
     textElem.setAttribute("maxlenght", "10");
     textElem.setAttribute("lenght", "10");
+    textElem.value = "" + intervalSeconds;
     textElem.style.position = "absolute";
     textElem.style.marginTop = "120px";
     textElem.style.marginLeft = "10px";
@@ -1787,7 +1799,7 @@ function drawIntervalTimeSet(){
 }
 function setIntervalSeconds(){
     let seconds = document.getElementById('spsbtextelem').value;
-    if (  (Number(seconds) > 1) && (Number(seconds) < 20) ){
+    if (  (Number(seconds) > 1) && (Number(seconds) < 20) && seconds != intervalSeconds ){
         intervalSeconds = seconds;
         intervalTime = intervalSeconds * 1000;
         window.clearInterval(myInterval);
@@ -1817,6 +1829,9 @@ function drawSquareDetails(){
     }
     if ( filterDetails[FILTER_ROW] != -1 ){
         selector += "[id*='"+(Number(filterDetails[FILTER_ROW])+1)+"']";
+    }
+    if ( filterDetails[FILTER_COLUMN] != -1 && filterDetails[FILTER_ROW] != -1  ){
+        selector = "[square][id='"+columnArray[filterDetails[FILTER_COLUMN]]+(Number(filterDetails[FILTER_ROW])+1)+"']";
     }
     if ( filterDetails[FILTER_COLOR] != -1 ){
         if ( filterDetails[FILTER_COLOR] == "both")
@@ -1939,9 +1954,7 @@ function fixSquareTypeProprierties(){
             element.setAttribute("sqcolor", SQUARE_TYPE_WHITE_PIECE);
     });
 }
-function hasMoved(squareId){
-    return document.getElementById(squareId).hasAttribute('mvd');
-}
+
 $(document).ready(function (){
     playerColor = avaliableColors[WHITE_COLOR];
     myInterval = window.setInterval(setSupervisorPatrol, intervalTime);

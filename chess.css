@@ -1,7 +1,13 @@
-.container{
-    position: absolute;
+.container{ 
+    cursor:pointer;
     height: 100%;
     width: 100%;
+    /* caret-color: transparent; */
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .borderblue{
     border :3px solid blue;
