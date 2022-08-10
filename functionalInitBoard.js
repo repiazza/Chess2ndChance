@@ -2,6 +2,7 @@
 //
 //    Board block
 //
+
 //
 const DARK_BGCOLOR = 0;
 const LIGHT_BGCOLOR = 1;
@@ -17,13 +18,25 @@ const highlightClasses =
     "diagonalmovhldark",
     "knightmovhldark",
     "capturehl",
-    "capturehldark"
+    "capturehldark",
+    "goldenrod",
+    "goldenroddark",
+    "silverbuenao",
+    "silverbuenaodark"
 ];
 
 const captureClasses =
 [
     "capturehl",
     "capturehldark"             
+];
+
+const pieceSpecialClasses =
+[
+    "goldenrod",
+    "goldenroddark",
+    "silverbuenao",
+    "silverbuenaodark"             
 ];
 
 const bgBoardColors = [
@@ -46,13 +59,15 @@ const SQUARE_TYPE_KING_PIECE      = 'KINGPIECE';
 const SQUARE_TYPE_ROOK_PIECE      = 'ROOKPIECE';
 const SQUARE_TYPE_BLANK           = 'BLANK';
 
+const SQUARE_ALPHABETICAL_NDX = 0;
+const SQUARE_NUMERIC_NDX      = 1;
 ///////////////////////////////////////////////////////////
 //
 //    Movement Block
 //
 //
-const CONSIDER_COLISION = 0;
-const IGNORE_COLISION = 1;
+const CONSIDER_COLISION = false;
+const IGNORE_COLISION = true;
     //                0  1  2  3
     //                l  r  t  b
 const TOP_LEFT     = [0 , 2];
@@ -63,11 +78,21 @@ const LEFT         = 0 ;
 const RIGHT        = 1 ;
 const TOP          = 2 ;
 const BOTTOM       = 3 ;
-const DIRECTION_ROTATE = [
-                            [[TOP_LEFT, TOP]       , [TOP_RIGHT, TOP]], 
-                            [[TOP_RIGHT, RIGHT]    , [BOTTOM_RIGHT, RIGHT]],
-                            [[BOTTOM_RIGHT, BOTTOM], [BOTTOM_LEFT, BOTTOM]],
-                            [[BOTTOM_LEFT, LEFT]   ,  [TOP_LEFT, LEFT]]
+
+const DIRECTION_VERTICAL   = [TOP, BOTTOM];
+const DIRECTION_HORIZONTAL = [LEFT, RIGHT];
+const DIRECTION_DIAGONAL   = [TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT];
+
+const FIRST_L_QUADRANT  = [[TOP_LEFT, TOP]       , [TOP_RIGHT, TOP]];
+const SECOND_L_QUADRANT = [[TOP_RIGHT, RIGHT]    , [BOTTOM_RIGHT, RIGHT]];
+const THIRD_L_QUADRANT  = [[BOTTOM_RIGHT, BOTTOM], [BOTTOM_LEFT, BOTTOM]];
+const FOURTH_L_QUADRANT = [[BOTTOM_LEFT, LEFT]   , [TOP_LEFT, LEFT]];
+
+const L_ROTATE = [
+                            FIRST_L_QUADRANT, 
+                            SECOND_L_QUADRANT,
+                            THIRD_L_QUADRANT,
+                            FOURTH_L_QUADRANT
                          ];
 
 const SQUARE_RANGE        = 1;
@@ -128,8 +153,26 @@ const MOVEMENT_MAIN_ALL   = MOVEMENT_COLUMN_ALL | MOVEMENT_LINE_ALL | SUBTYPE_DI
 const MOVEMENT_DIRECTION_SUBTYPE_ALL  = MOVEMENT_DIRECTION_ALL | MOVEMENT_MAIN_ALL;
 const MOVEMENT_TYPE_ALL               = MOVEMENT_DIRECTION_ALL | MOVEMENT_MAIN_ALL | SPECIAL_MOVEMENT_ALL;
 
+
+const TOP_RIGHT_DIRECTION = 'trsq';
+const TOP_LEFT_DIRECTION = 'tlsq';
+const BOTTOM_RIGHT_DIRECTION = 'brsq';
+const BOTTOM_LEFT_DIRECTION = 'blsq';
+const TOP_DIRECTION = 'tsq';
+const LEFT_DIRECTION = 'lsq';
+const BOTTOM_DIRECTION = 'bsq';
+const RIGHT_DIRECTION = 'rsq';
+const LINE_DIRECTION              = [ LEFT_DIRECTION, RIGHT_DIRECTION ];
+const COLUMN_DIRECTION            = [ BOTTOM_DIRECTION, TOP_DIRECTION ];
+const MAIN_DIAGONAL_DIRECTION     = [ TOP_LEFT_DIRECTION, BOTTOM_RIGHT_DIRECTION];
+const OPPOSITE_DIAGONAL_DIRECTION = [ TOP_RIGHT_DIRECTION, BOTTOM_LEFT_DIRECTION];
+const DIAGONAL_DIRECTION          = [ MAIN_DIAGONAL_DIRECTION, OPPOSITE_DIAGONAL_DIRECTION]
+
+const CROSS_DIRECTION             = LINE_DIRECTION.concat(COLUMN_DIRECTION);
+const STAR_DIRECTION              = CROSS_DIRECTION.concat(MAIN_DIAGONAL_DIRECTION).concat(OPPOSITE_DIAGONAL_DIRECTION);
+
 //
-// Piece movement
+// Piece
 //
 
 // ROOK
@@ -170,6 +213,8 @@ const PAWN_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_COLUMN
 const PAWN_INITIAL_RANGE = DOUBLE_SQUARE_RANGE;
 const PAWN_MOVED_RANGE   = SQUARE_RANGE;
 
+const THE_PIECE = 99;
+
 const PIECE_TYPE_ROOK    = 'R';
 const PIECE_TYPE_KNIGHT  = 'N';
 const PIECE_TYPE_BISHOP  = 'B';
@@ -199,41 +244,28 @@ const pieceTypeByColumn = [
     SQUARE_TYPE_ROOK_PIECE      // h     
 ];
 
-const TOP_RIGHT_DIRECTION = 'trsq';
-const TOP_LEFT_DIRECTION = 'tlsq';
-const BOTTOM_RIGHT_DIRECTION = 'brsq';
-const BOTTOM_LEFT_DIRECTION = 'blsq';
-const TOP_DIRECTION = 'tsq';
-const LEFT_DIRECTION = 'lsq';
-const BOTTOM_DIRECTION = 'bsq';
-const RIGHT_DIRECTION = 'rsq';
-const LINE_DIRECTION              = [ LEFT_DIRECTION, RIGHT_DIRECTION ];
-const COLUMN_DIRECTION            = [ BOTTOM_DIRECTION, TOP_DIRECTION ];
-const MAIN_DIAGONAL_DIRECTION     = [ TOP_LEFT_DIRECTION, BOTTOM_RIGHT_DIRECTION];
-const OPPOSITE_DIAGONAL_DIRECTION = [ TOP_RIGHT_DIRECTION, BOTTOM_LEFT_DIRECTION];
-const DIAGONAL_DIRECTION          = [ MAIN_DIAGONAL_DIRECTION, OPPOSITE_DIAGONAL_DIRECTION]
-
-const CROSS_DIRECTION             = LINE_DIRECTION.concat(COLUMN_DIRECTION);
-const STAR_DIRECTION              = CROSS_DIRECTION.concat(MAIN_DIAGONAL_DIRECTION).concat(OPPOSITE_DIAGONAL_DIRECTION);
-
-// const BLANK_ON_ORIGIN = 'BLKORIGIN';
-// const FULL_SWAP       = 'FULLSWAP';
-
 const FRIENDLY_SIDE   = 'FRIENDLY';
 const ENEMY_SIDE      = 'ENEMY';
+const BLANK_SIDE      = 'NEUTRAL';
+
+const PLAYER_SIDES = [FRIENDLY_SIDE, ENEMY_SIDE];
+const ALL_SIDES = [FRIENDLY_SIDE, ENEMY_SIDE, BLANK_SIDE]
 
 const SQUARE_TYPE_BLACK_PIECE = 'BLACKPIECE';
 const SQUARE_TYPE_WHITE_PIECE = 'WHITEPIECE';
+const BLANK_SQUARE_COLOR = 0;
 
 const PAWN_INIT_ROWS      = ["2", "7"];
 const HIGHVALUE_INIT_ROWS = ["1", "8"];
 
-const WHITEPIECE_ROWS  = ["1", "2"];
-const BLACKPIECE_ROWS  = ["7", "8"];
-const BLANKSQUARE_ROWS = ["3", "4", "5", "6"];
+const WHITEPIECE_INIT_ROWS  = ["1", "2"];
+const BLACKPIECE_INIT_ROWS  = ["7", "8"];
+const BLANKSQUARE_INIT_ROWS = ["3", "4", "5", "6"];
+
+const WHITE_COLOR = 0;
+const BLACK_COLOR = 1;
 
 const avaliableColors = ['WHITEPIECE','BLACKPIECE'];
-const BLANK_SQUARE_COLOR = 0;
 
 const columnArray = ['a','b','c','d','e','f','g','h'];
 
@@ -257,75 +289,144 @@ let myInterval;
 
 let playerColor = 'BLACKPIECE';
 let supervisorMode = false;
+let blankFrameStr = 'sqtype="BLANK" sqcolor="0"></div>'
 
+function getElementFromSquareOrSquareId(elementOrId){
+    if ( elementOrId == null )
+        return null;
 
+    if ( typeof (elementOrId) === 'object' && elementOrId.id !== undefined && elementOrId.id != null)
+        return elementOrId;
+
+    return document.getElementById(elementOrId);
+}
+function isValidSquareIndex(squareIndex){
+    if ( squareIndex < 1 || squareIndex > 8 || isNaN(squareIndex) )
+        return false;
+    
+    return true;
+}
+function isValidSquareAlpha(sqAlpha){
+    if ( columnArray.indexOf(sqAlpha) === -1 )
+        return false;
+    
+    return true;
+}
+function isValidSquare(elemSquare){
+    if ( elemSquare == null )
+        return false;
+
+    if ( typeof(elemSquare) === 'object' )
+        elemSquare = elemSquare.id;
+    
+    if ( isValidSquareAlpha(elemSquare[SQUARE_ALPHABETICAL_NDX])
+         && isValidSquareIndex(elemSquare[SQUARE_NUMERIC_NDX]) )
+        return true;
+
+    return false;
+}
 function toggleSupervisor(){
     supervisorMode = !supervisorMode;
     drawSquareDetails();
 }
-function validateAndSetCaptureSquare(mySquare){
-    if ( mySquare.id === undefined || mySquare.id == null)
-        mySquare = document.getElementById(mySquare);
+function validateAndSetCaptureSquare(elemSquare){
+    let mySquare = getElementFromSquareOrSquareId(elemSquare);
 
     if ( validateEnemyPieceSquare(mySquare) ){
-        mySquare.classList.add("captureclass");
+        setCaptureSquare(mySquare);
+        highlightCapture(mySquare);
     }
 }
-function setSelection(squareId){
-    let sqElem = document.getElementById(squareId);
-    sqElem.setAttribute("sltd", "1");
-    sqElem.innerHTML = "<b>"+sqElem.innerHTML+"</b>";
+function setCaptureSquare(elemSquare){
+    let mySquare = getElementFromSquareOrSquareId(elemSquare);
+    mySquare.setAttribute("cpt", "1");
 }
-function clearSelection(squareId){
-    let sqElem = document.getElementById(squareId);
-    sqElem.removeAttribute("sltd");
+function clearCaptureSelection(elemSquare){
+    let mySquare = getElementFromSquareOrSquareId(elemSquare);
+    mySquare.removeAttribute("cpt");
+}
+function setSelection(elemSquare){
+    let mySquare = getElementFromSquareOrSquareId(elemSquare);
+    mySquare.setAttribute("sltd", "1");
+    mySquare.innerHTML = "<b>"+mySquare.innerHTML+"</b>";
+}
+function clearSelection(elemSquare){
+    let mySquare = getElementFromSquareOrSquareId(elemSquare);
+    mySquare.removeAttribute("sltd");
 
-    if ( sqElem.innerHTML.indexOf('<b>') === -1 )
+    if ( mySquare.innerHTML.indexOf('<b>') === -1 )
         return;
 
-    let myInner = sqElem.innerHTML.split('<b>')[1];
+    let myInner = mySquare.innerHTML.split('<b>')[1];
     myInner = myInner.split('</b>')[0];
-    sqElem.innerHTML = myInner;
+    mySquare.innerHTML = myInner;
 }
-function setMoveSelection(squareId){
-    let sqElem = document.getElementById(squareId);
-    sqElem.setAttribute("mvsl", "1");
+function setMoveSelection(elemSquare, direction){
+    let mySquare = getElementFromSquareOrSquareId(elemSquare);
+    mySquare.setAttribute("mvsl", "1");
+    setDirectionSelection(elemSquare, direction)
 }
-function clearMoveSelection(squareId){
-    let sqElem = document.getElementById(squareId);
-    sqElem.removeAttribute("mvsl");
+function clearDirectionSelection(elemSquare){
+    let mySquare = getElementFromSquareOrSquareId(elemSquare);
+    mySquare.removeAttribute('lmv');
+    mySquare.removeAttribute('cmv');
+    mySquare.removeAttribute('dmv');
+    mySquare.removeAttribute('dmv');
+    mySquare.removeAttribute('kmv');
+    mySquare.removeAttribute('pmv');
+}
+function setMovedElem(elemSquare){
+    let mySquare = getElementFromSquareOrSquareId(elemSquare);
+    mySquare.setAttribute("mvd", "1");
+}
+function clearMoveSelection(elemSquare){
+    let mySquare = getElementFromSquareOrSquareId(elemSquare);
+    mySquare.removeAttribute("mvsl");
+    clearDirectionSelection(elemSquare);
+}
+
+function getSquareAfterMultipleMovements(originSq, movementArray){
+    if ( Array.isArray(movementArray) == false ){
+        return getSquare(originSq, movementArray);
+    }
+    let retSq = [];
+    let destSq = getElementFromSquareOrSquareId(originSq);
+    let wrkSq = destSq;
+    movementArray.map(direction =>{
+        wrkSq = getElementFromSquareOrSquareId(originSq);
+
+        if ( Array.isArray(direction) ){
+            wrkSq= getElementFromSquareOrSquareId(originSq);
+            direction.map(subdir =>{
+                destSq = getSquare(wrkSq, subdir);
+                wrkSq = destSq;
+            });
+            retSq.push(wrkSq);
+        }
+        else {
+            destSq = getSquare(wrkSq, direction);
+            wrkSq = destSq;
+            retSq.push(wrkSq);
+        }
+    });
+    return retSq;
 }
 function getLSquaresFromSquare(square, ignoreColision=false){
     LSquares = [];
-    let mySquareLeft = 0;
-    let mySquareRight = 0;
-
-    DIRECTION_ROTATE.map(pair => {
-                                         //   TL T
-        mySquareLeft = getSquare(square, pair[0][0]);
-        if ( mySquareLeft ){                                       //  TR  T   
-            mySquareLeft = getSquare(document.getElementById(mySquareLeft), pair[0][1]);                                     
-            if ( mySquareLeft && 
-                ( !ignoreColision && 
-                  !validateFriendlyPieceSquare(document.getElementById(mySquareLeft))) ){  
-                validateAndSetCaptureSquare(mySquareLeft);
-                LSquares.push(mySquareLeft);
-                setMoveSelection(mySquareLeft);
-            }
-        }
-        mySquareRight = getSquare(square,pair[1][0]);
-        if ( mySquareRight ){
-            mySquareRight = getSquare(document.getElementById(mySquareRight),pair[1][1]);
-            if ( mySquareRight && 
-                ( !ignoreColision && 
-                  !validateFriendlyPieceSquare(document.getElementById(mySquareRight))) ){ 
-                validateAndSetCaptureSquare(mySquareRight);
-                LSquares.push(mySquareRight);
-                setMoveSelection(mySquareRight);
-            }
+    L_ROTATE.map(quadrant => {
+        let retSq = getSquareAfterMultipleMovements(square, quadrant);
+        if ( Array.isArray(retSq) ){
+            retSq.map(sq => {
+                if ( !ignoreColision && isValidSquare(sq) && !validateFriendlyPieceSquare(sq) ){
+                    validateAndSetCaptureSquare(sq);
+                    LSquares.push(sq);
+                    setMoveSelection(sq, MOVEMENT_DIRECTION_L);
+                }
+            });
         }
     });
-    
+
+    highlightSelection();
 }                
 
 function movementMatchesAnyDirection(movementType){
@@ -399,16 +500,17 @@ function validateSquare(square, flag){
                 && !validateSquare(square, SQUARE_TYPE_HIGHVALUE_PIECE));
     }
 }
-function validateSquareColor(square, flag){
-    if ( square.id === undefined )
+function validateSquareColor(elemSquare, flag){
+    let square = getElementFromSquareOrSquareId(elemSquare);
+    if ( square == null )
         return false;
 
     if ( flag === SQUARE_TYPE_WHITE_PIECE )
-        return WHITEPIECE_ROWS.includes(square.id[1]);
+        return WHITEPIECE_INIT_ROWS.includes(square.id[1]);
     if ( flag === SQUARE_TYPE_BLACK_PIECE )
-        return BLACKPIECE_ROWS.includes(square.id[1]);
+        return BLACKPIECE_INIT_ROWS.includes(square.id[1]);
     if ( flag === SQUARE_TYPE_BLANK )
-        return BLANKSQUARE_ROWS.includes(square.id[1]);
+        return BLANKSQUARE_INIT_ROWS.includes(square.id[1]);
 }
 function createSquare(square){
     let sqType = 0;
@@ -447,7 +549,7 @@ function createSquare(square){
         rSquare  = getSquare(square, RIGHT);
         tSquare  = getSquare(square, TOP);
         bSquare  = getSquare(square, BOTTOM);
-    
+        
     return {
         squareElem:          square,
         squareId:            square.id,
@@ -464,7 +566,11 @@ function createSquare(square){
         squareColor:         sqColor
     };
 }
-function getSquare(square, relativePosition){
+function getSquare(elemSquare, relativePosition){
+    let square = getElementFromSquareOrSquareId(elemSquare);
+    if ( square == null )
+        return false;
+        
     let columnNotation = square.id[0];
     let indexNotation = Number(square.id[1]);
     let leftPos = -1;
@@ -483,26 +589,53 @@ function getSquare(square, relativePosition){
         bottomPos = indexNotation-1;
         
     allPos = [ leftPos, rightPos, topPos, bottomPos ];
-    if ( relativePosition.length > 1 ) {
-        if ( allPos[relativePosition[0]] == -1 || allPos[relativePosition[1]] == -1 )
+    // Square obtido por um par de deslocamento?
+    //
+    if ( relativePosition.length !== undefined && relativePosition.length  > 1 ) {
+        let squareGot = "" + allPos[relativePosition[0]] + allPos[relativePosition[1]];
+       
+        if ( isValidSquare(squareGot) == false )
             return false; 
-        
-    
-        return "" + allPos[relativePosition[0]] + allPos[relativePosition[1]];
-    }
-    if (  allPos[relativePosition] == -1 )
-        return false;
 
-    if ( isLetter(allPos[relativePosition]) )
-        return "" + allPos[relativePosition] + indexNotation;
-    
-    return "" + columnNotation + allPos[relativePosition];
+        return squareGot;
+    }
+
+    // Nao...
+
+    //
+    // Square obtido por um deslocamento vertical ? 
+    //
+    if ( DIRECTION_VERTICAL.includes(relativePosition) ) {
+        let squareGot = "" +  columnNotation +  allPos[relativePosition] ;
+        if ( isValidSquare(squareGot) ){   
+            return squareGot;
+        }
+    }
+    //
+    // Square obtido por um deslocamento Horizontal ? 
+    //    
+    if ( DIRECTION_HORIZONTAL.includes(relativePosition) ) {
+        let squareGot = "" + allPos[relativePosition] + indexNotation;
+        if ( isValidSquare(squareGot) ){   
+            return squareGot;
+        }
+    }
+    return false;
 }
 function lowlightSelection(){
     document.querySelectorAll('[mvsl]').forEach(element =>{
         highlightClasses.forEach(myClass => {
-             element.classList.remove(myClass);
-        });
+            element.classList.remove(myClass);
+       });
+        let bgcAttr = element.getAttribute('bgc');
+        element.classList.add(bgcAttr);
+    });
+}
+function lowlightCapture(){
+    document.querySelectorAll('[cpt]').forEach(element =>{
+        highlightClasses.forEach(myClass => {
+            element.classList.remove(myClass);
+       });
         let bgcAttr = element.getAttribute('bgc');
         element.classList.add(bgcAttr);
     });
@@ -514,23 +647,52 @@ function lowlightElement(element){
     let bgcAttr = element.getAttribute('bgc');
     element.classList.add(bgcAttr);
 }
-function highlightSelection(direction, elem){
-    let myClass = -1 ;
+function highlightCapture(elm){
+    let bgcAttr = elm.getAttribute('bgc');  
+    highlightClasses.forEach(myClass => {
+        elm.classList.remove(myClass);
+   });
+    elm.classList.remove(bgcAttr);
+    if ( bgcAttr.includes('dark') ){
+        elm.classList.add(captureClasses[1]);
+    }
+    else{
+        elm.classList.add(captureClasses[0]);
+    }
+}
+function setDirectionSelection(square, direction){
+    let mySquare = getElementFromSquareOrSquareId(square);
     if ( LINE_DIRECTION.includes(direction) )
-        myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_LINE);
+        mySquare.setAttribute('lmv', '1');
     else if ( COLUMN_DIRECTION.includes(direction) )  
-        myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_COLUMN);
+        mySquare.setAttribute('cmv', '1');
     else if ( MAIN_DIAGONAL_DIRECTION.includes(direction) )
-        myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
+        mySquare.setAttribute('dmv', '1');
     else if ( OPPOSITE_DIAGONAL_DIRECTION.includes(direction) )
-        myClass = getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
-    
-    let bgcAttr = elem.getAttribute('bgc');
-    // if ( bgcAttr.includes('dark') && myClass != bgcAttr ){
-    //     myClass += 'dark';
-    // }
-    $(document.querySelectorAll('[mvsl]')).removeClass(bgcAttr);
-    $(document.querySelectorAll('[mvsl]')).addClass(myClass);
+        mySquare.setAttribute('dmv', '1');
+    else if ( direction == MOVEMENT_DIRECTION_L )
+        mySquare.setAttribute('kmv', '1');
+    else if ( direction == THE_PIECE )
+        mySquare.setAttribute('pmv', '1');
+}
+
+function highlightSelection(){
+    document.querySelectorAll('[mvsl]').forEach(elm =>{
+        let myClass = getClassNameFromAttribute(elm);
+        let bgcAttr = elm.getAttribute('bgc');
+        if ( myClass != bgcAttr ){    
+            if ( bgcAttr.includes('dark') ){
+                myClass += 'dark'; 
+            }
+            else if ( myClass.includes('dark') ) {
+                let tmpClass = myClass.split('dark')[0];
+                myClass = tmpClass;
+            }
+            elm.classList.remove(bgcAttr);
+            elm.classList.add(myClass);
+        }
+    });
+
 }
 
 function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreColision=false){
@@ -540,12 +702,13 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         });
         return;
     }
-    setMoveSelection(square.id);
+    setMoveSelection(square.id, THE_PIECE);
     //
     // Pegamos o square de movimento a partir direcao.
     //
     let destSquareId = square.getAttribute(direction);
     let i = 0;
+    
     while ( document.getElementById(destSquareId) != null ){
         if ( i >= range )
             break;
@@ -553,11 +716,9 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         let nextSqElem = document.getElementById(destSquareId);
         let nextSqType = document.getElementById(destSquareId).getAttribute('sqtype');
         let mySquarePiece = getFirstSelectedElement().getAttribute('sqtype');
-        let moved = getFirstSelectedElement().getAttribute('mvd');
+        let moved = hasMoved(getFirstSelectedElement().id);
         let mySquareType = getPieceTypeFromSquareType(mySquarePiece, moved);
         
-        // console.debug(nextSqType);
-        // console.debug(ignoreColision);
         if ( (!ignoreColision && nextSqType != SQUARE_TYPE_BLANK )){
             if ( direction == TOP_DIRECTION
                  && mySquareType != PIECE_TYPE_PAWN)
@@ -571,12 +732,6 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
             }
             break;
         }
-        // console.debug(ignoreColision);
-        // console.debug(nextSqElem);
-        // console.debug(direction);
-        // console.debug(mySquareType);
-        // console.debug(destSquareId);
-        
         if ( 
             !(
                 (direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION)  
@@ -584,21 +739,22 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
              ) 
             )
         {
-            setMoveSelection(nextSqElem.id);
+            setMoveSelection(nextSqElem.id, direction);
         }
         else if ( !(direction == TOP_LEFT_DIRECTION || direction == TOP_RIGHT_DIRECTION) ){
             
-            setMoveSelection(nextSqElem.id);
+            setMoveSelection(nextSqElem.id, direction);
         }
         else{
-            clearMoveSelection(nextSqElem.id)
+            clearMoveSelection(nextSqElem.id, direction)
         }
 
-        highlightSelection(direction, nextSqElem);
         destSquareId = nextSqElem.getAttribute(direction);
         i++;
     }
-
+    
+    highlightSelection();
+    
     return true;
 }
 
@@ -612,12 +768,30 @@ function getClassNameFromMovementDirection(baseMovementDirection){
     }
     return highlightClasses[i-1];
 }
+function getClassNameFromAttribute(square){
+    let mySquare = getElementFromSquareOrSquareId(square);
+    if ( mySquare.hasAttribute('lmv') )
+        return getClassNameFromMovementDirection(MOVEMENT_DIRECTION_LINE);
+    if ( mySquare.hasAttribute('cmv') )
+        return getClassNameFromMovementDirection(MOVEMENT_DIRECTION_COLUMN);
+    if ( mySquare.hasAttribute('dmv') )
+        return getClassNameFromMovementDirection(MOVEMENT_DIRECTION_DIAGONAL);
+    if ( mySquare.hasAttribute('kmv') )
+        return getClassNameFromMovementDirection(MOVEMENT_DIRECTION_L);
+    if ( mySquare.hasAttribute('cpt') )
+        return captureClasses[0];
+    if ( mySquare.hasAttribute('pmv') )
+        return pieceSpecialClasses[0];
+
+    return false;
+}
 
 function validateIsSelected(){
-    return getAllSelectedElements();
+    return (getAllSelectedElements() != false);
 }
 function validateIsBlank(square){
-    return square.getAttribute("sqtype") == SQUARE_TYPE_BLANK;
+    let mySquare = getElementFromSquareOrSquareId(square);
+    return (mySquare.getAttribute("sqtype") == SQUARE_TYPE_BLANK);
 }
 function validateIsNotBlank(square){
     return !validateIsBlank(square);
@@ -626,34 +800,35 @@ function highlightSquares(square){
     validateIsOnRange(square);
 }
 function validateIsOnRange(square){
-    let myPieceType = getFirstSelectedElement().getAttribute('sqtype');
-    let moved = getFirstSelectedElement().getAttribute('mvd');
+    let selectedElem = getFirstSelectedElement();
+    let myPieceType = selectedElem.getAttribute('sqtype');
+    let moved = hasMoved(selectedElem.id);
 
     let myMovType = getMovementTypeFromPieceType(getPieceTypeFromSquareType(myPieceType), moved);
     let myMovRange = getMovementRangeFromPieceType(getPieceTypeFromSquareType(myPieceType), moved);
-    console.debug(myMovType+" "+myMovRange);
+
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_DIAGONAL) ){
         // Possui movimento absoluto? Se sim, nao possui subtipos
         if ( matchMovementDirection(myMovType, SUBTYPE_DIAG_ALL) == 0 )
             myMovType = myMovType | SUBTYPE_DIAG_ALL;
 
         if ( matchMovementDirection(myMovType,SUBTYPE_DIAG_MAIN_BEGIN) )
-            getDirectionFromSquare(getFirstSelectedElement(), TOP_LEFT_DIRECTION, myMovRange);
+            getDirectionFromSquare(selectedElem, TOP_LEFT_DIRECTION, myMovRange, CONSIDER_COLISION);
         if ( matchMovementDirection(myMovType,SUBTYPE_DIAG_MAIN_END) )
-            getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_RIGHT_DIRECTION, myMovRange);
+            getDirectionFromSquare(selectedElem, BOTTOM_RIGHT_DIRECTION, myMovRange, CONSIDER_COLISION);
         if ( matchMovementDirection(myMovType,SUBTYPE_DIAG_OPPOSITE_BEGIN) )
-            getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_LEFT_DIRECTION, myMovRange);
+            getDirectionFromSquare(selectedElem, BOTTOM_LEFT_DIRECTION, myMovRange, CONSIDER_COLISION);
         if ( matchMovementDirection(myMovType,SUBTYPE_DIAG_OPPOSITE_END) )
-            getDirectionFromSquare(getFirstSelectedElement(), TOP_RIGHT_DIRECTION, myMovRange);
+            getDirectionFromSquare(selectedElem, TOP_RIGHT_DIRECTION, myMovRange, CONSIDER_COLISION);
     }
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_COLUMN) ){
         if ( matchMovementDirection(myMovType, MOVEMENT_COLUMN_ALL) == 0 )
             myMovType = myMovType | MOVEMENT_COLUMN_ALL;
 
         if ( matchMovementDirection(myMovType, SUBTYPE_COLUMN_TOP) )
-            getDirectionFromSquare(getFirstSelectedElement(), TOP_DIRECTION, myMovRange);            
+            getDirectionFromSquare(selectedElem, TOP_DIRECTION, myMovRange, CONSIDER_COLISION);            
         if ( matchMovementDirection(myMovType, SUBTYPE_COLUMN_BOTTOM) )
-            getDirectionFromSquare(getFirstSelectedElement(), BOTTOM_DIRECTION, myMovRange);
+            getDirectionFromSquare(selectedElem, BOTTOM_DIRECTION, myMovRange, CONSIDER_COLISION);
         
     }
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_LINE) ){
@@ -661,62 +836,57 @@ function validateIsOnRange(square){
             myMovType = myMovType | MOVEMENT_LINE_ALL;
 
         if ( matchMovementDirection(myMovType, SUBTYPE_LINE_LEFT) )
-            getDirectionFromSquare(getFirstSelectedElement(), LEFT_DIRECTION, myMovRange);            
+            getDirectionFromSquare(selectedElem, LEFT_DIRECTION, myMovRange, CONSIDER_COLISION);            
         if ( matchMovementDirection(myMovType, SUBTYPE_LINE_RIGHT) )
-            getDirectionFromSquare(getFirstSelectedElement(), RIGHT_DIRECTION, myMovRange);
+            getDirectionFromSquare(selectedElem, RIGHT_DIRECTION, myMovRange, CONSIDER_COLISION);
     }
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_L) ){
-        getLSquaresFromSquare(getFirstSelectedElement());
+        getLSquaresFromSquare(selectedElem);
     }
     
-    if ( !square.getAttribute('mvsl') && !square.classList.contains("captureclass") ){
+    if ( !validateIsMoveSquare(square) && !validateIsCaptureSquare(square) ){
         return false;
     }
     
     return true;
 }
 function validateEnemyPieceSquare(square){
-    return (square.getAttribute('sqcolor') != playerColor);
+    return (validateSquareSide(square) == ENEMY_SIDE);
 }
 function validateFriendlyPieceSquare(square){
-    return (square.getAttribute("sqcolor") == playerColor)
+    return (validateSquareSide(square) == FRIENDLY_SIDE);
 }
 function validateSquareSide(square){
-    return validateFriendlyPieceSquare(square) ? FRIENDLY_SIDE : ENEMY_SIDE;
-}
-function getColorSide(color){
-    return (color == playerColor) ? FRIENDLY_SIDE : ENEMY_SIDE;
-}
-function validateSelectedPieceSquare(square){
-    if  ( !validateIsSelected() )
-        return validateIsSelected();
+    let mySquare = getElementFromSquareOrSquareId(square);
+    if ( !isValidSquare(mySquare) ) 
+        return false;
+        
+    if ( validateIsBlank(mySquare) ) 
+        return BLANK_SIDE;
 
-    let myColor = getFirstSelectedElement().getAttribute('sqColor');
-    if ( getColorSide(myColor) == validateSquareSide(square) )
-        return validateSquareSide(square)
-    else if ( validateSquareSide(square) == ENEMY_SIDE )
-        return ENEMY_SIDE ;
-
-    return false;    
+    return (mySquare.getAttribute("sqcolor") == playerColor) ? FRIENDLY_SIDE : ENEMY_SIDE;
 }
 function isLetter(letter) {
     return letter.length === 1 && letter.match(/[a-z]/i);
 }
-function validatePlayerColorSquare(square){
-    return (square.getAttribute("sqcolor") == playerColor);
+function validateIsSameSquare(square){
+    return getFirstSelectedElement().id == square.id;
+}
+function selectSameSquare(square){
+    return (validateIsSelected() && validateIsSameSquare(square));
 }
 function selectSquare(square){
         return (!validateIsSelected()
                && validateIsNotBlank(square)
-               && validatePlayerColorSquare(square));
+               && validateFriendlyPieceSquare(square));
 }
 function drawSquare(squareId, myInner=""){
     let divSquare = document.createElement('div');
     divSquare.id = squareId;
     divSquare.innerHTML = myInner;
     divSquare.setAttribute("square", "1");
-    divSquare.setAttribute("clm", squareId[0]);
-    divSquare.setAttribute("ldnx", squareId[1]);
+    divSquare.setAttribute("clm", squareId[SQUARE_ALPHABETICAL_NDX]);
+    divSquare.setAttribute("ldnx", squareId[SQUARE_NUMERIC_NDX]);
     divSquare.addEventListener('click', squareHandler);
 
     return divSquare;
@@ -765,7 +935,6 @@ function saveCoreAttrOnLocalStorage(square){
     let wrkDiv;
     let piecePrefix = "";
     // pcp="1" initsq="c2" sqtype="PAWNPIECE" sqcolor="WHITEPIECE">PAWN</div>
-    // alert(square.outerHTML);
     if (square.outerHTML.indexOf('BLANK') === -1){
         wrkDiv = "pc"+square.outerHTML.split("pc")[1];
         piecePrefix = 'p';
@@ -773,7 +942,6 @@ function saveCoreAttrOnLocalStorage(square){
     else{
         wrkDiv = "sqtype"+square.outerHTML.split("sqtype")[1];
     }
-    // alert(wrkDiv);
     objCoreAttr = new Object({
         divStringToReplace: wrkDiv
     });
@@ -788,37 +956,46 @@ function moveToDestination(originsq, destsq){
     var objSquare = JSON.parse(window.localStorage.getItem(destsq.id));
     var objPiece  = JSON.parse(window.localStorage.getItem("p"+originsq.id));
     let pieceStr = "";
+    let squareStr = "";
+    let setAsBlank = false;
     let newDestSquare = document.getElementById(destsq.id);
     let newOrigSquare = document.getElementById(originsq.id);
     lowlightElement(newDestSquare);
     lowlightElement(newOrigSquare);
-    if    (newDestSquare.outerHTML.indexOf('BLANK') === -1){
-        pieceStr = newDestSquare.outerHTML.split("pc")[0];
-        newDestSquare.outerHTML = pieceStr + objPiece.divStringToReplace;
-        newDestSquare = document.getElementById(destsq.id);
-        newDestSquare.addEventListener('click', squareHandler); 
+    if   (newDestSquare.outerHTML.indexOf('BLANK') === -1 ){
+        squareStr = newDestSquare.outerHTML.split("pc")[0];
+        setAsBlank = true;
     }
-    else {
-        pieceStr = newDestSquare.outerHTML.split("sqtype")[0];
-        newDestSquare.outerHTML = pieceStr + objPiece.divStringToReplace;
-        newDestSquare = document.getElementById(destsq.id);
-        newDestSquare.addEventListener('click', squareHandler);
+    else{
+        squareStr = newDestSquare.outerHTML.split("sqtype")[0];
+
     }
     if (newOrigSquare.outerHTML.indexOf('BLANK') === -1){
         pieceStr = newOrigSquare.outerHTML.split("pc")[0];
-        newOrigSquare.removeEventListener('click', squareHandler);
-        newOrigSquare.outerHTML = pieceStr + objSquare.divStringToReplace;
     }
     else  {
         pieceStr = newOrigSquare.outerHTML.split("sqtype")[0];
-        newOrigSquare.removeEventListener('click', squareHandler);
-        newOrigSquare.outerHTML = pieceStr + objSquare.divStringToReplace;
     }
+
+    newOrigSquare.removeEventListener('click', squareHandler);
+    newDestSquare.removeEventListener('click', squareHandler);
+    newOrigSquare.outerHTML = pieceStr +  (setAsBlank ? blankFrameStr : objSquare.divStringToReplace);
+    newDestSquare.outerHTML = squareStr + objPiece.divStringToReplace;
+    newOrigSquare = document.getElementById(originsq.id);
+    newOrigSquare.addEventListener('click', squareHandler);
+    newDestSquare = document.getElementById(destsq.id);
+    newDestSquare.addEventListener('click', squareHandler);
     saveCoreAttrOnLocalStorage(newDestSquare);
     saveCoreAttrOnLocalStorage(newOrigSquare);
 }
 function validateIsCaptureSquare(square){
-    if ( !square.classList.contains("captureclass")){
+    if ( !square.hasAttribute('cpt') ){
+        return false;
+    }
+    return true;
+}
+function validateIsMoveSquare(square){
+    if ( !square.hasAttribute('mvsl') ){
         return false;
     }
     return true;
@@ -827,18 +1004,18 @@ function hasAnySquareDrew(){
     return (document.querySelectorAll('[square="1"]').length > 0);
 }
 function moveSquare(square){
+    let mySquare = getElementFromSquareOrSquareId(square);
     return (validateIsSelected() 
-           && validateIsBlank(square)
-           && validateIsOnRange(square));
+           && validateIsBlank(mySquare)
+           && validateIsOnRange(mySquare));
 }
 function changeSelectedSquare(square){
-    return validateIsSelected() &&
-     (validateSelectedPieceSquare(square) == FRIENDLY_SIDE);
+    return (validateIsSelected() && validateFriendlyPieceSquare(square) && !validateIsSameSquare(square));
 }
 function captureSquare(square){
     return (
             validateIsSelected() 
-            && (validateSelectedPieceSquare(square) == ENEMY_SIDE)
+            && validateEnemyPieceSquare(square)
             && validateIsOnRange(square)
             && validateIsCaptureSquare(square)
     );
@@ -848,27 +1025,20 @@ function setElementAsSelected(elem){
 }
 function clearElementSelection(elem){
     clearSelection(elem.id);
-    clearMoveSelection(elem.id)
+    clearMoveSelection(elem.id);
+    clearCaptureSelection(elem.id);
 }
-// function setBGColorAsDOMAttributeAndRemove(elemId){
-//     let myClassName = bgBoardColors[DARK_BGCOLOR];
-//     let myElem = document.getElementById(elemId);
-//     if ( !myElem.classList.contains(myClassName) )
-//         myClassName = bgBoardColors[LIGHT_BGCOLOR];
-
-//     if ( myElem.classList.contains(myClassName) ) {
-//         myElem.setAttribute("bgc", myClassName);
-//         myElem.classList.remove(myClassName);
-//     }
-//     return myClassName;
-// }
 function clearAllElementSelection(){
     lowlightSelection();
+    lowlightCapture();
     document.querySelectorAll('[sltd]').forEach(element => {
         clearSelection(element.id);
     });
     document.querySelectorAll('[mvsl]').forEach(element => {
         clearMoveSelection(element.id);
+    });
+    document.querySelectorAll('[cpt]').forEach(element => {
+        clearCaptureSelection(element.id);
     });
 
 }
@@ -892,35 +1062,34 @@ function matchMovementDirection(movType, direction){
 }
 function squareHandler(event){
     event.preventDefault();
+    let captureSq = false;
 
     // Square aliado e
     // SEM selecao previa ou COM selecao previa 
-    if ( selectSquare(event.target) /*|| changeSelectedSquare(event.target)*/ ){
-        // if ( validateIsSelected() ){
-        // let oldelem = getFirstSelectedElement();
-        // clearElementSelection(oldelem);
-        // }
+    if ( selectSquare(event.target) || changeSelectedSquare(event.target) ){
+        if ( validateIsSelected() ){
+            clearAllElementSelection();
+        }
         setElementAsSelected(event.target);
         highlightSquares(event.target);
     }
     // Selecao previa + square sem pecas ou
     // Selecao previa + square com pecas inimigas
-    else if ( moveSquare(event.target) || captureSquare(event.target) ){
+    else if ( moveSquare(event.target) || (captureSq = captureSquare(event.target)) != false ){
         let oldelem = getFirstSelectedElement();
-        // event.target.innerHTML = oldelem.innerHTML;
-        // oldelem.innerHTML = "";
-        if ( !validateIsBlank(event.target) ){
-    
-            
-        //     capturedPieces +=  
-        //     event.target.getAttribute('sqcolor').split("PIECE")[0][0] 
-        //     + event.target.getAttribute('sqtype').split("PIECE")[0][0]
-        //     + event.target.id[0] + " ";
+        if ( captureSq ){
+            capturedPieces +=  
+            event.target.getAttribute('sqcolor').split("PIECE")[0][0] 
+            + event.target.getAttribute('sqtype').split("PIECE")[0][0]
+            + event.target.id[0] + " ";
         }
+
         moveToDestination(oldelem, event.target);
-        
         clearAllElementSelection();
-        event.target.setAttribute("mvd", "1");
+        setMovedElem(event.target.id);
+    }
+    else if ( selectSameSquare(event.target) ){
+        clearAllElementSelection();
     }
     //drawSquareDetails();
 
@@ -1441,7 +1610,7 @@ function setDirectionFromSelect(e){
     if ( drawLine == true ){
         getDirectionFromSquare(mySquare, LINE_DIRECTION, LINE_OF_SIGHT, IGNORE_COLISION);
     }
-    clearSelection(mySquare.id);
+    // clearSelection(mySquare.id);
 }
 function drawDirectionSelect(){
     // Select do square a partir do qual serao highlitadas as direcoes
@@ -1471,7 +1640,6 @@ function drawDirectionSelect(){
        columnArray.map( function (columnAlpha, clmndx){
             option = document.createElement("option");
             option.value = ""+columnAlpha+rowNdx;
-            // alert(option.value);
             if ( directionSelected == option.value )
                 option.selected = 1;
             
@@ -1759,7 +1927,8 @@ function fixSquareTypeProprierties(){
     });
     selector = "[class*='square']:not([sqcolor='0'])";
     document.querySelectorAll(selector).forEach(element => {
-        element.setAttribute("sqtype", pieceTypeByColumn[columnArray.indexOf(element.getAttribute('initsq')[0])]);
+        let ndxOfInitSquare = columnArray.indexOf(element.getAttribute('initsq')[SQUARE_ALPHABETICAL_NDX]);
+        element.setAttribute("sqtype", pieceTypeByColumn[ndxOfInitSquare]);
         obj = {
             id : element.initsq,
             objname : ""
@@ -1771,11 +1940,10 @@ function fixSquareTypeProprierties(){
     });
 }
 function hasMoved(squareId){
-    return (document.getElementById(squareId).getAttribute('mvd') == 1);
+    return document.getElementById(squareId).hasAttribute('mvd');
 }
 $(document).ready(function (){
-
-    playerColor = avaliableColors[0];
+    playerColor = avaliableColors[WHITE_COLOR];
     myInterval = window.setInterval(setSupervisorPatrol, intervalTime);
 });
 
