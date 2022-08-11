@@ -403,7 +403,10 @@ function getElementFromSquareOrSquareId(elementOrId, getActualStatus=null){
     if ( elementOrId == null )
         return null;
 
-    if ( typeof (elementOrId) === 'object' && elementOrId.id !== undefined && elementOrId.id != null)
+    if ( typeof (elementOrId) === 'object' 
+         && elementOrId.id !== undefined 
+         && elementOrId.id != null
+         && elementOrId.id != "" )
         return (getActualStatus == null) ? elementOrId : document.getElementById(elementOrId.id);
 
     return document.getElementById(elementOrId);
@@ -459,8 +462,9 @@ function validateCastleFromSquare(elemSquare, possibleCastles=false){
     let rookOne = document.getElementById(columnArray[0] + square.id[SQUARE_NUMERIC_NDX]);
     let rookTwo = document.getElementById(columnArray[(columnArray.length-1)] + square.id[SQUARE_NUMERIC_NDX]);
 
-    if ( hasMoved(square.id) )
+    if ( hasMoved(square.id) || square.getAttribute('initsq') != square.id )
         return false;
+        
 
     if ( sqType != SQUARE_TYPE_KING_PIECE && sqType != SQUARE_TYPE_ROOK_PIECE )
         return false;
@@ -740,6 +744,8 @@ function clearSelection(elemSquare){
 }
 function setMoveSelection(elemSquare, direction, specialMoveNmbr=DEFAULT_MOVEMENT_SELECTION){
     let mySquare = getElementFromSquareOrSquareId(elemSquare);
+    if ( !isValidSquare(mySquare) )
+        return;
     if ( mySquare.hasAttribute('mvsl') 
          && Number(mySquare.getAttribute('mvsl')) > DEFAULT_MOVEMENT_SELECTION ){
         specialMoveNmbr = mySquare.getAttribute('mvsl');
@@ -1478,7 +1484,8 @@ function hasAnySquareDrew(){
 function moveSquare(square){
     let mySquare = getElementFromSquareOrSquareId(square);
     return (
-             validateIsSelected() 
+             isValidSquare(mySquare)
+             && validateIsSelected() 
              && (validateIsBlank(mySquare) || validateCastleDestinationSquare(mySquare))
              && !validateEnPassantDestSquare(mySquare)
              && validateIsOnRange(mySquare)
