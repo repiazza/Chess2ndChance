@@ -45,6 +45,7 @@ const bgBoardColors = [
 ];
 
 const columnArray = ['a','b','c','d','e','f','g','h'];
+const revColumn   = ['h','g','f','e','d','c','b','a']
 
 const SQUARE_TYPE_BLACK_PIECE = 'BLACKPIECE';
 const SQUARE_TYPE_WHITE_PIECE = 'WHITEPIECE';
@@ -57,8 +58,10 @@ const WHITEPIECE_INIT_ROWS  = ["1", "2"];
 const BLACKPIECE_INIT_ROWS  = ["7", "8"];
 const BLANKSQUARE_INIT_ROWS = ["3", "4", "5", "6"];
 
-const GAME_CONTEXT_INITIAL = 0;
-const GAME_CONTEXT_PLAYING = 1;
+const GAME_CONTEXT_INITIAL     = 0;
+const GAME_CONTEXT_PLAYING     = 1;
+const GAME_CONTEXT_SKIP_PIECES = 2;
+const GAME_CONTEXT_SKIP_SIDE   = 3;
 
 const VISIBILITY_VISIBLE = "visible";
 const VISIBILITY_HIDDEN  = "hidden";
@@ -91,7 +94,6 @@ const SHORT_CASTLE_NDX = 1;
 
 const CASTLE_INIT_SQUARES = [ LONG_CASTLE_INIT_SQUARES, SHORT_CASTLE_INIT_SQUARES ];
 
-
 //
 //
 //////////////////////////////////////////////////////////
@@ -101,26 +103,40 @@ const CASTLE_INIT_SQUARES = [ LONG_CASTLE_INIT_SQUARES, SHORT_CASTLE_INIT_SQUARE
 //    Movement Block
 //
 //
+const MOVEMENT_CHAIN_ORIGIN      = 0;
+const MOVEMENT_CHAIN_DESTINATION = 1;
+
+const DEFAULT_MOVEMENT_SELECTION    = 1;
+const CASTLE_MOVEMENT_SELECTION     = 2;
+const EN_PASSANT_MOVEMENT_SELECTION = 3;
+const PROMOTION_MOVEMENT_SELECTION  = 4;
+
+const SHORT_CASTLE_TYPE = 0x01;
+const LONG_CASTLE_TYPE  = 0x02;  
+const BOTH_CASTLE_TYPE  = SHORT_CASTLE_TYPE | LONG_CASTLE_TYPE ;
+
+const GET_BOOLEAN_POSSIBILITY = false;
+const GET_POSSIBLE_TYPES = true;
+
 const CONSIDER_COLISION = false;
 const IGNORE_COLISION = true;
-    //                0  1  2  3
-    //                l  r  t  b
-const TOP_LEFT     = [0 , 2];
-const TOP_RIGHT    = [1 , 2];
-const BOTTOM_LEFT  = [0 , 3];
-const BOTTOM_RIGHT = [1 , 3];
-const LEFT         = 0 ;
-const RIGHT        = 1 ;
-const TOP          = 2 ;
-const BOTTOM       = 3 ;
+
+
+let LEFT         = 0 ;
+let RIGHT        = 1 ;
+let TOP          = 2 ;
+let BOTTOM       = 3 ;
+
+//                0  1  2  3
+//                l  r  t  b
+let TOP_LEFT     = [LEFT , TOP];
+let TOP_RIGHT    = [RIGHT , TOP];
+let BOTTOM_LEFT  = [LEFT , BOTTOM];
+let BOTTOM_RIGHT = [RIGHT , BOTTOM];
 
 const LONG_CASTLE  = [ [RIGHT], [RIGHT, RIGHT], [RIGHT, RIGHT, RIGHT] ];
-// const LONG_CASTLE  = [  [RIGHT, RIGHT, RIGHT] ];
-                        
 const SHORT_CASTLE = [ [LEFT], [LEFT, LEFT] ] ;
-// const SHORT_CASTLE = [ [LEFT, LEFT] ] ;
 const ALL_CASTLE   = [ LONG_CASTLE , SHORT_CASTLE ];
-                       
 
 const DIRECTION_VERTICAL   = [TOP, BOTTOM];
 const DIRECTION_HORIZONTAL = [LEFT, RIGHT];
@@ -223,7 +239,7 @@ const CROSS_DIRECTION             = LINE_DIRECTION.concat(COLUMN_DIRECTION);
 const STAR_DIRECTION              = CROSS_DIRECTION.concat(MAIN_DIAGONAL_DIRECTION).concat(OPPOSITE_DIAGONAL_DIRECTION);
 
 let LSquares = [];
-let castleValid = false;
+
 //
 //
 //////////////////////////////////////////////////////////
@@ -321,7 +337,7 @@ const avaliableColors = ['WHITEPIECE','BLACKPIECE'];
 
 let capturedPieces = "";
 
-let playerColor = 'BLACKPIECE';
+// let playerColor = 'WHITEPIECE';
 
 //
 //
@@ -356,12 +372,28 @@ let supervisorMode = false;
 //
 //  Functions and procedures
 //
-function getElementFromSquareOrSquareId(elementOrId){
+function assingDirectionsByPlayerColor(){
+    LEFT         = 0 ;
+    RIGHT        = 1 ;
+    TOP          = 2 ;
+    BOTTOM       = 3 ;
+    if ( playerColor == avaliableColors[BLACK_COLOR] ){
+        RIGHT        = 0 ;
+        LEFT         = 1 ;
+        BOTTOM       = 2 ;
+        TOP          = 3 ;
+    }
+    TOP_LEFT     = [LEFT , TOP];
+    TOP_RIGHT    = [RIGHT , TOP];
+    BOTTOM_LEFT  = [LEFT , BOTTOM];
+    BOTTOM_RIGHT = [RIGHT , BOTTOM];
+}
+function getElementFromSquareOrSquareId(elementOrId, getActualStatus=null){
     if ( elementOrId == null )
         return null;
 
     if ( typeof (elementOrId) === 'object' && elementOrId.id !== undefined && elementOrId.id != null)
-        return elementOrId;
+        return (getActualStatus == null) ? elementOrId : document.getElementById(elementOrId.id);
 
     return document.getElementById(elementOrId);
 }
@@ -390,6 +422,20 @@ function validateIsMoveSquare(square){
     }
     return true;
 }
+function validateIsCastleSquare(square){
+    if ( !validateIsMoveSquare(square) ){
+        return false;
+    }
+    if ( validateIsSelected() ){
+        if ( Number(square.getAttribute('mvsl')) != CASTLE_MOVEMENT_SELECTION )
+            return false;
+    }
+
+    return true;
+}
+function matchCastleType(castleType, squareCastleType){
+    return ( castleType & squareCastleType )
+}
 // O rei e a torre envolvida não podem ter se movimentado nenhuma vez desde o início do jogo;
 // As casas entre o rei e a torre devem estar desocupadas;
 // O rei não pode estar em xeque, e também não pode ficar em xeque depois do roque;
@@ -398,11 +444,15 @@ function validateIsMoveSquare(square){
 function validateCastleFromSquare(elemSquare, possibleCastles=false){
     let square = getElementFromSquareOrSquareId(elemSquare);
     let kpos = square.getAttribute('kpos');
+    let sqType = getSquareType(square)
     let rookOne = document.getElementById(columnArray[0] + square.id[SQUARE_NUMERIC_NDX]);
     let rookTwo = document.getElementById(columnArray[(columnArray.length-1)] + square.id[SQUARE_NUMERIC_NDX]);
 
     if ( hasMoved(square.id) )
-        return false
+        return false;
+
+    if ( sqType != SQUARE_TYPE_KING_PIECE && sqType != SQUARE_TYPE_ROOK_PIECE )
+        return false;
 
     if ( kpos == null ){
         if ( hasMoved(rookOne) && hasMoved(rookTwo) )
@@ -420,8 +470,13 @@ function validateCastleFromSquare(elemSquare, possibleCastles=false){
             return false;
         
         if ( possibleCastles ){
-            if ( ! (i < 3) )
-                possibleCastles 
+            let retCastleTypes = 0;
+            if ( i >= 3 )
+                retCastleTypes |= LONG_CASTLE_TYPE
+            if ( j >= 2 )
+                retCastleTypes |= SHORT_CASTLE_TYPE
+            
+            return retCastleTypes;
         }
         return true;
     }
@@ -436,7 +491,28 @@ function validateCastleFromSquare(elemSquare, possibleCastles=false){
             isCleanPath = false;
     });
 
+    if ( possibleCastles ){
+        if ( isCleanPath )
+            return (cstlType == 'lcstl') ? LONG_CASTLE_TYPE : SHORT_CASTLE_TYPE;
+    }
     return isCleanPath;
+}
+function validatePassableEnemies(square, possibleDirection=false){
+    let mySquare = getElementFromSquareOrSquareId(square, true);
+
+    let lSquare = document.getElementById(mySquare.getAttribute(LEFT_DIRECTION));
+    let rSquare = document.getElementById(mySquare.getAttribute(RIGHT_DIRECTION));
+
+    if ( validateEnemyPieceSquare(lSquare) && lSquare.hasAttribute('ep') )
+        return possibleDirection ? TOP_LEFT : true;
+    else if ( validateEnemyPieceSquare(rSquare) && rSquare.hasAttribute('ep') )
+        return possibleDirection ? TOP_RIGHT :true;
+
+    return false;
+}
+function setEnPassantDestination(square){
+    let mySquare = getElementFromSquareOrSquareId(square);
+    mySquare.setAttribute("epdst","1");
 }
 function validateIsOnRange(square){
     let selectedElem = getFirstSelectedElement();
@@ -449,8 +525,58 @@ function validateIsOnRange(square){
     // Possui movimento especial? 
     if ( matchMovementDirection(myMovType, SPECIAL_MOVEMENT_ALL) ){
         if ( matchMovementDirection(myMovType, SPECIAL_MOVEMENT_CASTLE)
-             && validateCastleFromSquare(square) ){
-            getCastleSquaresFromSquare(square)
+             && validateCastleFromSquare(square, GET_BOOLEAN_POSSIBILITY) ){
+            let castleTypes = validateCastleFromSquare(square, GET_POSSIBLE_TYPES);
+            if ( matchCastleType(SHORT_CASTLE_TYPE, castleTypes) ){
+                let sCastleSquares;
+                if ( getSquareType(square) == SQUARE_TYPE_KING_PIECE ){
+                   sCastleSquares = document.getElementById((columnArray[(columnArray.length-1)] + square.id[SQUARE_NUMERIC_NDX])).getAttribute('scstl');
+                   // Minha Torre
+                   setMoveSelection(document.getElementById((columnArray[(columnArray.length-1)] + square.id[SQUARE_NUMERIC_NDX])), LEFT_DIRECTION, CASTLE_MOVEMENT_SELECTION);
+                }
+                else{
+                   sCastleSquares = square.getAttribute('scstl');
+                   // Meu Rei
+                   setMoveSelection(document.getElementById(square.getAttribute('kpos')), LEFT_DIRECTION, CASTLE_MOVEMENT_SELECTION);
+                }
+                sCastleSquares.split(',').forEach(sq => {
+                    // Intervalo Rei Torre
+                    setMoveSelection(sq, LEFT_DIRECTION, CASTLE_MOVEMENT_SELECTION);
+                });
+                // Eu mesmo
+                setMoveSelection(square, LEFT_DIRECTION, CASTLE_MOVEMENT_SELECTION);
+            }
+            if ( matchCastleType(LONG_CASTLE_TYPE, castleTypes) ){
+                let lCastleSquares;
+                if ( getSquareType(square) == SQUARE_TYPE_KING_PIECE ){
+                   lCastleSquares = document.getElementById((columnArray[0] + square.id[SQUARE_NUMERIC_NDX])).getAttribute('lcstl');
+                   // Minha Torre
+                   setMoveSelection(document.getElementById((columnArray[0] + square.id[SQUARE_NUMERIC_NDX])), RIGHT_DIRECTION, CASTLE_MOVEMENT_SELECTION);
+                }
+                else{
+                   lCastleSquares = square.getAttribute('lcstl');
+                   // Meu Rei
+                   setMoveSelection(document.getElementById(square.getAttribute('kpos')), RIGHT_DIRECTION, CASTLE_MOVEMENT_SELECTION);
+                }
+                lCastleSquares.split(',').forEach(sq => {
+                    // Intervalo Rei Torre
+                    setMoveSelection(sq, RIGHT_DIRECTION, CASTLE_MOVEMENT_SELECTION);
+                });
+                // Eu mesmo
+                setMoveSelection(square, RIGHT_DIRECTION, CASTLE_MOVEMENT_SELECTION);
+            }
+            // highlightSelection();
+        }
+        if ( matchMovementDirection(myMovType, SPECIAL_MOVEMENT_EN_PASSANT)
+             && validatePassableEnemies(selectedElem, GET_BOOLEAN_POSSIBILITY) ){
+            if ( validateEnPassantDestSquare(square) )
+                return true;
+            let enPassantDirection = validatePassableEnemies(selectedElem, GET_POSSIBLE_TYPES);
+            let captSq = getSquare(selectedElem, enPassantDirection);
+            setCaptureSquare(captSq);
+            setEnPassantDestination(captSq);
+            highlightCapture(captSq);
+            
         }
     }
     if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_DIAGONAL) ){
@@ -601,10 +727,14 @@ function clearSelection(elemSquare){
     myInner = myInner.split('</b>')[0];
     mySquare.innerHTML = myInner;
 }
-function setMoveSelection(elemSquare, direction){
+function setMoveSelection(elemSquare, direction, specialMoveNmbr=DEFAULT_MOVEMENT_SELECTION){
     let mySquare = getElementFromSquareOrSquareId(elemSquare);
-    mySquare.setAttribute("mvsl", "1");
-    setDirectionSelection(elemSquare, direction)
+    if ( mySquare.hasAttribute('mvsl') 
+         && Number(mySquare.getAttribute('mvsl')) > DEFAULT_MOVEMENT_SELECTION ){
+        specialMoveNmbr = mySquare.getAttribute('mvsl');
+    }
+    mySquare.setAttribute("mvsl", specialMoveNmbr);
+    setDirectionSelection(mySquare, direction)
 }
 function clearDirectionSelection(elemSquare){
     let mySquare = getElementFromSquareOrSquareId(elemSquare);
@@ -655,7 +785,7 @@ function getSquareAfterMultipleMovements(originSq, movementArray){
     return retSq;
 }
 function getCastleSquaresFromSquare(square, ignoreColision=false){
-
+    return validateCastleFromSquare(square, GET_POSSIBLE_TYPES);
 }
 function getLSquaresFromSquare(square, ignoreColision=false){
     LSquares = [];
@@ -689,7 +819,6 @@ function setSpecialMovementAttributes(){
             document.getElementById(square[1]).setAttribute('lcstl', cstlSquare[i-1]);
             document.getElementById(square[1]).setAttribute('cstldst', LONG_CASTLE_ROOK_SQUARES[1]);
             document.getElementById(square[1]).setAttribute('kpos', 'e8');
-
         }
         if ( ndx == SHORT_CASTLE_NDX ){
             cstlSquare[i++] = getSquareAfterMultipleMovements(square[0], SHORT_CASTLE);
@@ -732,7 +861,7 @@ function getPieceTypeFromSquareType(type){
             
     return PIECE_TYPE_NONE;
 }
-function getMovementRangeFromPieceType(value, moved=0){
+function getMovementRangeFromPieceType(value, moved=false){
     switch (value){
         case PIECE_TYPE_BISHOP:
             return BISHOP_MOVEMENT_RANGE;
@@ -750,7 +879,7 @@ function getMovementRangeFromPieceType(value, moved=0){
     return MOVEMENT_TYPE_NONE;
 }
 
-function getMovementTypeFromPieceType(value, moved=0){
+function getMovementTypeFromPieceType(value, moved=false){
     switch (value){
         case PIECE_TYPE_BISHOP:
             return BISHOP_INITIAL_MOVEMENT;
@@ -779,9 +908,6 @@ function createSquare(square){
     let rSquare = 0;
     let tSquare = 0;
     let bSquare = 0;
-    let lcstlSquare = 0;
-    let scstlSquare = 0;
-    let objSpecialMovementSquares = new Object({});
 
     if ( validateSquareType(square, SQUARE_TYPE_BLANK) )
         sqType = SQUARE_TYPE_BLANK;
@@ -810,6 +936,8 @@ function createSquare(square){
     tSquare  = getSquare(square, TOP);
     bSquare  = getSquare(square, BOTTOM);
     
+    let kingDestinationCastleSquare = setKingDestinationSquare(square);
+
     let pieceObject = {
         squareElem:          square,
         squareId:            square.id,
@@ -823,7 +951,8 @@ function createSquare(square){
         bottomSquare:        bSquare,
         initSquareId:        square.id,
         squareType:          sqType,
-        squareColor:         sqColor
+        squareColor:         sqColor,
+        kingDstCstSq:        kingDestinationCastleSquare
     };
 
     return pieceObject;
@@ -878,7 +1007,7 @@ function getSquare(elemSquare, relativePosition){
     //    
     if ( DIRECTION_HORIZONTAL.includes(relativePosition) ) {
         let squareGot = "" + allPos[relativePosition] + indexNotation;
-        if ( isValidSquare(squareGot) ){   
+        if ( isValidSquare(squareGot) ){
             return squareGot;
         }
     }
@@ -910,32 +1039,39 @@ function lowlightElement(element){
     element.classList.add(bgcAttr);
 }
 function highlightCapture(elm){
-    let bgcAttr = elm.getAttribute('bgc');  
+    mySquare = getElementFromSquareOrSquareId(elm);
+    let bgcAttr = mySquare.getAttribute('bgc');  
     highlightClasses.forEach(myClass => {
-        elm.classList.remove(myClass);
+        mySquare.classList.remove(myClass);
    });
-    elm.classList.remove(bgcAttr);
+    mySquare.classList.remove(bgcAttr);
     if ( bgcAttr.includes('dark') ){
-        elm.classList.add(captureClasses[1]);
+        mySquare.classList.add(captureClasses[1]);
     }
     else{
-        elm.classList.add(captureClasses[0]);
+        mySquare.classList.add(captureClasses[0]);
     }
+}
+function setKingDestinationSquare(square){
+    if ( LONG_CASTLE_KING_SQUARES.includes(square.id) )
+        return "klcdst";
+    else if ( SHORT_CASTLE_KING_SQUARES.includes(square.id) ){
+        return "kscdst";
+    }
+    return false;
 }
 function setDirectionSelection(square, direction){
     let mySquare = getElementFromSquareOrSquareId(square);
     if ( LINE_DIRECTION.includes(direction) )
-        mySquare.setAttribute('lmv', '1');
+        mySquare.setAttribute('lmv', "dr"+direction);
     else if ( COLUMN_DIRECTION.includes(direction) )  
-        mySquare.setAttribute('cmv', '1');
-    else if ( MAIN_DIAGONAL_DIRECTION.includes(direction) )
-        mySquare.setAttribute('dmv', '1');
-    else if ( OPPOSITE_DIAGONAL_DIRECTION.includes(direction) )
-        mySquare.setAttribute('dmv', '1');
+        mySquare.setAttribute('cmv', "dr"+direction);
+    else if ( MAIN_DIAGONAL_DIRECTION.includes(direction) || OPPOSITE_DIAGONAL_DIRECTION.includes(direction) )
+        mySquare.setAttribute('dmv', "dr"+direction);
     else if ( direction == MOVEMENT_DIRECTION_L )
-        mySquare.setAttribute('kmv', '1');
+        mySquare.setAttribute('kmv', "dr"+direction);
     else if ( direction == THE_PIECE )
-        mySquare.setAttribute('pmv', '1');
+        mySquare.setAttribute('pmv', "dr"+direction);
 }
 
 function highlightSelection(){
@@ -981,7 +1117,6 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         let moved = hasMoved(getFirstSelectedElement().id);
         let mySquareType = getPieceTypeFromSquareType(mySquarePiece, moved);
         
-        if ( EMBBED mySquarePiece)
         if ( (!ignoreColision && nextSqType != SQUARE_TYPE_BLANK )){
             if ( direction == TOP_DIRECTION
                  && mySquareType != PIECE_TYPE_PAWN)
@@ -1071,7 +1206,7 @@ function drawSquare(squareId, myInner=""){
     divSquare.innerHTML = myInner;
     divSquare.setAttribute("square", "1");
     divSquare.setAttribute("clm", squareId[SQUARE_ALPHABETICAL_NDX]);
-    divSquare.setAttribute("ldnx", squareId[SQUARE_NUMERIC_NDX]);
+    divSquare.setAttribute("lndx", squareId[SQUARE_NUMERIC_NDX]);
     divSquare.addEventListener('click', squareHandler);
 
     return divSquare;
@@ -1135,20 +1270,64 @@ function saveCoreAttrOnLocalStorage(square){
     window.localStorage.setItem(sqName, JSON.stringify({ ...objCoreAttr}));
 }
 function removeNonRelevantAttributesFromSquare(square){
-    clearMoveSelection(square.id);
+    clearMoveSelection(square.id);  
 }
-function moveToDestination(originsq, destsq){
+//
+// Movimento simples ou Composto?
+//
+function setupMovement(orgsq, destsq){
+    let movementChain = [];
+    if ( validateCastleDestinationSquare(destsq) ){
+        // Roque
+        // Irao ser gerados dois movimentos
+        let rookDestElem;
+        let rookKingElem;
+        let kingDir = LEFT;
+        let rookElem;
+        let relativeDirection = "drrsq";
+        if ( orgsq.hasAttribute('cstldst') ){
+            // Partindo de uma torre
+            rookElem = orgsq;
+            relativeDirection = "drlsq";
+        }
+        else if ( destsq.hasAttribute('cstldst') ) {
+            // Partindo de um rei para uma torre
+            rookElem = destsq;
+        }
+        else if ( destsq.hasAttribute('klcdst') ) {
+            // Partindo de um rei para uma destino roque grande
+            rookElem = document.getElementById((columnArray[0] + orgsq.id[SQUARE_NUMERIC_NDX]));
+        }
+        else if ( destsq.hasAttribute('kscdst') ) {
+            // Partindo de um rei para uma destino roque grande
+            rookElem = document.getElementById((columnArray[(columnArray.length-1)] + orgsq.id[SQUARE_NUMERIC_NDX]));
+        }
+        rookDestElem = document.getElementById(rookElem.getAttribute('cstldst'));
+        rookKingElem = document.getElementById(rookElem.getAttribute('kpos'));
+        
+        if ( rookDestElem.getAttribute('lmv') == relativeDirection )
+            kingDir = RIGHT;
+        
+        kingDestinationElem = document.getElementById(getSquare(rookDestElem, kingDir));
+        movementChain.push([rookElem, rookDestElem]);
+        movementChain.push([rookKingElem, kingDestinationElem]);
+    }
+    else{
+        movementChain.push([orgsq, destsq])
+    }
+    return movementChain;
+}
+function doMoveToDestination(orgsq, destsq){
     var objSquare = JSON.parse(window.localStorage.getItem(destsq.id));
-    var objPiece  = JSON.parse(window.localStorage.getItem("p"+originsq.id));
+    var objPiece  = JSON.parse(window.localStorage.getItem("p"+orgsq.id));
     let pieceStr = "";
     let squareStr = "";
     let setAsBlank = false;
     let newDestSquare = document.getElementById(destsq.id);
-    let newOrigSquare = document.getElementById(originsq.id);
+    let newOrigSquare = document.getElementById(orgsq.id);
     lowlightElement(newDestSquare);
     lowlightElement(newOrigSquare);
-    if   (newDestSquare.outerHTML.indexOf('BLANK') === -1 ){
-        // Captura
+    if  ( newDestSquare.outerHTML.indexOf('BLANK') === -1 ){
         squareStr = newDestSquare.outerHTML.split("pc")[0];
         setAsBlank = true;
     }
@@ -1162,26 +1341,75 @@ function moveToDestination(originsq, destsq){
     else  {
         pieceStr = newOrigSquare.outerHTML.split("sqtype")[0];
     }
-
     newOrigSquare.removeEventListener('click', squareHandler);
     newDestSquare.removeEventListener('click', squareHandler);
     newOrigSquare.outerHTML = pieceStr +  (setAsBlank ? blankFrameStr : objSquare.divStringToReplace);
     newDestSquare.outerHTML = squareStr + objPiece.divStringToReplace;
-    newOrigSquare = document.getElementById(originsq.id);
+    newOrigSquare = document.getElementById(orgsq.id);
     newOrigSquare.addEventListener('click', squareHandler);
     newDestSquare = document.getElementById(destsq.id);
     newDestSquare.addEventListener('click', squareHandler);
+    setMovedElem(newDestSquare);
     saveCoreAttrOnLocalStorage(newDestSquare);
     saveCoreAttrOnLocalStorage(newOrigSquare);
+}
+function validateCastleDestinationSquare(mySquare){
+    // alert((validateCastleFriendDestinationSquare(mySquare) 
+    // || validateCastleBlankDestinationSquare(mySquare) ))
+    return ( validateCastleFriendDestinationSquare(mySquare) 
+             || validateCastleBlankDestinationSquare(mySquare) )
+}
+function validateCastleFriendDestinationSquare(square){
+    let originSelection = getFirstSelectedElement();
+    // Torre clicando no Rei
+    if ( originSelection.hasAttribute('kpos') 
+         && originSelection.getAttribute('kpos') == square.id )
+        return true;
+    // Rei Clicando na torre
+    if ( square.hasAttribute('kpos')
+         && square.getAttribute('kpos') == originSelection.id )
+         return true;
+    
+    return false;
+}
+function validateEnPassantDestSquare(square){
+    let elemSquare = getElementFromSquareOrSquareId(square, true);
+    
+    if ( elemSquare == null )
+        return false;
+
+    return elemSquare.hasAttribute("epdst");
+}
+function validateCastleBlankDestinationSquare(square){
+    let originSelection = getFirstSelectedElement();
+
+    // Torre -> blankSq
+    if ( originSelection.hasAttribute('cstldst') 
+         && originSelection.getAttribute('cstldst') == square.id )
+        return true;
+
+    // Rei -> blankSq
+    if ( 
+         getSquareType(originSelection) == SQUARE_TYPE_KING_PIECE
+         && ( 
+              square.hasAttribute('kscdst')
+              || square.hasAttribute('klcdst')
+            ) 
+       )
+         return true;
+
+    return false;
 }
 function hasAnySquareDrew(){
     return (document.querySelectorAll('[square="1"]').length > 0);
 }
+
 function moveSquare(square){
     let mySquare = getElementFromSquareOrSquareId(square);
     return (
              validateIsSelected() 
-             && validateIsBlank(mySquare)
+             && (validateIsBlank(mySquare) || validateCastleDestinationSquare(mySquare))
+             && !validateEnPassantDestSquare(mySquare)
              && validateIsOnRange(mySquare)
            );
 }
@@ -1190,12 +1418,13 @@ function changeSelectedSquare(square){
               validateIsSelected() 
               && validateFriendlyPieceSquare(square) 
               && !validateIsSameSquare(square)
+              && !validateCastleDestinationSquare(square)
            );
 }
 function captureSquare(square){
     return (
               validateIsSelected() 
-              && validateEnemyPieceSquare(square)
+              && (validateEnemyPieceSquare(square) || validateEnPassantDestSquare(square))
               && validateIsOnRange(square)
               && validateIsCaptureSquare(square)
            );
@@ -1233,6 +1462,46 @@ function getFirstSelectedElement(){
 function matchMovementDirection(movType, direction){
     return (movType & direction) ? true : false;
 }
+function clearSpecialMovementsStatus(){
+    document.querySelectorAll('[sqColor="'+playerColor+'"][ep="1"]').forEach(element => {
+        element.removeAttribute('ep');
+    });   
+    document.querySelectorAll('[epdst="1"]').forEach(element => {
+        element.removeAttribute('epdst');
+    });   
+}
+function setSpecialMovementStatus(chain){
+    clearSpecialMovementsStatus();
+      
+    let origElem = getElementFromSquareOrSquareId(chain[MOVEMENT_CHAIN_ORIGIN], true);
+    let destElem = getElementFromSquareOrSquareId(chain[MOVEMENT_CHAIN_DESTINATION], true);
+
+    if ( getSquareType(destElem) == SQUARE_TYPE_PAWN_PIECE ){ 
+        // En Passant?
+        if ( (destElem.id[SQUARE_NUMERIC_NDX] - origElem.id[SQUARE_NUMERIC_NDX]) > SQUARE_RANGE ){
+            // Marcar como 'passivel de'
+            destElem.setAttribute("ep", "1");
+        }
+        let captureSq = destElem.getAttribute(BOTTOM_DIRECTION);
+        let enPasseSq = getElementFromSquareOrSquareId(captureSq, true);
+        if ( enPasseSq.hasAttribute('ep') ){
+            // Limpar square 'En passado'
+            enPasseSq.outerHTML = enPasseSq.outerHTML.split("sqtype")[0] + " " + blankFrameStr;
+        }
+    }
+}
+function setupCapture(event){
+    let strElem = getElementFromSquareOrSquareId(event.target);
+    if ( validateEnPassantDestSquare(strElem) ){
+        let captureSq = strElem.getAttribute(BOTTOM_DIRECTION);
+        strElem = document.getElementById(captureSq);
+    }
+    retStr = strElem.getAttribute('sqcolor').split("PIECE")[0][0] 
+    + strElem.getAttribute('sqtype').split("PIECE")[0][0]
+    + strElem.id[0] + " ";
+
+    return retStr;
+}
 function squareHandler(event){
     event.preventDefault();
     let captureSq = false;
@@ -1246,20 +1515,40 @@ function squareHandler(event){
         setSelection(event.target);
         highlightSquares(event.target);
     }
+
     // Selecao previa + square sem pecas ou
     // Selecao previa + square com pecas inimigas
     else if ( moveSquare(event.target) || (captureSq = captureSquare(event.target)) != false ){
         let oldelem = getFirstSelectedElement();
         if ( captureSq ){
-            capturedPieces +=  
-            event.target.getAttribute('sqcolor').split("PIECE")[0][0] 
-            + event.target.getAttribute('sqtype').split("PIECE")[0][0]
-            + event.target.id[0] + " ";
-        }
 
-        moveToDestination(oldelem, event.target);
+            capturedPieces += setupCapture(event);
+            document.getElementById("captured").innerHTML = capturedPieces;
+        }
+        //
+        // Acao de mover-se:
+        //   Preparacao
+        //     - Quantos Movimentos estao envolvidos ?
+        //   Deslocamento
+        //     - Movimento ou captura?
+        //   Desdobramentos
+        //     - Ganhamos alguma habilidade especial?
+        //     - Checagens extras?
+        //
+        // Preparacao
+        //
+        let movementChain = setupMovement(oldelem, event.target);
+        //
+        // Deslocamento
+        //
+        movementChain.map(chain => {
+            doMoveToDestination(chain[MOVEMENT_CHAIN_ORIGIN], chain[MOVEMENT_CHAIN_DESTINATION]); 
+        })
+        //
+        // Desdobramento
+        //
+        setSpecialMovementStatus(movementChain[0]);
         clearAllElementSelection();
-        setMovedElem(event.target.id);
     }
     else if ( selectSameSquare(event.target) ){
         clearAllElementSelection();
@@ -1274,7 +1563,19 @@ function readyHandler(event){
     if ( document.getElementById('a1') != null )
         return;
 
-    drawBoardSquares(GAME_CONTEXT_INITIAL, null);
+    // drawBoardSquares(GAME_CONTEXT_INITIAL, null);
+    // drawBoardSquares( 
+    //                   GAME_CONTEXT_SKIP_PIECES,
+    //                   [ 
+    //                       SQUARE_TYPE_BISHOP_PIECE,
+    //                       SQUARE_TYPE_KNIGHT_PIECE, 
+    //                       SQUARE_TYPE_QUEEN_PIECE
+    //                   ]
+    //                 );
+    drawBoardSquares(
+                      GAME_CONTEXT_SKIP_SIDE,
+                      ENEMY_SIDE
+                    );
 
     $('#board').css("transform", "scaleY(-1)");
 
@@ -1286,8 +1587,15 @@ function readyHandler(event){
 //
 function drawHorizontalSubtitles(){
     marginLeft = 140;
-    columnArray.map(function (columnAlpha,clmndx){        
+    let columnAlpha = ""
+
+    columnArray.map(function (clmAlpha,clmndx){        
         let subtitle  =  document.createElement('div');
+        columnAlpha = clmAlpha;
+        if ( playerColor == avaliableColors[BLACK_COLOR] ){
+            columnAlpha = revColumn[clmndx];
+        }
+
         subtitle.innerHTML = columnAlpha;
         subtitle.style.marginLeft = marginLeft+"px";
         subtitle.style.marginTop = "690px";
@@ -1295,6 +1603,7 @@ function drawHorizontalSubtitles(){
         subtitle.style.color= 'black'; 
         subtitle.style.fontWeight= 'bold';
         subtitle.style.fontSize= "20px";
+        subtitle.id = "subtitles";
         document.getElementById('container').appendChild(subtitle);
         marginLeft += 81;
     });
@@ -1349,8 +1658,26 @@ function setSupervisorDiv(divId, mgTop){
     supervisor.classList.add('supervisordiv');
     document.getElementById('container').appendChild(supervisor);
 }
-
-function drawBoardSquares(context, objSquareArr=null){
+function applyContext(context, extraArg, sqElem){
+    // let myElem = document.getElementById(sqElem.id);
+    if ( context == GAME_CONTEXT_SKIP_PIECES ) {
+        extraArg.map(pT  => {
+            if ( pT == sqElem.squareType ){
+                sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
+                sqElem.squareElem.setAttribute("sqcolor", "0");
+                sqElem.squareElem.innerHTML = ""
+            }
+        });
+    }
+    if ( context == GAME_CONTEXT_SKIP_SIDE ) {
+        if ( validateSquareSide(sqElem.squareElem) == extraArg ){
+            sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
+            sqElem.squareElem.setAttribute("sqcolor", "0");
+            sqElem.squareElem.innerHTML = ""
+        }
+    }
+}
+function drawBoardSquares(context, extraArg=null){
     const board = document.getElementById('board');
     let storageSquares = [];
     let marginLeft = 0;
@@ -1359,15 +1686,22 @@ function drawBoardSquares(context, objSquareArr=null){
     let supervisoridCtr = 0;
     let rowColorToggle = false;
     let i = 0;
-    
+    let columnAlpha;
+
     destroySquares();
-    
+
     for ( let rowNdx = 1; rowNdx < 9; rowNdx++ ){
-        columnArray.map(function (columnAlpha, clmndx){
+        columnArray.map(function (clmAlpha, clmNdx){
             try{
                 var squareColorSeq = DARK_BGCOLOR;
-                if ( clmndx % 2 != rowColorToggle ) {
-                    squareColorSeq = LIGHT_BGCOLOR;
+                columnAlpha = clmAlpha;
+                if ( playerColor == avaliableColors[BLACK_COLOR] ){
+                    rowNdx = (9 - rowNdx);
+                    columnAlpha = revColumn[clmNdx];
+                }
+
+                if ( clmNdx % 2 != rowColorToggle ) {
+                    squareColorSeq = squareColorSeq ? 0 : 1;
                 }
                 
                 let candidateElem = drawSquare(columnAlpha+rowNdx, "");
@@ -1389,6 +1723,10 @@ function drawBoardSquares(context, objSquareArr=null){
                 newsquare.squareElem.setAttribute("lsq", newsquare.leftSquare);
                 newsquare.squareElem.setAttribute("rsq", newsquare.rightSquare);
                 newsquare.squareElem.innerHTML = newsquare.squareType.split("PIECE")[0];
+                
+                if ( newsquare.kingDstCstSq != false )
+                    newsquare.squareElem.setAttribute(newsquare.kingDstCstSq, "1");
+                    
                 if ( newsquare.squareColor != BLANK_SQUARE_COLOR ){
                     let attrPieceType = "pc"+getPieceTypeFromSquareType(newsquare.squareType).toUpperCase();
                     newsquare.squareElem.setAttribute(attrPieceType,"1");
@@ -1404,7 +1742,8 @@ function drawBoardSquares(context, objSquareArr=null){
 
                 newsquare.squareElem.setAttribute("sqtype", newsquare.squareType);
                 newsquare.squareElem.setAttribute("sqcolor", newsquare.squareColor);
-                board.appendChild(newsquare.squareElem);
+                applyContext(context, extraArg, newsquare);
+                board.appendChild(newsquare.squareElem); 
                 setSupervisorDiv(supervisoridCtr, supervisorMarginTop);
                 supervisoridCtr++;
                 supervisorMarginTop += 20;
@@ -1415,6 +1754,10 @@ function drawBoardSquares(context, objSquareArr=null){
             }
             catch(err){
                 alert(err.message);
+            }
+            
+            if ( playerColor == avaliableColors[BLACK_COLOR] ){
+                rowNdx = (9 - rowNdx);
             }
         });
         marginTop += 80;
@@ -1428,8 +1771,12 @@ function drawBoardSquares(context, objSquareArr=null){
     window.localStorage.setItem("gameBoard", JSON.stringify( { ...storageSquares} ));
 }
 function drawInitialBoard(boardId, buttonreadyHandler){
-     const createbtn = document.getElementById(boardId);
-     createbtn.addEventListener('click', buttonreadyHandler);
+    const createbtn = document.getElementById(boardId);
+    createbtn.addEventListener('click', buttonreadyHandler);
+}
+function setToggleColor(toggleId, buttonreadyHandler){
+    const createbtn = document.getElementById(toggleId);
+    createbtn.addEventListener('click', buttonreadyHandler);
 }
 function destroySupervisorFrame(){
     document.querySelectorAll('[id^=spsb]').forEach(element => {
@@ -1440,7 +1787,11 @@ function destroySupervisorFrame(){
 function destroySquares(){
     document.querySelectorAll('[square]').forEach(element => {
         $(element).remove();
+    });  
+     document.querySelectorAll('[id="subtitles"]').forEach(element => {
+        $(element).remove();
     });
+
 }
 function drawSupervisorSelect(){
     let radioElem = [-1,-1];
@@ -1794,7 +2145,7 @@ function setDirectionFromSelect(e){
     if ( drawLine == true ){
         getDirectionFromSquare(mySquare, LINE_DIRECTION, LINE_OF_SIGHT, IGNORE_COLISION);
     }
-    highlightSelection()
+    highlightSelection();
 }
 function drawDirectionSelect(){
     // Select do square a partir do qual serao highlitadas as direcoes
@@ -2063,7 +2414,6 @@ function drawSquareDetails(){
             supervisordiv.style.fontWeight= 'bold'; 
         }
     });
-    document.getElementById("captured").innerHTML = capturedPieces;
 }
 function matchColumnIntervalExcludingInterval(initialColumn, endColumn=null, initialInterval=null, endInterval=null){
     let myColumn = initialColumn 
@@ -2138,9 +2488,30 @@ function toggleSupervisor(){
     drawSquareDetails();
 }
 
+function togglePlayerColorAndRedrawBoard(event){
+    if ( !confirm('ATENÇÃO! Inverter as cores? (todo progresso será perdido)') )
+        return;
+
+    playerColor = avaliableColors.indexOf(playerColor) 
+                  ? avaliableColors[WHITE_COLOR] 
+                  : avaliableColors[BLACK_COLOR];
+    
+    assingDirectionsByPlayerColor();
+
+    destroySquares();
+    readyHandler(event);
+}
+
 $(document).ready(function (){
-    playerColor = avaliableColors[WHITE_COLOR];
+    playerColor = avaliableColors[BLACK_COLOR];
+    if ( (Math.floor(Math.random() * 9) % 2) == 0 )
+        playerColor = avaliableColors[WHITE_COLOR];
+
+    assingDirectionsByPlayerColor();
+
     myInterval = window.setInterval(setSupervisorPatrol, intervalTime);
+    
 });
 
 drawInitialBoard("boardcreate", readyHandler);
+setToggleColor("togglecolor", togglePlayerColorAndRedrawBoard);
