@@ -169,3 +169,9 @@ label.label-checkbox input:checked + span {
     margin-top: 630px;
     position:absolute;
 }
+.sethidden{
+    visibility: hidden;
+}
+.setvisible{
+    visibility: visible;
+}

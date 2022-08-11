@@ -63,10 +63,10 @@ const WHITEPIECE_INIT_ROWS  = ["1", "2"];
 const BLACKPIECE_INIT_ROWS  = ["7", "8"];
 const BLANKSQUARE_INIT_ROWS = ["3", "4", "5", "6"];
 
-const GAME_CONTEXT_INITIAL     = 0;
-const GAME_CONTEXT_PLAYING     = 1;
-const GAME_CONTEXT_SKIP_PIECES = 2;
-const GAME_CONTEXT_SKIP_SIDE   = 3;
+const GAME_CONTEXT_INITIAL         = 0;
+const GAME_CONTEXT_PLAYING         = 1;
+const GAME_CONTEXT_SKIP_PIECES     = 2;
+const GAME_CONTEXT_SKIP_SIDEPIECES = 3;
 
 const VISIBILITY_VISIBLE = "visible";
 const VISIBILITY_HIDDEN  = "hidden";
@@ -93,6 +93,9 @@ const SHORT_CASTLE_ROOK_SQUARES = [ 'f1', 'f8' ];
 
 const LONG_CASTLE_KING_SQUARES = [ 'c1', 'c8' ];
 const SHORT_CASTLE_KING_SQUARES = [ 'g1', 'g8' ];
+
+const LONG_CASTLE_COLUMNS  = columnArray.slice(0,5);
+const SHORT_CASTLE_COLUMNS = columnArray.slice(4,8);
 
 const LONG_CASTLE_NDX  = 0; 
 const SHORT_CASTLE_NDX = 1;
@@ -239,6 +242,16 @@ const COLUMN_DIRECTION            = [ BOTTOM_DIRECTION, TOP_DIRECTION ];
 const MAIN_DIAGONAL_DIRECTION     = [ TOP_LEFT_DIRECTION, BOTTOM_RIGHT_DIRECTION];
 const OPPOSITE_DIAGONAL_DIRECTION = [ TOP_RIGHT_DIRECTION, BOTTOM_LEFT_DIRECTION];
 const DIAGONAL_DIRECTION          = [ MAIN_DIAGONAL_DIRECTION, OPPOSITE_DIAGONAL_DIRECTION]
+const ALL_DIRECTION = [
+                        TOP_RIGHT_DIRECTION,
+                        TOP_LEFT_DIRECTION,
+                        BOTTOM_RIGHT_DIRECTION,
+                        BOTTOM_LEFT_DIRECTION, 
+                        TOP_DIRECTION,
+                        LEFT_DIRECTION,
+                        BOTTOM_DIRECTION,
+                        RIGHT_DIRECTION
+                      ]
 
 const CROSS_DIRECTION             = LINE_DIRECTION.concat(COLUMN_DIRECTION);
 const STAR_DIRECTION              = CROSS_DIRECTION.concat(MAIN_DIAGONAL_DIRECTION).concat(OPPOSITE_DIAGONAL_DIRECTION);
@@ -356,16 +369,6 @@ const PROMOTION_PIECES = pieceTypeByColumn.slice(0,4);
 // Game block
 //
 
-const TIMER_SETUPS = [60, 180, 300, 600]
-
-const TIMER_MINUTE = 0;
-const TIMER_THREE_MINUTES = 1;
-const TIMER_FIVE_MINUTES = 2;
-const TIMER_TEN_MINUTES = 3;
-
-const TIMER_MILLISEC_MULTIPLIER = 1000;
-
-let GAME_INITIAL_TIME =  TIMER_SETUPS[TIMER_FIVE_MINUTES] ;
 
 
 //////////////////////////////////////////////////////////
@@ -545,6 +548,44 @@ function setEnPassantDestination(square){
     let mySquare = getElementFromSquareOrSquareId(square);
     mySquare.setAttribute("epdst","1");
 }
+function validateCastleRangeIsSafe(castleType, possibleCastles=false){
+    if ( castleType == false)
+        return false;
+    
+    alert(castleType)
+    let myColor = getFirstSelectedElement().getAttribute('sqcolor');
+    let lndx = 1;
+    let i=0;
+    let j=0;
+    if ( myColor == avaliableColors[BLACK_COLOR] ) 
+        lndx = 8;
+    
+    if ( matchCastleType(SHORT_CASTLE_TYPE, castleType) ){
+        SHORT_CASTLE_COLUMNS.map(squareColumn => {
+            if ( !isSquareIsOnEnemyRange((squareColumn+lndx)) )
+                i++;
+
+        });
+
+    }
+    if ( matchCastleType(LONG_CASTLE_TYPE, castleType) ){
+        LONG_CASTLE_COLUMNS.map(squareColumn => {
+            if ( !isSquareIsOnEnemyRange((squareColumn+lndx)) )
+                j++;
+        });
+    }
+    if ( possibleCastles ){
+        let retCastleTypes = 0;
+        if ( i >= 5 )
+            retCastleTypes |= LONG_CASTLE_TYPE
+        if ( j >= 4 )
+            retCastleTypes |= SHORT_CASTLE_TYPE
+        
+        return retCastleTypes;
+    }
+    
+    return ( i < 5 && j < 4 ) ? false : true;
+}
 function validateIsOnRange(square){
     let selectedElem = getFirstSelectedElement();
     let myPieceType = getSquareType(selectedElem);
@@ -555,9 +596,12 @@ function validateIsOnRange(square){
     
     // Possui movimento especial? 
     if ( matchMovementDirection(myMovType, SPECIAL_MOVEMENT_ALL) ){
+        let castleTypes;
         if ( matchMovementDirection(myMovType, SPECIAL_MOVEMENT_CASTLE)
-             && validateCastleFromSquare(square, GET_BOOLEAN_POSSIBILITY) ){
-            let castleTypes = validateCastleFromSquare(square, GET_POSSIBLE_TYPES);
+             && (castleTypes = validateCastleFromSquare(square, GET_POSSIBLE_TYPES)) != false
+             && (castleTypes = validateCastleRangeIsSafe(castleTypes, GET_POSSIBLE_TYPES)) != false ){
+            
+            alert(castleTypes);
             if ( matchCastleType(SHORT_CASTLE_TYPE, castleTypes) ){
                 let sCastleSquares;
                 if ( getSquareType(square) == SQUARE_TYPE_KING_PIECE ){
@@ -914,7 +958,48 @@ function getMovementRangeFromPieceType(value, moved=false){
     }
     return MOVEMENT_TYPE_NONE;
 }
+function getMovementTypeFromSquareType(value, moved=false){
+    return getMovementTypeFromPieceType(getPieceTypeFromSquareType(value, moved), moved);
+}
+function getMovementRangeFromSquareType(value){
+    return getMovementRangeFromPieceType(getPieceTypeFromSquareType(value), 0);
+}
+function getMovementDirectionFromSquareType(value){
+    let retDirs = [];
+    // alert(retDirs.length)
+    let myMovType = getMovementTypeFromSquareType(value, 0);
+    if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_COLUMN)){
+        retDirs.push(TOP_DIRECTION);
+        retDirs.push(BOTTOM_DIRECTION);
+    }
+    if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_LINE)){
+        retDirs.push(LEFT_DIRECTION);
+        retDirs.push(RIGHT_DIRECTION);
+    }
+    if ( matchMovementDirection(myMovType, MOVEMENT_DIRECTION_DIAGONAL)){
+        retDirs.push(TOP_LEFT_DIRECTION);
+        retDirs.push(BOTTOM_RIGHT_DIRECTION);
+        retDirs.push(BOTTOM_LEFT_DIRECTION);
+        retDirs.push(TOP_RIGHT_DIRECTION);
+    }
+    if ( matchMovementDirection(myMovType, SUBTYPE_DIAG_MAIN_BEGIN)){
+        retDirs.push(TOP_LEFT_DIRECTION);
+    }
+    if ( matchMovementDirection(myMovType, SUBTYPE_DIAG_MAIN_END)){
+        retDirs.push(BOTTOM_RIGHT_DIRECTION);
+    }
+    if ( matchMovementDirection(myMovType, SUBTYPE_DIAG_OPPOSITE_BEGIN)){
+        retDirs.push(BOTTOM_LEFT_DIRECTION);
+    }
+    if ( matchMovementDirection(myMovType, SUBTYPE_DIAG_OPPOSITE_END)){
+        retDirs.push(TOP_RIGHT_DIRECTION);
+    }
+    if ( retDirs.length > 0 )
+       return retDirs;
+    
+    return [-1];
 
+}
 function getMovementTypeFromPieceType(value, moved=false){
     switch (value){
         case PIECE_TYPE_BISHOP:
@@ -1159,7 +1244,9 @@ function getDirectionFromSquare(square, direction, range=LINE_OF_SIGHT, ignoreCo
         let nextSqElem = document.getElementById(destSquareId);
         let nextSqType = getSquareType(document.getElementById(destSquareId))
         let mySquarePiece = getSquareType(getFirstSelectedElement())
-        let moved = hasMoved(getFirstSelectedElement().id);
+        // let moved = hasMoved(getFirstSelectedElement().id);
+        // let mySquareType = getPieceTypeFromSquareType(mySquarePiece, moved);
+        let moved = 0
         let mySquareType = getPieceTypeFromSquareType(mySquarePiece, moved);
         
         if ( (!ignoreColision && nextSqType != SQUARE_TYPE_BLANK )){
@@ -1678,15 +1765,52 @@ function readyHandler(event){
     //                       SQUARE_TYPE_QUEEN_PIECE
     //                   ]
     //                 );
-    drawBoardSquares(
-                      GAME_CONTEXT_SKIP_SIDE,
-                      ENEMY_SIDE
-                    );
+    // drawBoardSquares(
+    //                   GAME_CONTEXT_SKIP_SIDE,
+    //                   ENEMY_SIDE
+    //                 );
+    drawBoardSquares( 
+                      GAME_CONTEXT_SKIP_SIDEPIECES,
+                        [
+                          [[ 
+                            SQUARE_TYPE_BISHOP_PIECE,
+                            SQUARE_TYPE_KNIGHT_PIECE, 
+                            SQUARE_TYPE_QUEEN_PIECE,
+                            SQUARE_TYPE_PAWN_PIECE
+                          ],
+                          [
+                            FRIENDLY_SIDE
+                          ]],
+                          [[ 
+                            SQUARE_TYPE_PAWN_PIECE
+                          ],
+                          [
+                            ENEMY_SIDE
+                          ]]
 
+                        ]
+                    );
     $('#board').css("transform", "scaleY(-1)");
 
     drawHorizontalSubtitles();
-    
+}
+function isSquareIsOnEnemyRange(square){
+    let mySquare = getElementFromSquareOrSquareId(square);
+    let enemyColor = (playerColor == avaliableColors[BLACK_COLOR]) 
+                     ? avaliableColors[WHITE_COLOR]
+                     : avaliableColors[BLACK_COLOR];
+    document.querySelectorAll('[sqcolor="'+enemyColor+'"]').forEach(elem => {
+        let elemRange = elem.getAttribute('range');
+        ALL_DIRECTION.map(direction => {
+            let attrDir = "mv"+direction;
+            elem.hasAttribute(attrDir) ? 
+                getDirectionFromSquare(elem, direction, elemRange, CONSIDER_COLISION):
+                "";
+        });
+    })
+    let retSts = (document.querySelector('[mvsl][id="'+mySquare.id+'"]') !== null)
+    clearAllElementSelection();
+    return retSts;
 }
 //
 //  Supervisor
@@ -1766,25 +1890,31 @@ function setSupervisorDiv(divId, mgTop){
 }
 function applyContext(context, extraArg, sqElem){
     // let myElem = document.getElementById(sqElem.id);
-    if ( context == GAME_CONTEXT_SKIP_PIECES ) {
-        extraArg.map(pT  => {
-            if ( pT == sqElem.squareType ){
-                sqElem.squareElem.removeAttribute(("pc"+getPieceTypeFromSquareType(sqElem.squareType)));
-                sqElem.squareElem.removeAttribute("initsq");
-                sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
-                sqElem.squareElem.setAttribute("sqcolor", "0");
-                sqElem.squareElem.innerHTML = ""
-            }
-        });
-    }
-    if ( context == GAME_CONTEXT_SKIP_SIDE ) {
-        if ( validateSquareSide(sqElem.squareElem) == extraArg ){
-            sqElem.squareElem.removeAttribute(("pc"+getPieceTypeFromSquareType(sqElem.squareType)));
-            sqElem.squareElem.removeAttribute("initsq");
-            sqElem.squareElem.setAttribute("sqcolor", "0");
-            sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
-            sqElem.squareElem.innerHTML = ""
-        }
+    if ( context == GAME_CONTEXT_SKIP_SIDEPIECES){
+        extraArg.map(ctx=>{
+            pieceArr     = ctx[0]
+            pieceSideArr = ctx[1]
+        
+            // alert(pieceArr)
+            // alert(pieceSideArr)
+            pieceArr.map(pT  => {
+                if ( pT == sqElem.squareType 
+                    && validateSquareSide(sqElem.squareElem) == pieceSideArr[0] ){
+                    sqElem.squareElem.removeAttribute(("pc"+getPieceTypeFromSquareType(sqElem.squareType)));
+                    sqElem.squareElem.removeAttribute("initsq");
+                    sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
+                    sqElem.squareElem.setAttribute("sqcolor", "0");
+                    sqElem.squareElem.innerHTML = ""
+                }
+            });
+        })
+        // if ( validateSquareSide(sqElem.squareElem) == pieceSideArr[0] ){
+        //     sqElem.squareElem.removeAttribute(("pc"+getPieceTypeFromSquareType(sqElem.squareType)));
+        //     sqElem.squareElem.removeAttribute("initsq");
+        //     sqElem.squareElem.setAttribute("sqcolor", "0");
+        //     sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
+        //     sqElem.squareElem.innerHTML = ""
+        // }
     }
 }
 function drawBoardSquares(context, extraArg=null){
@@ -1854,7 +1984,13 @@ function drawBoardSquares(context, extraArg=null){
                 newsquare.squareElem.setAttribute("sqcolor", newsquare.squareColor);
                 if ( newsquare.prRow > 0 )
                     newsquare.squareElem.setAttribute("prow", newsquare.prRow);
-
+                
+                getMovementDirectionFromSquareType(newsquare.squareType).map(mvdr => {
+                      newsquare.squareElem.setAttribute("mv"+mvdr.toString(), "1")
+                });
+                let myRange = getMovementRangeFromSquareType(newsquare.squareType)
+                newsquare.squareElem.setAttribute("range", myRange);
+                // getMovementDirectionFromSquareType(newsquare.squareType)
                 applyContext(context, extraArg, newsquare);
                 board.appendChild(newsquare.squareElem); 
                 setSupervisorDiv(supervisoridCtr, supervisorMarginTop);
@@ -1883,10 +2019,7 @@ function drawBoardSquares(context, extraArg=null){
     window.localStorage.removeItem("gameBoard");
     window.localStorage.setItem("gameBoard", JSON.stringify( { ...storageSquares} ));
 }
-function setClockListener(clockId, cHdl){
-    const createclock = document.getElementById(clockId);
-    createclock.addEventListener('click', cHdl);
-}
+
 function drawInitialBoard(boardId, buttonreadyHandler){
     const createbtn = document.getElementById(boardId);
     createbtn.addEventListener('click', buttonreadyHandler);
@@ -2458,6 +2591,7 @@ function setSupervisorListVisibility(visibilityStatus){
         element.style.visibility = visibilityStatus;
     });   
 }
+
 function drawSquareDetails(){
 
     if ( supervisorMode == false ){
@@ -2618,67 +2752,7 @@ function togglePlayerColorAndRedrawBoard(event){
     destroySquares();
     readyHandler(event);
 }
-var btimer = GAME_INITIAL_TIME;
-function blackPlayerTimer() {
-    let seconds;
-    let minutes;
-    minutes = parseInt(btimer / 60, 10)
-    seconds = parseInt(btimer % 60, 10);
 
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    seconds = seconds < 10 ? "0" + seconds : seconds;
-
-    document.getElementById("bspntmr").textContent = minutes + ":" + seconds;
-
-    if (--btimer < 0) {
-        btimer = GAME_INITIAL_TIME;
-    }
-}
-var wtimer = GAME_INITIAL_TIME;
-function whitePlayerTimer() {
-    let seconds;
-    let minutes;
-    minutes = parseInt(wtimer / 60, 10)
-    seconds = parseInt(wtimer % 60, 10);
-
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    seconds = seconds < 10 ? "0" + seconds : seconds;
-
-    document.getElementById("wspntmr").textContent = minutes + ":" + seconds;
-
-    if (--wtimer < 0) {
-        wtimer = GAME_INITIAL_TIME;
-    }
-}
-function bTimerHandler(event){
-    let chksts = document.getElementById('btinput').checked;
-    // alert(chksts)
-    if ( chksts == true ){
-        // document.getElementById('btinput').checked = true;
-        return true;
-    }
-
-    // alert(document.getElementById('btinput').checked)
-    // alert(document.getElementById('wtinput').checked)
-    window.clearInterval(bPTInterval);
-    document.getElementById('btinput').checked = false;
-    document.getElementById('wtinput').checked = !document.getElementById('wtinput').checked;
-    wPTInterval = window.setInterval(whitePlayerTimer, 1000);
-    return false;
-}
-function wTimerHandler(event){
-    let chksts = document.getElementById('wtinput').checked;
-    if ( chksts == true ){
-        // document.getElementById('wtinput').checked = true;
-        return true;
-    }
-
-    window.clearInterval(wPTInterval);
-    document.getElementById('btinput').checked = !document.getElementById('btinput').checked;
-    document.getElementById('wtinput').checked = false;
-    bPTInterval = window.setInterval(blackPlayerTimer, 1000);
-    return true;
-}
 $(document).ready(function (){
     playerColor = avaliableColors[BLACK_COLOR];
     if ( (Math.floor(Math.random() * 9) % 2) == 0 )
@@ -2687,15 +2761,12 @@ $(document).ready(function (){
     assingDirectionsByPlayerColor();
 
     myInterval = window.setInterval(setSupervisorPatrol, intervalTime);
-    wPTInterval = window.setInterval(whitePlayerTimer, 1000);
-    bPTInterval = window.setInterval(blackPlayerTimer, 1000);
-    // $('#whitetimer').click()
-    window.clearInterval(bPTInterval);
-    document.getElementById('wtinput').checked = false;
-    document.getElementById('btinput').checked = true;
+    // alert(LONG_CASTLE_COLUMNS)
+    // alert(SHORT_CASTLE_COLUMNS)
+    // setClock();
+    new WebSocket("wss://javascript.info/chat");
 });
 
-setClockListener("whitetimer", wTimerHandler);
-setClockListener("blacktimer", bTimerHandler);
+
 drawInitialBoard("boardcreate", readyHandler);
 setToggleColor("togglecolor", togglePlayerColorAndRedrawBoard);
