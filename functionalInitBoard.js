@@ -2,8 +2,13 @@
 //
 //    Board block
 //
-
 //
+const TOTAL_PIECE_COUNT = 16;
+const PLAYER_PIECE_COUNT = TOTAL_PIECE_COUNT / 2;
+
+const ROW_SQUARE_COUNT = 8;
+const COLUMN_SQUARE_ROW = 8;
+
 const DARK_BGCOLOR = 0;
 const LIGHT_BGCOLOR = 1;
 
@@ -337,6 +342,9 @@ const avaliableColors = ['WHITEPIECE','BLACKPIECE'];
 
 let capturedPieces = "";
 
+const PROMOTION_PIECES = pieceTypeByColumn.slice(0,4);
+
+
 // let playerColor = 'WHITEPIECE';
 
 //
@@ -372,6 +380,9 @@ let supervisorMode = false;
 //
 //  Functions and procedures
 //
+function getFrameByTypeAndColor(sqType, sqColor){
+    return 'sqtype="'+sqType+'" sqcolor="'+sqColor+'">'+sqType.split('PIECE')[0]+'</div>';
+}
 function assingDirectionsByPlayerColor(){
     LEFT         = 0 ;
     RIGHT        = 1 ;
@@ -641,7 +652,7 @@ function validateIsSameSquare(square){
     return getFirstSelectedElement().id == square.id;
 }
 function isValidSquareIndex(squareIndex){
-    if ( squareIndex < 1 || squareIndex > 8 || isNaN(squareIndex) )
+    if ( squareIndex < 1 || squareIndex > ROW_SQUARE_COUNT || isNaN(squareIndex) )
         return false;
     
     return true;
@@ -839,6 +850,9 @@ function movementMatchesAnyDirection(movementType){
 function getSquareType(elemSquare){
     let square = getElementFromSquareOrSquareId(elemSquare);
 
+    if ( square == null )
+        return false;
+
     if ( square.hasAttribute('sqtype'))
         return square.getAttribute('sqtype');
 
@@ -908,11 +922,13 @@ function createSquare(square){
     let rSquare = 0;
     let tSquare = 0;
     let bSquare = 0;
+    let promotionRow = 0;
 
     if ( validateSquareType(square, SQUARE_TYPE_BLANK) )
         sqType = SQUARE_TYPE_BLANK;
-    else if ( validateSquareType(square, SQUARE_TYPE_PAWN_PIECE) )
+    else if ( validateSquareType(square, SQUARE_TYPE_PAWN_PIECE) ){
         sqType = SQUARE_TYPE_PAWN_PIECE;
+    }
     else if ( validateSquareType(square, SQUARE_TYPE_HIGHVALUE_PIECE) )
         sqType = pieceTypeByColumn[columnArray.indexOf(square.id[0])];
     else{
@@ -926,6 +942,12 @@ function createSquare(square){
         sqColor = SQUARE_TYPE_WHITE_PIECE;
     if ( validateSquareColor(square, SQUARE_TYPE_BLANK) )
         sqColor = BLANK_SQUARE_COLOR;
+
+    if ( validateSquareType(square, SQUARE_TYPE_PAWN_PIECE) ){
+        promotionRow = validateSquareColor(square, SQUARE_TYPE_WHITE_PIECE)
+                       ? ROW_SQUARE_COUNT
+                       : 1;
+    }
 
     blSquare = getSquare(square, BOTTOM_LEFT);
     brSquare = getSquare(square, BOTTOM_RIGHT);
@@ -952,7 +974,8 @@ function createSquare(square){
         initSquareId:        square.id,
         squareType:          sqType,
         squareColor:         sqColor,
-        kingDstCstSq:        kingDestinationCastleSquare
+        kingDstCstSq:        kingDestinationCastleSquare,
+        prRow:               promotionRow
     };
 
     return pieceObject;
@@ -1063,15 +1086,15 @@ function setKingDestinationSquare(square){
 function setDirectionSelection(square, direction){
     let mySquare = getElementFromSquareOrSquareId(square);
     if ( LINE_DIRECTION.includes(direction) )
-        mySquare.setAttribute('lmv', "dr"+direction);
+        mySquare.setAttribute('lmv', direction);
     else if ( COLUMN_DIRECTION.includes(direction) )  
-        mySquare.setAttribute('cmv', "dr"+direction);
+        mySquare.setAttribute('cmv', direction);
     else if ( MAIN_DIAGONAL_DIRECTION.includes(direction) || OPPOSITE_DIAGONAL_DIRECTION.includes(direction) )
-        mySquare.setAttribute('dmv', "dr"+direction);
+        mySquare.setAttribute('dmv', direction);
     else if ( direction == MOVEMENT_DIRECTION_L )
-        mySquare.setAttribute('kmv', "dr"+direction);
+        mySquare.setAttribute('kmv', direction);
     else if ( direction == THE_PIECE )
-        mySquare.setAttribute('pmv', "dr"+direction);
+        mySquare.setAttribute('pmv', direction);
 }
 
 function highlightSelection(){
@@ -1249,7 +1272,6 @@ function saveSquareCoreAttrOnLocalStorage(square){
     if ( divToReplace.includes("</div>") == false )
         divToReplace += "></div>";
 
-
 }
 function saveCoreAttrOnLocalStorage(square){
     let wrkDiv;
@@ -1271,6 +1293,13 @@ function saveCoreAttrOnLocalStorage(square){
 }
 function removeNonRelevantAttributesFromSquare(square){
     clearMoveSelection(square.id);  
+}
+function validateProtionDestinationSquare(prow, destId){
+    if ( destId[SQUARE_NUMERIC_NDX] == prow )
+        return true;
+    // }
+
+    return false;
 }
 //
 // Movimento simples ou Composto?
@@ -1311,6 +1340,48 @@ function setupMovement(orgsq, destsq){
         kingDestinationElem = document.getElementById(getSquare(rookDestElem, kingDir));
         movementChain.push([rookElem, rookDestElem]);
         movementChain.push([rookKingElem, kingDestinationElem]);
+    }
+     else if ( orgsq.hasAttribute('prow') && validateProtionDestinationSquare(orgsq.getAttribute('prow'), destsq.id) ){
+        // Promover peao, sera utilizada a escolha previa
+        // ou apresentado um menu de selecao
+        let rtchoice = "";
+        let promChoice = "";
+        do {
+            let promOpt = "Selecione:\r\n"
+            let i = 1;
+            
+            PROMOTION_PIECES.map(piece =>{
+                promOpt += i + ". " + piece + "\r\n";
+                i++;
+            })
+            promChoice = (prompt(promOpt, "") - 1);
+            rtchoice = PROMOTION_PIECES[promChoice];
+            if ( rtchoice === undefined ){
+                if ( !confirm("Opcao invalida, continuar?") ){
+                    promChoice = 1;
+                    break;
+                }
+            }
+        } while(rtchoice === undefined);
+
+        lowlightSelection();
+        lowlightCapture();
+        let divToReplace = "";
+        if ( destsq.outerHTML.indexOf('BLANK') === -1 ){
+            divToReplace = destsq.outerHTML.split("pc")[0];
+        }
+        else{
+            divToReplace = destsq.outerHTML.split("sqtype")[0];
+        }
+        divToReplace += " pc"+pieceColumnLookup[promChoice]+"=\"1\" " + "initsq=\""+orgsq.getAttribute('initsq')+"\" ";
+        divToReplace += getFrameByTypeAndColor(pieceTypeByColumn[promChoice], orgsq.getAttribute('sqcolor'));
+
+        objCoreAttr = new Object({
+            divStringToReplace: divToReplace
+        });
+        window.localStorage.removeItem('promPiece');
+        window.localStorage.setItem('promPiece', JSON.stringify({ ...objCoreAttr}));
+        movementChain.push([orgsq, destsq])
     }
     else{
         movementChain.push([orgsq, destsq])
@@ -1488,7 +1559,16 @@ function setSpecialMovementStatus(chain){
             // Limpar square 'En passado'
             enPasseSq.outerHTML = enPasseSq.outerHTML.split("sqtype")[0] + " " + blankFrameStr;
         }
+        if ( destElem.hasAttribute('prow') && validateProtionDestinationSquare(destElem.getAttribute('prow'), destElem.id) ){
+            var objSquare = JSON.parse(window.localStorage.getItem('promPiece'));
+            destElem.removeEventListener('click', squareHandler);
+            destElem.outerHTML = objSquare.divStringToReplace;  
+            destElem = getElementFromSquareOrSquareId(destElem.id, true);
+            destElem.addEventListener('click', squareHandler);
+            saveCoreAttrOnLocalStorage(destElem);
+        }
     }
+
 }
 function setupCapture(event){
     let strElem = getElementFromSquareOrSquareId(event.target);
@@ -1521,7 +1601,6 @@ function squareHandler(event){
     else if ( moveSquare(event.target) || (captureSq = captureSquare(event.target)) != false ){
         let oldelem = getFirstSelectedElement();
         if ( captureSq ){
-
             capturedPieces += setupCapture(event);
             document.getElementById("captured").innerHTML = capturedPieces;
         }
@@ -1663,6 +1742,8 @@ function applyContext(context, extraArg, sqElem){
     if ( context == GAME_CONTEXT_SKIP_PIECES ) {
         extraArg.map(pT  => {
             if ( pT == sqElem.squareType ){
+                sqElem.squareElem.removeAttribute(("pc"+getPieceTypeFromSquareType(sqElem.squareType)));
+                sqElem.squareElem.removeAttribute("initsq");
                 sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
                 sqElem.squareElem.setAttribute("sqcolor", "0");
                 sqElem.squareElem.innerHTML = ""
@@ -1671,8 +1752,10 @@ function applyContext(context, extraArg, sqElem){
     }
     if ( context == GAME_CONTEXT_SKIP_SIDE ) {
         if ( validateSquareSide(sqElem.squareElem) == extraArg ){
-            sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
+            sqElem.squareElem.removeAttribute(("pc"+getPieceTypeFromSquareType(sqElem.squareType)));
+            sqElem.squareElem.removeAttribute("initsq");
             sqElem.squareElem.setAttribute("sqcolor", "0");
+            sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
             sqElem.squareElem.innerHTML = ""
         }
     }
@@ -1728,7 +1811,7 @@ function drawBoardSquares(context, extraArg=null){
                     newsquare.squareElem.setAttribute(newsquare.kingDstCstSq, "1");
                     
                 if ( newsquare.squareColor != BLANK_SQUARE_COLOR ){
-                    let attrPieceType = "pc"+getPieceTypeFromSquareType(newsquare.squareType).toUpperCase();
+                    let attrPieceType = "pc"+getPieceTypeFromSquareType(newsquare.squareType);
                     newsquare.squareElem.setAttribute(attrPieceType,"1");
                     newsquare.squareElem.setAttribute("initsq", newsquare.initSquareId);
                 }
@@ -1742,6 +1825,9 @@ function drawBoardSquares(context, extraArg=null){
 
                 newsquare.squareElem.setAttribute("sqtype", newsquare.squareType);
                 newsquare.squareElem.setAttribute("sqcolor", newsquare.squareColor);
+                if ( newsquare.prRow > 0 )
+                    newsquare.squareElem.setAttribute("prow", newsquare.prRow);
+
                 applyContext(context, extraArg, newsquare);
                 board.appendChild(newsquare.squareElem); 
                 setSupervisorDiv(supervisoridCtr, supervisorMarginTop);
@@ -1854,7 +1940,7 @@ function drawSupervisorSelect(){
     option.value = -1;
     option.text = "Linha:";
     selectRow.appendChild(option);
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < ROW_SQUARE_COUNT; i++) {
         option = document.createElement("option");
         option.value = i;
         option.text = i+1;
