@@ -351,6 +351,22 @@ const PROMOTION_PIECES = pieceTypeByColumn.slice(0,4);
 //
 //
 //////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
+//
+// Game block
+//
+
+const TIMER_SETUPS = [60, 180, 300, 600]
+
+const TIMER_MINUTE = 0;
+const TIMER_THREE_MINUTES = 1;
+const TIMER_FIVE_MINUTES = 2;
+const TIMER_TEN_MINUTES = 3;
+
+const TIMER_MILLISEC_MULTIPLIER = 1000;
+
+let GAME_INITIAL_TIME =  TIMER_SETUPS[TIMER_FIVE_MINUTES] ;
+
 
 //////////////////////////////////////////////////////////
 //
@@ -1635,6 +1651,9 @@ function squareHandler(event){
         //
         setSpecialMovementStatus(movementChain[0]);
         clearAllElementSelection();
+        //
+        // Passar Turno
+        //
     }
     else if ( selectSameSquare(event.target) ){
         clearAllElementSelection();
@@ -1642,6 +1661,7 @@ function squareHandler(event){
     //drawSquareDetails();
 
 }
+
 function readyHandler(event){
     
     event.preventDefault();
@@ -1862,6 +1882,10 @@ function drawBoardSquares(context, extraArg=null){
     setSpecialMovementAttributes();
     window.localStorage.removeItem("gameBoard");
     window.localStorage.setItem("gameBoard", JSON.stringify( { ...storageSquares} ));
+}
+function setClockListener(clockId, cHdl){
+    const createclock = document.getElementById(clockId);
+    createclock.addEventListener('click', cHdl);
 }
 function drawInitialBoard(boardId, buttonreadyHandler){
     const createbtn = document.getElementById(boardId);
@@ -2594,7 +2618,67 @@ function togglePlayerColorAndRedrawBoard(event){
     destroySquares();
     readyHandler(event);
 }
+var btimer = GAME_INITIAL_TIME;
+function blackPlayerTimer() {
+    let seconds;
+    let minutes;
+    minutes = parseInt(btimer / 60, 10)
+    seconds = parseInt(btimer % 60, 10);
 
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+
+    document.getElementById("bspntmr").textContent = minutes + ":" + seconds;
+
+    if (--btimer < 0) {
+        btimer = GAME_INITIAL_TIME;
+    }
+}
+var wtimer = GAME_INITIAL_TIME;
+function whitePlayerTimer() {
+    let seconds;
+    let minutes;
+    minutes = parseInt(wtimer / 60, 10)
+    seconds = parseInt(wtimer % 60, 10);
+
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+
+    document.getElementById("wspntmr").textContent = minutes + ":" + seconds;
+
+    if (--wtimer < 0) {
+        wtimer = GAME_INITIAL_TIME;
+    }
+}
+function bTimerHandler(event){
+    let chksts = document.getElementById('btinput').checked;
+    // alert(chksts)
+    if ( chksts == true ){
+        // document.getElementById('btinput').checked = true;
+        return true;
+    }
+
+    // alert(document.getElementById('btinput').checked)
+    // alert(document.getElementById('wtinput').checked)
+    window.clearInterval(bPTInterval);
+    document.getElementById('btinput').checked = false;
+    document.getElementById('wtinput').checked = !document.getElementById('wtinput').checked;
+    wPTInterval = window.setInterval(whitePlayerTimer, 1000);
+    return false;
+}
+function wTimerHandler(event){
+    let chksts = document.getElementById('wtinput').checked;
+    if ( chksts == true ){
+        // document.getElementById('wtinput').checked = true;
+        return true;
+    }
+
+    window.clearInterval(wPTInterval);
+    document.getElementById('btinput').checked = !document.getElementById('btinput').checked;
+    document.getElementById('wtinput').checked = false;
+    bPTInterval = window.setInterval(blackPlayerTimer, 1000);
+    return true;
+}
 $(document).ready(function (){
     playerColor = avaliableColors[BLACK_COLOR];
     if ( (Math.floor(Math.random() * 9) % 2) == 0 )
@@ -2603,8 +2687,15 @@ $(document).ready(function (){
     assingDirectionsByPlayerColor();
 
     myInterval = window.setInterval(setSupervisorPatrol, intervalTime);
-    
+    wPTInterval = window.setInterval(whitePlayerTimer, 1000);
+    bPTInterval = window.setInterval(blackPlayerTimer, 1000);
+    // $('#whitetimer').click()
+    window.clearInterval(bPTInterval);
+    document.getElementById('wtinput').checked = false;
+    document.getElementById('btinput').checked = true;
 });
 
+setClockListener("whitetimer", wTimerHandler);
+setClockListener("blacktimer", bTimerHandler);
 drawInitialBoard("boardcreate", readyHandler);
 setToggleColor("togglecolor", togglePlayerColorAndRedrawBoard);
