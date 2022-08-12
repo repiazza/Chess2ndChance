@@ -750,10 +750,18 @@ function isValidSquare(elemSquare){
 
     return false;
 }
+function areSquaresFromOpositeSides(orgsqcolor, destsqcolor){
+    return ((orgsqcolor == 'BLACKPIECE' && destsqcolor == 'WHITEPIECE')
+             ||( orgsqcolor ==  'WHITEPIECE' && destsqcolor == 'BLACKPIECE' ))
+}
 function validateAndSetCaptureSquare(elemSquare){
     let mySquare = getElementFromSquareOrSquareId(elemSquare);
-
-    if ( validateEnemyPieceSquare(mySquare) ){
+    // let playerPiece = getFirstSelectedElement();
+    // if ( playerPiece == null)
+      let  playerPiece = document.querySelector('[pmv]');
+      playerPiece = getElementFromSquareOrSquareId(playerPiece,true);
+    if ( areSquaresFromOpositeSides(playerPiece.getAttribute('sqcolor'), mySquare.getAttribute('sqcolor') ) ){
+        if ( playerPiece.getAttribute('sqcolor') )
         setCaptureSquare(mySquare);
         highlightCapture(mySquare);
     }
@@ -1774,7 +1782,6 @@ function squareHandler(event){
         //
         // Deslocamento
         //
-        console.debug(movementChain)
         movementChain.map(chain => {
             doMoveToDestination(chain[MOVEMENT_CHAIN_ORIGIN], chain[MOVEMENT_CHAIN_DESTINATION]); 
         })
@@ -1787,7 +1794,7 @@ function squareHandler(event){
         //
         // Passar Turno
         //
-        // changeTurn();
+        changeTurn();
     }
     else if ( selectSameSquare(event.target) ){
         clearAllElementSelection();
@@ -1803,7 +1810,9 @@ function toggleTurnValue(){
 }
 function changeTurn(){
 
-    // toggleTurnValue();
+    toggleTurnValue();
+
+    togglePlayerColor();
 
     // toggleTimer()
 
@@ -1812,7 +1821,6 @@ function changeTurn(){
 
 }
 function isPlayerOnCheck(){
-    alert('[sqtype="KINGPIECE"][sqcolor="'+playerColor+'"]')
     let kElem = document.querySelector('[sqtype="KINGPIECE"][sqcolor="'+playerColor+'"]');
     return isSquareIsOnEnemyRange(kElem);
 }
@@ -1904,8 +1912,12 @@ function isSquareIsOnEnemyRange(square){
 
     // lowlightElement(getFirstSelectedElement())
     // clearElementSelection(getFirstSelectedElement());
-
+   
     if ( document.querySelector('[mvsl="E"][id="'+mySquare.id+'"]') != null ){
+        isDangerSquare = true;
+    }
+   
+    if ( document.querySelector('[cpt][id="'+mySquare.id+'"]') != null ){
         isDangerSquare = true;
     }
     // clearAllElementSelection();
@@ -2808,7 +2820,7 @@ function matchColumnIntervalExcludingInterval(initialColumn, endColumn=null, ini
         myColumn  += "-" + endColumn;
 
     let pattern = "(["+myColumn+"])"
-    let interval = -1``
+    let interval = -1;
     if ( initialInterval )
         interval = initialInterval;
     if ( endInterval )
@@ -2875,13 +2887,17 @@ function toggleSupervisor(){
     drawSquareDetails();
 }
 
+function togglePlayerColor(){
+    playerColor = avaliableColors.indexOf(playerColor) 
+                  ? avaliableColors[WHITE_COLOR] 
+                  : avaliableColors[BLACK_COLOR];
+}
+
 function togglePlayerColorAndRedrawBoard(event){
     if ( !confirm('ATENÇÃO! Inverter as cores? (todo progresso será perdido)') )
         return;
 
-    playerColor = avaliableColors.indexOf(playerColor) 
-                  ? avaliableColors[WHITE_COLOR] 
-                  : avaliableColors[BLACK_COLOR];
+    togglePlayerColor();
     
     assingDirectionsByPlayerColor();
 
