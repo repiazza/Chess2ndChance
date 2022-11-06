@@ -1,0 +1,7 @@
+{
+    "rules": {
+                "no-unused-vars":"warn",
+                "no-mixed-spaces-and-tabs":"off",
+                "no-irregular-whitespace":"off"
+            }
+}

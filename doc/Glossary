@@ -1,0 +1,13 @@
+highlightStyles 
+ - estilos contidos em chess.css com intuito de destacar/colorir a casa.
+
+captureStyles
+ - elenca quais estilos em highlightStyles sao referentes a captura
+
+specialPieceStyles
+ - elenca quais estilos em highlightStyles sao referentes movimentos especiais
+
+bgBoardColors
+ - estilos contidos em chess.css com as cores default do tabuleiro
+
+

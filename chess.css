@@ -17,6 +17,9 @@
     width: 80px;
     transform: scaleY(-1);
 }
+#togglecollor{
+    display: none;
+}
 .board{
     height: 640px;
     width: 640px;
