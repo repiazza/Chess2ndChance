@@ -53,7 +53,6 @@ export const highlightStyles = [
   "silverbuenao",
   "silverbuenaodark",
 ];
-
 /**
  * @constant @type {Array of Strings}
  * @default [ "capturehl" "capturehldark" ]
@@ -87,11 +86,11 @@ export const revColumn = ["h", "g", "f", "e", "d", "c", "b", "a"];
 /**
  * @constant {string} @default
  */
-export const SQUARE_TYPE_BLACK_PIECE = "BLACKPIECE";
+export const SQUARE_PIECE_COLOR_BLACK = "BLACKPIECE";
 /**
  * @constant {string} @default
  */
-export const SQUARE_TYPE_WHITE_PIECE = "WHITEPIECE";
+export const SQUARE_PIECE_COLOR_WHITE = "WHITEPIECE";
 /**
  * @constant {number} @default
  */

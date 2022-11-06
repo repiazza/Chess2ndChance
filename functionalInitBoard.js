@@ -1,6 +1,7 @@
 import {
   TOTAL_PIECE_COUNT,
   PLAYER_PIECE_COUNT,
+  ROW_SQUARE_COUNT,
   COLUMN_SQUARE_ROW,
   DARK_BGCOLOR,
   LIGHT_BGCOLOR,
@@ -10,8 +11,8 @@ import {
   bgBoardColors,
   columnArray,
   revColumn,
-  SQUARE_TYPE_BLACK_PIECE,
-  SQUARE_TYPE_WHITE_PIECE,
+  SQUARE_PIECE_COLOR_BLACK,
+  SQUARE_PIECE_COLOR_WHITE,
   BLANK_SQUARE_COLOR,
   PAWN_INIT_ROWS,
   HIGHVALUE_INIT_ROWS,
@@ -21,7 +22,7 @@ import {
   GAME_CONTEXT_INITIAL,
   GAME_CONTEXT_PLAYING,
   GAME_CONTEXT_SKIP_PIECES,
-  GAME_CONTEXT_SKIP_SIDEPIECE,
+  GAME_CONTEXT_SKIP_SIDEPIECES,
   VISIBILITY_VISIBLE,
   VISIBILITY_HIDDEN,
   SQUARE_TYPE_PAWN_PIECE,
@@ -30,8 +31,10 @@ import {
   SQUARE_TYPE_BISHOP_PIECE,
   SQUARE_TYPE_QUEEN_PIECE,
   SQUARE_TYPE_KING_PIECE,
+  SQUARE_TYPE_ROOK_PIECE,
   SQUARE_TYPE_BLANK,
   SQUARE_ALPHABETICAL_NDX,
+  SQUARE_NUMERIC_NDX,
   LONG_CASTLE_INIT_SQUARES,
   SHORT_CASTLE_INIT_SQUARES,
   LONG_CASTLE_ROOK_SQUARES,
@@ -46,61 +49,6 @@ import {
 } from "./modules/board.js";
 
 let blankFrameStr = 'sqtype="BLANK" sqcolor="0"></div>';
-
-// /////////////////////////////////////////////////////////////
-// //
-// //    Board block
-// //
-// //
-//
-// /**
-//  *  @constant {number} @default
-//  */
-//
-// const TOTAL_PIECE_COUNT = 32;
-//
-// /**
-//  * @constant {number} @default
-//  */
-// const PLAYER_PIECE_COUNT = TOTAL_PIECE_COUNT / 2;
-//
-// /**
-//  * @constant {number} @default
-//  */
-// const ROW_SQUARE_COUNT = 8;
-// /**
-//  * @constant {number} @default
-//  */
-// const COLUMN_SQUARE_ROW = 8;
-//
-// /** @constant
-//  *  @type {number}
-//  */
-// const DARK_BGCOLOR = 0;
-// const LIGHT_BGCOLOR = 1;
-//
-// /** @constant
-//  *  @type {Array}
-//  */
-// const highlightStyles = [
-//   "columnmovhl",
-//   "linemovhl",
-//   "diagonalmovhl",
-//   "knightmovhl",
-//   "linemovhldark",
-//   "columnmovhldark",
-//   "diagonalmovhldark",
-//   "knightmovhldark",
-//   "capturehl",
-//   "capturehldark",
-//   "goldenrod",
-//   "goldenroddark",
-//   "silverbuenao",
-//   "silverbuenaodark",
-// ];
-
-// LINDO ISSo
-// console.log("TTP: ", TOTAL_PIECE_COUNT, "");
 
 ///////////////////////////////////////////////////////////
 //
@@ -370,7 +318,7 @@ let capturedPieces = "";
 
 const PROMOTION_PIECES = pieceTypeByColumn.slice(0, 4);
 
-// let playerColor = 'WHITEPIECE';
+let playerColor = "WHITEPIECE";
 
 //
 //
@@ -857,9 +805,9 @@ function validateSquareColor(elemSquare, flag) {
   let square = getElementFromSquareOrSquareId(elemSquare);
   if (square == null) return false;
 
-  if (flag === SQUARE_TYPE_WHITE_PIECE)
+  if (flag === SQUARE_PIECE_COLOR_WHITE)
     return WHITEPIECE_INIT_ROWS.includes(square.id[1]);
-  if (flag === SQUARE_TYPE_BLACK_PIECE)
+  if (flag === SQUARE_PIECE_COLOR_BLACK)
     return BLACKPIECE_INIT_ROWS.includes(square.id[1]);
   if (flag === SQUARE_TYPE_BLANK) return BLANKSQUARE_INIT_ROWS.includes(square.id[1]);
 }
@@ -1112,32 +1060,32 @@ function getMovementTypeFromPieceType(value, moved = false) {
 function createSquare(square) {
   let sqType = 0;
   let sqColor = 0;
-  let nwsquare = 0;
-  let nesquare = 0;
+  let nwSquare = 0;
+  let neSquare = 0;
   let swSquare = 0;
   let seSquare = 0;
-  let lSquare = 0;
-  let rSquare = 0;
-  let tSquare = 0;
-  let bSquare = 0;
+  let wSquare = 0;
+  let eSquare = 0;
+  let nSquare = 0;
+  let sSquare = 0;
   let promotionRow = 0;
 
   if (validateSquareType(square, SQUARE_TYPE_BLANK)) sqType = SQUARE_TYPE_BLANK;
   else if (validateSquareType(square, SQUARE_TYPE_PAWN_PIECE)) {
     sqType = SQUARE_TYPE_PAWN_PIECE;
-  } else if (validateSquareType(square, SQUARE_TYPE_HIGHVALUE_PIECE))
+  } else if (validateSquareType(square, SQUARE_TYPE_HIGHVALUE_PIECE)) {
     sqType = pieceTypeByColumn[columnArray.indexOf(square.id[0])];
-  else {
+  } else {
     throw new Error("Square invalido");
   }
-  if (validateSquareColor(square, SQUARE_TYPE_BLACK_PIECE))
-    sqColor = SQUARE_TYPE_BLACK_PIECE;
-  if (validateSquareColor(square, SQUARE_TYPE_WHITE_PIECE))
-    sqColor = SQUARE_TYPE_WHITE_PIECE;
+  if (validateSquareColor(square, SQUARE_PIECE_COLOR_BLACK))
+    sqColor = SQUARE_PIECE_COLOR_BLACK;
+  if (validateSquareColor(square, SQUARE_PIECE_COLOR_WHITE))
+    sqColor = SQUARE_PIECE_COLOR_WHITE;
   if (validateSquareColor(square, SQUARE_TYPE_BLANK)) sqColor = BLANK_SQUARE_COLOR;
 
   if (validateSquareType(square, SQUARE_TYPE_PAWN_PIECE)) {
-    promotionRow = validateSquareColor(square, SQUARE_TYPE_WHITE_PIECE)
+    promotionRow = validateSquareColor(square, SQUARE_PIECE_COLOR_WHITE)
       ? ROW_SQUARE_COUNT
       : 1;
   }
@@ -1161,7 +1109,7 @@ function createSquare(square) {
     bottomLeftSquare: swSquare,
     bottomRightSquare: seSquare,
     topSquare: tSquare,
-    rightSquare: rSquare,
+    rightSquare: eSquare,
     leftSquare: lSquare,
     bottomSquare: bSquare,
     initSquareId: square.id,
@@ -2948,10 +2896,10 @@ function fixSquareTypeProprierties() {
       id: element.initsq,
       objname: "",
     };
-    if (validateSquareColor(obj, SQUARE_TYPE_BLACK_PIECE))
-      element.setAttribute("sqcolor", SQUARE_TYPE_BLACK_PIECE);
-    else if (validateSquareColor(obj, SQUARE_TYPE_WHITE_PIECE))
-      element.setAttribute("sqcolor", SQUARE_TYPE_WHITE_PIECE);
+    if (validateSquareColor(obj, SQUARE_PIECE_COLOR_BLACK))
+      element.setAttribute("sqcolor", SQUARE_PIECE_COLOR_BLACK);
+    else if (validateSquareColor(obj, SQUARE_PIECE_COLOR_WHITE))
+      element.setAttribute("sqcolor", SQUARE_PIECE_COLOR_WHITE);
   });
 }
 function toggleSupervisor() {
