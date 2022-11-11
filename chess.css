@@ -15,7 +15,7 @@
 .board > div[square='1']{
     height: 80px;
     width: 80px;
-    transform: scaleY(-1);
+    /* transform: scaleY(-1); */
 }
 #togglecollor{
     display: none;
@@ -30,15 +30,15 @@
 .captureclass{
     border: rgba(0, 0, 0, 0.1);
 }
-.rotate45deg{
+/* .rotate45deg{
     transform: rotate(-45deg);
-}
-.rotate180deg{
+} */
+/* .rotate180deg{
     transform: scaleY(-1);
 }
 .rotate90{
     transform: scaleY(-1);
-}
+} */
 .selectedsquareborder{
     border:solid 10px green;
 }

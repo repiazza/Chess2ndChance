@@ -1,0 +1,247 @@
+///////////////////////////////////////////////////////////
+//
+//    Movement Block
+//
+//
+/**
+ * @constant {number} @default
+ */
+export const MOVEMENT_CHAIN_ORIGIN = 0;
+/**
+ * @constant {number} @default
+ */
+export const MOVEMENT_CHAIN_DESTINATION = 1;
+/**
+ * @constant {number} @default
+ */
+export const DEFAULT_MOVEMENT_SELECTION = 1;
+/**
+ * @constant {number} @default
+ */
+export const CASTLE_MOVEMENT_SELECTION = 2;
+/**
+ * @constant {number} @default
+ */
+export const EN_PASSANT_MOVEMENT_SELECTION = 3;
+/**
+ * @constant {number} @default
+ */
+export const PROMOTION_MOVEMENT_SELECTION = 4;
+/**
+ * @constant {number} @default
+ */
+export const SHORT_CASTLE_TYPE = 0x01;
+/**
+ * @constant {number} @default
+ */
+export const LONG_CASTLE_TYPE = 0x02;
+/**
+ * @constant {number} @default SHORT_CASTLE_TYPE | LONG_CASTLE_TYPE;
+ */
+export const BOTH_CASTLE_TYPE = SHORT_CASTLE_TYPE | LONG_CASTLE_TYPE;
+/**
+ * @constant {boolean} @default false
+ */
+export const GET_BOOLEAN_POSSIBILITY = false;
+/**
+ * @constant {boolean} @default false
+ */
+export const GET_POSSIBLE_TYPES = true;
+/**
+ * @constant {boolean} @default false
+ */
+export const CONSIDER_COLISION = false;
+/**
+ * @constant {boolean} @default false
+ */
+export const IGNORE_COLISION = true;
+/**
+ * @constant {number} @default
+ */
+export const WEST = 0;
+/**
+ * @constant {number} @default
+ */
+export const EAST = 1;
+/**
+ * @constant {number} @default
+ */
+export const NORTH = 2;
+/**
+ * @constant {number} @default
+ */
+export const SOUTH = 3;
+/**
+ * @constant {Array} @default
+ */
+export const NORTH_WEST = [WEST, NORTH];
+/**
+ * @constant {Array} @default
+ */
+export const NORTH_EAST = [EAST, NORTH];
+/**
+ * @constant {Array} @default
+ */
+export const SOUTH_WEST = [WEST, SOUTH];
+/**
+ * @constant {Array} @default
+ */
+export const SOUTH_EAST = [EAST, SOUTH];
+/**
+ * @constant {Array of Array}
+ * @default [ [ WEST ] [ WEST WEST ] [ WEST WEST WEST ] ]
+ */
+export const LONG_CASTLE = [[WEST], [WEST, WEST], [WEST, WEST, WEST]];
+/**
+ * @constant {Array of Array}
+ * @default [ [ EAST ] [ EAST EAST ] ]
+ */
+export const SHORT_CASTLE = [[EAST], [EAST, EAST]];
+/**
+ * @constant {Array of Array}
+ * @default [ LONG_CASTLE SHORT_CASTLE ]
+ */
+export const BOTH_CASTLE = [LONG_CASTLE, SHORT_CASTLE];
+/**
+ * @constant {Array} @default [ NORTH SOUTH ]
+ */
+export const DIRECTION_VERTICAL = [NORTH, SOUTH];
+/**
+ * @constant {Array} @default
+ */
+export const DIRECTION_HORIZONTAL = [WEST, EAST];
+/**
+ * @constant {Array} @default
+ */
+export const DIRECTION_DIAGONAL = [NORTH_EAST, NORTH_WEST, SOUTH_WEST, SOUTH_EAST];
+
+export const FIRST_L_QUADRANT = [
+  [NORTH_WEST, NORTH],
+  [NORTH_EAST, NORTH],
+];
+export const SECOND_L_QUADRANT = [
+  [NORTH_EAST, EAST],
+  [SOUTH_EAST, EAST],
+];
+export const THIRD_L_QUADRANT = [
+  [SOUTH_EAST, SOUTH],
+  [SOUTH_WEST, SOUTH],
+];
+export const FOURTH_L_QUADRANT = [
+  [SOUTH_WEST, WEST],
+  [NORTH_WEST, WEST],
+];
+
+export const L_ROTATE = [
+  FIRST_L_QUADRANT,
+  SECOND_L_QUADRANT,
+  THIRD_L_QUADRANT,
+  FOURTH_L_QUADRANT,
+];
+
+export const SQUARE_RANGE = 1;
+export const DOUBLE_SQUARE_RANGE = 2;
+export const L_RANGE = 4;
+export const LINE_OF_SIGHT = 8;
+export const RANGE_TYPE_NONE = 0;
+
+export const MOVEMENT_TYPE_NONE = 0;
+//
+// Main movement notation
+//
+export const MOVEMENT_DIRECTION_COLUMN = 0x01;
+export const MOVEMENT_DIRECTION_LINE = 0x02;
+export const MOVEMENT_DIRECTION_DIAGONAL = 0x04;
+export const MOVEMENT_DIRECTION_L = 0x08;
+//
+// Segemented movement notation
+//
+export const SUBTYPE_DIAG_MAIN_BEGIN = 0x10;
+export const SUBTYPE_DIAG_MAIN_END = 0x20;
+export const SUBTYPE_DIAG_OPPOSITE_BEGIN = 0x40;
+export const SUBTYPE_DIAG_OPPOSITE_END = 0x80;
+
+export const SUBTYPE_DIAG_ALL =
+  SUBTYPE_DIAG_MAIN_BEGIN |
+  SUBTYPE_DIAG_MAIN_END |
+  SUBTYPE_DIAG_OPPOSITE_BEGIN |
+  SUBTYPE_DIAG_OPPOSITE_END;
+
+export const SUBTYPE_COLUMN_NORTH = 1024;
+export const SUBTYPE_COLUMN_SOUTH = 2048;
+export const SUBTYPE_LINE_WEST = 4096;
+export const SUBTYPE_LINE_EAST = 8192;
+//
+// Special movement notation
+//
+export const SPECIAL_MOVEMENT_CASTLE = 16384;
+export const SPECIAL_MOVEMENT_EN_PASSANT = 32768;
+export const SPECIAL_MOVEMENT_PROMOTE = 65536;
+export const SPECIAL_MOVEMENT_ALL =
+  SPECIAL_MOVEMENT_CASTLE | SPECIAL_MOVEMENT_EN_PASSANT | SPECIAL_MOVEMENT_PROMOTE;
+
+export const MOVEMENT_CASTLE_SHORT = 1;
+export const MOVEMENT_CASTLE_LONG = 2;
+export const MOVEMENT_CASTLE_BOTH = 3;
+//
+// Compount movement notation
+//
+export const MAIN_DIAGONAL = SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END;
+export const OPPOSITE_DIAGONAL = SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
+//
+// Full movement notation
+//
+export const MOVEMENT_DIAGONAL_X = MAIN_DIAGONAL | OPPOSITE_DIAGONAL;
+export const MOVEMENT_DIRECTION_ALL =
+  MOVEMENT_DIRECTION_COLUMN |
+  MOVEMENT_DIRECTION_LINE |
+  MOVEMENT_DIRECTION_DIAGONAL |
+  MOVEMENT_DIRECTION_L;
+
+export const MOVEMENT_COLUMN_ALL = SUBTYPE_COLUMN_NORTH | SUBTYPE_COLUMN_SOUTH;
+export const MOVEMENT_LINE_ALL = SUBTYPE_LINE_WEST | SUBTYPE_LINE_EAST;
+export const MOVEMENT_MAIN_ALL =
+  MOVEMENT_COLUMN_ALL | MOVEMENT_LINE_ALL | SUBTYPE_DIAG_ALL;
+
+export const MOVEMENT_DIRECTION_SUBTYPE_ALL = MOVEMENT_DIRECTION_ALL | MOVEMENT_MAIN_ALL;
+export const MOVEMENT_TYPE_ALL =
+  MOVEMENT_DIRECTION_ALL | MOVEMENT_MAIN_ALL | SPECIAL_MOVEMENT_ALL;
+
+//
+// Movement coordinates
+//
+
+export const NORTH_EAST_DIRECTION = "nesq";
+export const NORTH_WEST_DIRECTION = "nwsq";
+export const SOUTH_EAST_DIRECTION = "sesq";
+export const SOUTH_WEST_DIRECTION = "swsq";
+export const NORTH_DIRECTION = "nsq"; // nsq = (N)orth (Sq)uare
+export const WEST_DIRECTION = "wsq";
+export const SOUTH_DIRECTION = "ssq";
+export const EAST_DIRECTION = "esq";
+export const LINE_DIRECTION = [WEST_DIRECTION, EAST_DIRECTION];
+export const COLUMN_DIRECTION = [SOUTH_DIRECTION, NORTH_DIRECTION];
+export const MAIN_DIAGONAL_DIRECTION = [NORTH_WEST_DIRECTION, SOUTH_EAST_DIRECTION];
+export const OPPOSITE_DIAGONAL_DIRECTION = [NORTH_EAST_DIRECTION, SOUTH_WEST_DIRECTION];
+export const DIAGONAL_DIRECTION = [MAIN_DIAGONAL_DIRECTION, OPPOSITE_DIAGONAL_DIRECTION];
+export const ALL_DIRECTION = [
+  NORTH_EAST_DIRECTION,
+  NORTH_WEST_DIRECTION,
+  SOUTH_EAST_DIRECTION,
+  SOUTH_WEST_DIRECTION,
+  NORTH_DIRECTION,
+  WEST_DIRECTION,
+  SOUTH_DIRECTION,
+  EAST_DIRECTION,
+];
+
+export const CROSS_DIRECTION = LINE_DIRECTION.concat(COLUMN_DIRECTION);
+export const STAR_DIRECTION = CROSS_DIRECTION.concat(MAIN_DIAGONAL_DIRECTION).concat(
+  OPPOSITE_DIAGONAL_DIRECTION
+);
+
+let LSquares = [];
+
+//
+//
+//////////////////////////////////////////////////////////
