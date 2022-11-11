@@ -387,9 +387,11 @@ function validateIsOnRange(square) {
     getPieceTypeFromSquareType(myPieceType),
     moved
   );
-
+  // alert("PieceType:" + myPieceType + "MoveType:" + myMovType + "MoveRange:" + myMovRange);
   // Possui movimento especial?
   if (matchMovementDirection(myMovType, SPECIAL_MOVEMENT_ALL)) {
+    // Roques
+
     let castleTypes;
     if (
       matchMovementDirection(myMovType, SPECIAL_MOVEMENT_CASTLE) &&
@@ -458,6 +460,7 @@ function validateIsOnRange(square) {
       }
       // highlightSelection();
     }
+    // EN PASSANT?
     if (
       matchMovementDirection(myMovType, SPECIAL_MOVEMENT_EN_PASSANT) &&
       validatePassableEnemies(selectedElem, GET_BOOLEAN_POSSIBILITY)
@@ -622,11 +625,14 @@ function validateSquareColor(elemSquare, flag) {
   let square = getElementFromSquareOrSquareId(elemSquare);
   if (square == null) return false;
 
+  // alert(square.id[1]);
   if (flag === SQUARE_PIECE_COLOR_WHITE)
     return WHITEPIECE_INIT_ROWS.includes(square.id[1]);
   if (flag === SQUARE_PIECE_COLOR_BLACK)
     return BLACKPIECE_INIT_ROWS.includes(square.id[1]);
   if (flag === SQUARE_TYPE_BLANK) return BLANKSQUARE_INIT_ROWS.includes(square.id[1]);
+
+  return false;
 }
 //
 // End Validation block
@@ -902,6 +908,8 @@ function createSquare(square) {
     sqColor = SQUARE_PIECE_COLOR_WHITE;
   if (validateSquareColor(square, SQUARE_TYPE_BLANK)) sqColor = BLANK_SQUARE_COLOR;
 
+  // alert(sqColor);
+
   if (validateSquareType(square, SQUARE_TYPE_PAWN_PIECE)) {
     promotionRow = validateSquareColor(square, SQUARE_PIECE_COLOR_WHITE)
       ? ROW_SQUARE_COUNT
@@ -1018,7 +1026,7 @@ function lowlightElement(element) {
   element.classList.add(bgcAttr);
 }
 function highlightCapture(elm) {
-  mySquare = getElementFromSquareOrSquareId(elm);
+  let mySquare = getElementFromSquareOrSquareId(elm);
   let bgcAttr = mySquare.getAttribute("bgc");
   highlightStyles.forEach((myClass) => {
     mySquare.classList.remove(myClass);
@@ -1564,7 +1572,7 @@ function setupCapture(event) {
     let captureSq = strElem.getAttribute(SOUTH_DIRECTION);
     strElem = document.getElementById(captureSq);
   }
-  retStr =
+  let retStr =
     strElem.getAttribute("sqcolor").split("PIECE")[0][0] +
     strElem.getAttribute("sqtype").split("PIECE")[0][0] +
     strElem.id[0] +
@@ -1604,7 +1612,7 @@ function updateMajorRelativePositions(movChain) {
  *
  * A funcao squareHandler tem dois fluxos basicos:
  *  + Seleção da casa.
- *    º selectSquare - caso nenhuma casa esteja seolecionada, ou troca a casa atraves de
+ *    º selectSquare - caso nenhuma casa esteja selecionada, ou troca a casa atraves de
  *      changeSelectedSquare - se o segundo clique for em casa aliada.
  *      (Exceto para acoes especiais como Roque)
  *  + Ação da casa ou casas.
@@ -1617,19 +1625,29 @@ function squareHandler(event) {
   event.preventDefault();
   let captureSq = false;
 
-  // Square aliado e
-  // SEM selecao previa ou COM selecao previa
+  /**
+   * @todo : Pegar outros sons de squares, por enquanto somente
+   * temos e2.wav e e4.wav
+   * Funcional mas desabilitado por enquanto
+   * playSquareName(event.target);
+   */
+
+  // Clique em casas aliadas
+  //
+  // COM selecao previa - changeSelectedSquare
+  // SEM selecao previa - SelectSquare
   if (selectSquare(event.target) || changeSelectedSquare(event.target)) {
     if (validateIsSelected()) {
       clearAllElementSelection();
     }
     setSelection(event.target);
-    playSquareName(event.target);
     highlightSquares(event.target);
   }
 
-  // Selecao previa + square sem pecas ou
-  // Selecao previa + square com pecas inimigas
+  // Clique em casas neutras ou inimigas
+  //
+  // Selecao previa + neutro  - moveSquare
+  // Selecao previa + inimigo - captureSquare
   else if (
     moveSquare(event.target) ||
     (captureSq = captureSquare(event.target)) != false
@@ -1670,7 +1688,7 @@ function squareHandler(event) {
     //
     // Passar Turno
     //
-    changeTurn();
+    // changeTurn();
   } else if (selectSameSquare(event.target)) {
     clearAllElementSelection();
   }
@@ -1682,9 +1700,9 @@ function toggleTurnValue() {
   return TURN_CONTROL;
 }
 function changeTurn() {
-  toggleTurnValue();
+  // toggleTurnValue();
 
-  togglePlayerColor();
+  // togglePlayerColor();
 
   // toggleTimer()
 
@@ -1701,41 +1719,28 @@ function readyHandler(event) {
 
   if (document.getElementById("a1") != null) return;
 
-  drawBoardSquares(GAME_CONTEXT_INITIAL, null);
-  // drawBoardSquares(
-  //                   GAME_CONTEXT_SKIP_PIECES,
-  //                   [
-  //                       SQUARE_TYPE_BISHOP_PIECE,
-  //                       SQUARE_TYPE_KNIGHT_PIECE,
-  //                       SQUARE_TYPE_QUEEN_PIECE
-  //                   ]
-  //                 );
+  //drawBoardSquares(GAME_CONTEXT_INITIAL, null);
+  // drawBoardSquares(GAME_CONTEXT_SKIP_PIECES, [
+  //   SQUARE_TYPE_BISHOP_PIECE,
+  //   SQUARE_TYPE_KNIGHT_PIECE,
+  //   SQUARE_TYPE_QUEEN_PIECE,
+  // ]);
   // drawBoardSquares(
   //                   GAME_CONTEXT_SKIP_SIDE,
   //                   ENEMY_SIDE
   //                 );
-  // drawBoardSquares(
-  //                   GAME_CONTEXT_SKIP_SIDEPIECES,
-  //                     [
-  //                       [[
-  //                         SQUARE_TYPE_BISHOP_PIECE,
-  //                         SQUARE_TYPE_KNIGHT_PIECE,
-  //                         SQUARE_TYPE_QUEEN_PIECE,
-  //                         SQUARE_TYPE_PAWN_PIECE
-  //                       ],
-  //                       [
-  //                         FRIENDLY_SIDE
-  //                       ]],
-  //                       [[
-  //                         SQUARE_TYPE_PAWN_PIECE,
-  //                         SQUARE_TYPE_KNIGHT_PIECE
-  //                       ],
-  //                       [
-  //                         ENEMY_SIDE
-  //                       ]]
-
-  //                     ]
-  //                 );
+  drawBoardSquares(GAME_CONTEXT_SKIP_SIDEPIECES, [
+    [
+      [
+        SQUARE_TYPE_BISHOP_PIECE,
+        SQUARE_TYPE_KNIGHT_PIECE,
+        SQUARE_TYPE_QUEEN_PIECE,
+        SQUARE_TYPE_PAWN_PIECE,
+      ],
+      [FRIENDLY_SIDE],
+    ],
+    [[SQUARE_TYPE_PAWN_PIECE, SQUARE_TYPE_KNIGHT_PIECE], [ENEMY_SIDE]],
+  ]);
   // $("#board").css("transform", "scaleY(-1)");
 
   drawSubtitles(SUBTITLE_BOTH);
@@ -1854,7 +1859,10 @@ function drawSubtitles(whichSubs) {
 }
 function applyContext(context, extraArg, sqElem) {
   // let myElem = document.getElementById(sqElem.id);
+
   if (context == GAME_CONTEXT_SKIP_SIDEPIECES) {
+    var pieceArr = new Array();
+    var pieceSideArr = new Array();
     extraArg.map((ctx) => {
       pieceArr = ctx[0];
       pieceSideArr = ctx[1];
@@ -1906,10 +1914,10 @@ function setWindRoseCoordinates(drawingSquare) {
   drawingSquare.squareElem.setAttribute("nesq", drawingSquare.northEastSquare);
   drawingSquare.squareElem.setAttribute("sesq", drawingSquare.southEastSquare);
   drawingSquare.squareElem.setAttribute("swsq", drawingSquare.southWestSquare);
-  drawingSquare.squareElem.setAttribute("tsq", drawingSquare.northSquare);
-  drawingSquare.squareElem.setAttribute("bsq", drawingSquare.southSquare);
-  drawingSquare.squareElem.setAttribute("lsq", drawingSquare.westSquare);
-  drawingSquare.squareElem.setAttribute("rsq", drawingSquare.eastSquare);
+  drawingSquare.squareElem.setAttribute("nsq", drawingSquare.northSquare);
+  drawingSquare.squareElem.setAttribute("ssq", drawingSquare.southSquare);
+  drawingSquare.squareElem.setAttribute("wsq", drawingSquare.westSquare);
+  drawingSquare.squareElem.setAttribute("esq", drawingSquare.eastSquare);
 }
 //
 /**
@@ -1984,11 +1992,21 @@ function drawBoardSquares(context, extraArg = null) {
         newsquare.squareElem.setAttribute("sqcolor", newsquare.squareColor);
         // Setar posicoes inicial dos Reis.
         // Se somos brancas, o rei aliado estará na linha 1, se nao 8.
-        let whiteInitId = WHITEPIECE_INIT_ROWS.indexOf(
-          newsquare.squareId[SQUARE_NUMERIC_NDX]
-        );
-        let friendlyKingSq = whiteInitId ? "e1" : "e8";
-        let enemyKingSq = whiteInitId ? "e8" : "e1";
+
+        let friendlyKingSq = "";
+        let enemyKingSq = "";
+        if (validateIsNotBlank(newsquare.squareElem)) {
+          friendlyKingSq = "e8";
+          enemyKingSq = "e1";
+        }
+
+        if (
+          validateFriendlyPieceSquare(newsquare.squareElem) &&
+          playerColor == avaliableColors[WHITE_COLOR]
+        ) {
+          friendlyKingSq = "e1";
+          enemyKingSq = "e8";
+        }
 
         newsquare.squareElem.setAttribute("frkpos", friendlyKingSq);
         newsquare.squareElem.setAttribute("enkpos", enemyKingSq);

@@ -16,6 +16,7 @@ function sendWSMessage(msg) {
   traceSocketMsg(msg);
   sockConn.send(msg);
 }
+
 function traceSocketMsg(msg) {
   let i = 0;
   let logmsg = "";
