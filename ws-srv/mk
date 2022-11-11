@@ -1,0 +1,16 @@
+Tipo=""
+Flags=""
+
+while ((${#} > 0)); do
+  if [ "${1}" == "cl7" ]; then
+    Tipo="CL7=1"
+  elif [ "${1}" == "rh73" ]; then
+    Tipo="RH73=1"
+  else
+  if [ "${Flags}" != "" ]; then Flags="${Flags} "; fi
+    Flags="${Flags}${1}"
+  fi
+  shift
+done
+
+make LINUX=1 ${Tipo} CFLAGS="${Flags}" chess-srv

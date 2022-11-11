@@ -1,3 +1,10 @@
+// import {
+//   ArrayOfArray,
+//   ArrayOfNumber,
+//   ArrayOfString,
+//   ArrayOfChar,
+//   bitwiseCumullativeFlag,
+// } from "./types.js";
 import {
   SQUARE_RANGE,
   DOUBLE_SQUARE_RANGE,
@@ -25,55 +32,93 @@ import {
   SQUARE_TYPE_ROOK_PIECE,
 } from "./board.js";
 
-// ROOK
+////////////////////////////////
+//
+//  ROOK - TORRE
+//
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag}
+ *
+ * Movimento Inicial da Torre.
+ *
+ * Sentido da coluna (Norte-Sul) e Sentido da linha (Leste-Oeste)
+ *
+ * Possui movimento especial Roque, ate se mover a primeira vez.
+ *
+ * @default 0x01 | 0x02 | 0x4000 = 100000000000011
  */
 export const ROOK_INITIAL_MOVEMENT =
   MOVEMENT_DIRECTION_COLUMN | MOVEMENT_DIRECTION_LINE | SPECIAL_MOVEMENT_CASTLE;
+
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag}
+ *
+ * Movimento da Torre
+ *
+ * Este movimento é o movimento real, levando em conta que o Roque é uma situação especial.
+ *
+ * Sentido da coluna (Norte-Sul) e Sentido da linha (Leste-Oeste)
+ *
+ * @default 0x4003 ^ 0x4000 = 0x03
  */
 export const ROOK_CASTLED_MOVEMENT = ROOK_INITIAL_MOVEMENT ^ SPECIAL_MOVEMENT_CASTLE;
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {number}
+ *
+ * Alcance(range) do movimento da torre.
+ *
+ * Ela se move para onde é capaz de enxergar.
+ *
+ * @default LINE_OF_SIGHT
  */
 export const ROOK_MOVEMENT_RANGE = LINE_OF_SIGHT;
 
-// KNIGHT
+////////////////////////////////
+//
+//  KNIGHT - CAVALO
+//
+
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
+ *
+ * Movimento de corrida e virada.
+ *
+ * Formando um 'L'. Corre 2 casas, vira e anda uma.
+ *
  */
 export const KNIGHT_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_L;
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const KNIGHT_MOVEMENT_RANGE = L_RANGE; // 2 movements 4way expressed
 
-// BISHOP
+////////////////////////////////
+//
+//  BISHOP - BISPO
+//
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const BISHOP_INITIAL_MOVEMENT = MOVEMENT_DIRECTION_DIAGONAL;
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const BISHOP_MOVEMENT_RANGE = LINE_OF_SIGHT;
 
 // QUEEN
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const QUEEN_INITIAL_MOVEMENT =
   MOVEMENT_DIRECTION_COLUMN | MOVEMENT_DIRECTION_LINE | MOVEMENT_DIRECTION_DIAGONAL;
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const QUEEN_MOVEMENT_RANGE = LINE_OF_SIGHT;
 
 // KING
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const KING_INITIAL_MOVEMENT =
   SPECIAL_MOVEMENT_CASTLE |
@@ -81,17 +126,17 @@ export const KING_INITIAL_MOVEMENT =
   MOVEMENT_DIRECTION_LINE |
   MOVEMENT_DIRECTION_DIAGONAL;
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const KING_CASTLED_MOVEMENT = KING_INITIAL_MOVEMENT ^ SPECIAL_MOVEMENT_CASTLE;
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const KING_MOVEMENT_RANGE = SQUARE_RANGE;
 
 // PAWN
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const PAWN_INITIAL_MOVEMENT =
   MOVEMENT_DIRECTION_COLUMN |
@@ -102,15 +147,15 @@ export const PAWN_INITIAL_MOVEMENT =
   SPECIAL_MOVEMENT_PROMOTE |
   SPECIAL_MOVEMENT_EN_PASSANT;
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const PAWN_PASSE_MOVEMENT = PAWN_INITIAL_MOVEMENT ^ SPECIAL_MOVEMENT_EN_PASSANT;
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const PAWN_INITIAL_RANGE = DOUBLE_SQUARE_RANGE;
 /**
- * @constant {number bitwise flag} @default
+ * @constant @type {bitwiseCumullativeFlag} @default
  */
 export const PAWN_MOVED_RANGE = SQUARE_RANGE;
 

@@ -1,0 +1,1 @@
+./mkall -DDEBUG=1 ${*}

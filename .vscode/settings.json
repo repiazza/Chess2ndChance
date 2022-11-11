@@ -2,4 +2,9 @@
     "zenMode.fullScreen": true,
     "javascript.inlayHints.parameterTypes.enabled": false,
     "debug.javascript.breakOnConditionalError": false,
+    "files.associations": {
+        "timeb.h": "c",
+        "stat.h": "c",
+        "process.h": "c"
+    },
 }

@@ -1,3 +1,5 @@
+// import { ArrayOfArray, ArrayOfNumber, ArrayOfString, ArrayOfChar } from "./types.js";
+
 // Board Composition
 //  - Dimensions (sqxsq)
 //  - Rows       (indexed by number (1-8))
@@ -8,7 +10,6 @@
 // pn = PieceName
 // pc = PieceColor
 //
-
 /**
  * @constant {number} @default
  */
@@ -33,8 +34,9 @@ export const DARK_BGCOLOR = 0;
  * @constant {number} @default
  */
 export const LIGHT_BGCOLOR = 1;
+
 /**
- * @constant {Array of Strings}
+ * @constant @type {ArrayOfString}
  * @default [ "columnmovhl" "linemovhl" "diagonalmovhl" "knightmovhl" "linemovhldark" ...]
  */
 export const highlightStyles = [
@@ -54,12 +56,12 @@ export const highlightStyles = [
   "silverbuenaodark",
 ];
 /**
- * @constant @type {Array of Strings}
+ * @constant @type {ArrayOfString}
  * @default [ "capturehl" "capturehldark" ]
  */
 export const captureStyles = ["capturehl", "capturehldark"];
 /**
- * @constant @type {Array of Strings}
+ * @constant @type {ArrayOfString}
  * @default [ "goldenrod" "goldenroddark" "silverbuenao" "silverbuenaodark" ];
  */
 export const specialPieceStyles = [
@@ -69,17 +71,17 @@ export const specialPieceStyles = [
   "silverbuenaodark",
 ];
 /**
- * @constant @type {Array of Strings}
+ * @constant @type {ArrayOfString}
  * @default [ "darksquarecolor" "lightsquarecolor" ]
  */
 export const bgBoardColors = ["darksquarecolor", "lightsquarecolor"];
 /**
- * @constant @type {Array of chars}
+ * @constant @type {ArrayOfChar}
  * @default [ "a" "b" "c" "d" "e" "f" "g" "h" ]
  */
 export const columnArray = ["a", "b", "c", "d", "e", "f", "g", "h"];
 /**
- * @constant @type {Array of chars}
+ * @constant @type {ArrayOfChar}
  * @default [ "a" "b" "c" "d" "e" "f" "g" "h" ]
  */
 export const revColumn = ["h", "g", "f", "e", "d", "c", "b", "a"];
@@ -96,27 +98,27 @@ export const SQUARE_PIECE_COLOR_WHITE = "WHITEPIECE";
  */
 export const BLANK_SQUARE_COLOR = 0;
 /**
- * @constant @type {Array of chars}
+ * @constant @type {ArrayOfChar}
  * @default [ "2" "7" ];
  */
 export const PAWN_INIT_ROWS = ["2", "7"];
 /**
- * @constant @type {Array of chars}
+ * @constant @type {ArrayOfChar}
  * @default [ "1" "8" ];
  */
 export const HIGHVALUE_INIT_ROWS = ["1", "8"];
 /**
- * @constant @type {Array of chars}
+ * @constant @type {ArrayOfChar}
  * @default [ "1" "2" ];
  */
 export const WHITEPIECE_INIT_ROWS = ["1", "2"];
 /**
- * @constant @type {Array of chars}
+ * @constant @type {ArrayOfChar}
  * @default [ "7" "8" ];
  */
 export const BLACKPIECE_INIT_ROWS = ["7", "8"];
 /**
- * @constant @type {Array of chars}
+ * @constant @type {ArrayOfChar}
  * @default [ "3" "4" "5" "6" ];
  */
 export const BLANKSQUARE_INIT_ROWS = ["3", "4", "5", "6"];
@@ -185,42 +187,42 @@ export const SQUARE_ALPHABETICAL_NDX = 0;
  */
 export const SQUARE_NUMERIC_NDX = 1;
 /**
- * @constant @type {Array of Strings}
+ * @constant @type {ArrayOfString}
  * @default [ "a1" "a8" ]
  */
 export const LONG_CASTLE_INIT_SQUARES = ["a1", "a8"];
 /**
- * @constant @type {Array of Strings}
+ * @constant @type {ArrayOfString}
  * @default [ "h1" "h8" ]
  */
 export const SHORT_CASTLE_INIT_SQUARES = ["h1", "h8"];
 /**
- * @constant @type {Array of Strings}
+ * @constant @type {ArrayOfString}
  * @default [ "d1" "d8" ]
  */
 export const LONG_CASTLE_ROOK_SQUARES = ["d1", "d8"];
 /**
- * @constant @type {Array of Strings}
+ * @constant @type {ArrayOfString}
  * @default [ "f1" "f8" ]
  */
 export const SHORT_CASTLE_ROOK_SQUARES = ["f1", "f8"];
 /**
- * @constant @type {Array of Strings}
+ * @constant @type {ArrayOfString}
  * @default [ "c1" "c8" ]
  */
 export const LONG_CASTLE_KING_SQUARES = ["c1", "c8"];
 /**
- * @constant @type {Array of Strings}
+ * @constant @type {ArrayOfString}
  * @default [ "g1" "g8" ]
  */
 export const SHORT_CASTLE_KING_SQUARES = ["g1", "g8"];
 /**
- * @constant @type {Array of chars}
+ * @constant @type {ArrayOfChar}
  * @default "columnArray.slice(0, 5);"
  */
 export const LONG_CASTLE_COLUMNS = columnArray.slice(0, 5);
 /**
- * @constant @type {Array of chars}
+ * @constant @type {ArrayOfChar}
  * @default "columnArray.slice(0, 5);"
  */
 export const SHORT_CASTLE_COLUMNS = columnArray.slice(4, 8);
@@ -233,6 +235,6 @@ export const LONG_CASTLE_NDX = 0;
  */
 export const SHORT_CASTLE_NDX = 1;
 /**
- * @constant {Array of Array} @default "[ LONG_CASTLE_INIT_SQUARES SHORT_CASTLE_INIT_SQUARES ]"
+ * @constant @type {ArrayOfArray} @default "[ LONG_CASTLE_INIT_SQUARES SHORT_CASTLE_INIT_SQUARES ]"
  */
 export const CASTLE_INIT_SQUARES = [LONG_CASTLE_INIT_SQUARES, SHORT_CASTLE_INIT_SQUARES];

@@ -180,27 +180,21 @@ let playerColor = "WHITEPIECE";
 let blankFrameStr = 'sqtype="BLANK" sqcolor="0"></div>';
 let LSquares = [];
 
-//
-//
-//
-//////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////
-//
-// Game block
-//
-
 const TURN_WHITE = 0;
 const TURN_BLACK = 1;
 
 let TURN_CONTROL = TURN_WHITE;
 
-//
-//
-//////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////
-//
-//  Functions and procedures
-//
+const SUBTITLE_HORIZONTAL = 1;
+const SUBTITLE_VERTICAL = 2;
+const SUBTITLE_BOTH = 3;
+
+function playSquareName(elemSquare) {
+  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+  var audio = new Audio();
+  audio.src = "sounds/" + mySquare.id + ".wav";
+  audio.play();
+}
 function getFrameByTypeAndColor(sqType, sqColor) {
   return (
     'sqtype="' +
@@ -1592,8 +1586,15 @@ function updateMajorRelativePositions(movChain) {
         playerColor == avaliableColors[BLACK_COLOR]
           ? avaliableColors[WHITE_COLOR]
           : avaliableColors[BLACK_COLOR];
-      $('[sqColor="' + playerColor + '"]').attr("frkpos", kingSqId);
-      $('[sqColor="' + enemyColor + '"]').attr("enkpos", kingSqId);
+
+      document.querySelectorAll('[sqColor="' + playerColor + '"]').forEach((element) => {
+        element.setAttribute("frkpos", kingSqId);
+      });
+      document.querySelectorAll('[sqColor="' + enemyColor + '"]').forEach((element) => {
+        element.setAttribute("enkpos", kingSqId);
+      });
+      // $('[sqColor="' + playerColor + '"]').attr("frkpos", kingSqId);
+      // $('[sqColor="' + enemyColor + '"]').attr("enkpos", kingSqId);
     }
   });
 }
@@ -1623,6 +1624,7 @@ function squareHandler(event) {
       clearAllElementSelection();
     }
     setSelection(event.target);
+    playSquareName(event.target);
     highlightSquares(event.target);
   }
 
@@ -1736,7 +1738,7 @@ function readyHandler(event) {
   //                 );
   // $("#board").css("transform", "scaleY(-1)");
 
-  drawHorizontalSubtitles();
+  drawSubtitles(SUBTITLE_BOTH);
 }
 function isKingOnEnemyRangeIgnoringColision(square) {
   let mySquare = getElementFromSquareOrSquareId(square);
@@ -1795,7 +1797,7 @@ function isSquareIsOnEnemyRange(square) {
 }
 
 function drawHorizontalSubtitles() {
-  let marginLeft = 140;
+  let marginLeft = 160;
   let columnAlpha = "";
 
   columnArray.map(function (clmAlpha, clmndx) {
@@ -1807,26 +1809,55 @@ function drawHorizontalSubtitles() {
 
     subtitle.innerHTML = columnAlpha;
     subtitle.style.marginLeft = marginLeft + "px";
-    subtitle.style.marginTop = "690px";
+    subtitle.style.marginTop = "688px";
     subtitle.style.position = "absolute";
     subtitle.style.color = "black";
+    subtitle.style.opacity = "0.4";
     subtitle.style.fontWeight = "bold";
-    subtitle.style.fontSize = "20px";
-    subtitle.id = "subtitles";
+    subtitle.style.fontSize = "22px";
+    subtitle.id = "horzsubtitles";
     document.getElementById("container").appendChild(subtitle);
     marginLeft += 81;
   });
 }
 
+function drawVerticalSubtitles() {
+  let marginLeft = 115;
+  let marginTop = 75;
+
+  for (let rowNdx = 1; rowNdx < 9; rowNdx++) {
+    let subtitle = document.createElement("div");
+    if (playerColor == avaliableColors[WHITE_COLOR]) {
+      rowNdx = 9 - rowNdx;
+    }
+    subtitle.innerHTML = rowNdx;
+    subtitle.style.marginLeft = marginLeft + "px";
+    subtitle.style.marginTop = marginTop + "px";
+    subtitle.style.position = "absolute";
+    subtitle.style.color = "black";
+    subtitle.style.fontWeight = "bold";
+    subtitle.style.opacity = "0.4";
+    subtitle.style.fontSize = "20px";
+    subtitle.id = "vertsubtitles";
+    document.getElementById("container").appendChild(subtitle);
+    marginTop += 80;
+    if (playerColor == avaliableColors[WHITE_COLOR]) {
+      rowNdx = 9 - rowNdx;
+    }
+  }
+}
+function drawSubtitles(whichSubs) {
+  if (whichSubs == SUBTITLE_HORIZONTAL || whichSubs == SUBTITLE_BOTH)
+    drawHorizontalSubtitles();
+  if (whichSubs == SUBTITLE_VERTICAL || whichSubs == SUBTITLE_BOTH)
+    drawVerticalSubtitles();
+}
 function applyContext(context, extraArg, sqElem) {
   // let myElem = document.getElementById(sqElem.id);
   if (context == GAME_CONTEXT_SKIP_SIDEPIECES) {
     extraArg.map((ctx) => {
       pieceArr = ctx[0];
       pieceSideArr = ctx[1];
-
-      // alert(pieceArr)
-      // alert(pieceSideArr)
       pieceArr.map((pT) => {
         if (
           pT == sqElem.squareType &&
@@ -1880,7 +1911,15 @@ function setWindRoseCoordinates(drawingSquare) {
   drawingSquare.squareElem.setAttribute("lsq", drawingSquare.westSquare);
   drawingSquare.squareElem.setAttribute("rsq", drawingSquare.eastSquare);
 }
-// Cria os squares do board
+//
+/**
+ * Cria as casas(squares) do tabuleiro(board);
+ * @constructor
+ * @param {number} context - Se houver um contexto, sera aplicado.
+ *                           Os contextos estão cadastrados no modulo board.js
+ *                           Exemplo: Desenhar comeco de jogo ou sem peças laterais, etc.
+ * @param  @type {Array of Array}  - Opcional, para caso de contexto livre, onde cada peça eh selecionada a parte.
+ */
 function drawBoardSquares(context, extraArg = null) {
   const board = document.getElementById("board");
   let storageSquares = [];
@@ -1914,7 +1953,7 @@ function drawBoardSquares(context, extraArg = null) {
 
         let candidateElem = drawSquare(columnAlpha + rowNdx, "");
         const newsquare = createSquare(candidateElem);
-
+        // Incrementamos de 80 em 80 px a cada linha(row), temos um board 8x8 de 640px
         marginLeft += 80;
 
         // Setamos nosso posicionamento e estilos
@@ -2015,10 +2054,10 @@ function setToggleColor(toggleId, buttonreadyHandler) {
 
 function destroySquares() {
   document.querySelectorAll("[square]").forEach((element) => {
-    $(element).remove();
+    element.remove();
   });
-  document.querySelectorAll('[id="subtitles"]').forEach((element) => {
-    $(element).remove();
+  document.querySelectorAll('[id*="subtitles"]').forEach((element) => {
+    element.remove();
   });
 }
 

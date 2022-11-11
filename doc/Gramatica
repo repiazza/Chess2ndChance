@@ -1,0 +1,109 @@
+// Composicao do tabuleiro
+//  - Dimensions (sqxsq)
+//  - Rows       (indexed by number (1-8))
+//  - Columns    (indexed by letters(a-h))
+//  - Squares    (composed by Column + Row Index)
+//
+// Square attributes:
+// pt = PieceType
+// pc = PieceColor
+// id = Square
+// 
+// Descrição dos intervalos de intenção ou presença
+// o que esta esta - conviccao 
+// https://en.wikipedia.org/wiki/Law_of_noncontradiction
+//
+// p  ---> q
+// p <---> q
+// p ----> q -----> r
+// 
+// Como ler
+// regras operacional (runtime) dos ponteiros
+//
+// *   - o que há em
+// var - quem sou eu 
+// &   - endereco de
+// 
+// declaration:
+//   specifiers-and-qualifiers declarators-and-initializers(optional)
+
+//   type specifiers:
+    // [ 
+    //   {void}?|{unsigned}?|{long}?{int, long, float, double}|{char}
+    //   {struct}|{union}|{enum}
+    //   [{typedef}|{auto}|{register}|{static}|{extern}]{0-1}
+    //     [zero or more type qualifiers: const, volatile, restrict]{*}
+    // ]+
+//     []	array subscript	a[b]	access the bth element of array a
+// *	pointer dereference	*a	dereference the pointer a to access the object or function it refers to
+// &	address of	&a	create a pointer that refers to the object or function a
+// .	member access	a.b	access member b of struct or union a
+// ->	member access through pointer	a->b	access member b of struct or union pointed to by a
+
+// 
+// 
+// declaration-specifiers:
+//     storage-class-specifier declaration-specifiersopt
+//     type-specifier declaration-specifiersopt
+//     type-qualifier declaration-specifiersopt
+
+// init-declarator-list:
+//     init-declarator
+//     init-declarator-list , init-declarator
+
+// init-declarator:
+//     declarator
+//     declarator = initializer
+// regras operacionais (declscope) de declaracao 
+// 
+// 
+// *   - ponteiro 
+// 
+//
+// Cores/Fratria
+// W - White
+// B - Black
+//
+// Movimentos sao realizados nas 
+// Direcoes cardeais e nas direcoes colaterais
+// 
+// São leste (L), sul (S), oeste (W), norte (N).
+// São eles: nordeste (NE), sudeste (SE), noroeste (NW) e sudoeste (SW).
+//
+//                                 N 
+//              N                  | 
+//           NW   NE              \|/
+//          W       E          ----|----
+//           SW   SE              /|\
+//              S                  | 
+//                                    
+//
+//  Mover-se, entao eh deslocar-se na direcao de uma coordenada ou na composicao delas
+//  
+//  Outros padroes: 
+//    Pecas brancas sempre comecam nos squares a1-a8 e as h1-h8, e as pre preenchendo 
+//  de fora para dentro na seguinte sequencia Torres, Cavalos, Bispos. As Damas vao 
+//  nas casas de sua cor e os reis nas casas de cores opostas restantes
+//  A nomenclatura abreviada das pecas para representacao:
+//     R - Rook, N - kNight, B - Bishop, Q - Queen, K - King, ( B - Bishop, N - kNight, R - Rook, )                                 
+//       (Torre)   (Cavalo)    (Bispo)     (Dama)     (Rei)   (   (Bispo)     (Cavalo)    (Torre) )                             
+//
+//  Outra representacao posivel eh Cor + Tipo + (CordasCasas)? + Square(somente alfa)
+//                      WBle - BPa - WQ - BK           
+//
+//  
+
+//                               (   )
+//                                ( )
+// l(0)= -1 + *.[0-1]+          ------
+//       ----------------
+//             E
+//  desvio padrao limite 3 8 
+// 
+//
+//
+//
+// logxi
+//
+// impasse mexicano
+// interpolacao periodo log   

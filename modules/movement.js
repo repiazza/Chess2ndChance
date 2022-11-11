@@ -1,8 +1,10 @@
-///////////////////////////////////////////////////////////
-//
-//    Movement Block
-//
-//
+// import {
+//   ArrayOfArray,
+//   ArrayOfNumber,
+//   ArrayOfString,
+//   ArrayOfChar,
+//   bitwiseCumullativeFlag,
+// } from "./types.js";
 /**
  * @constant {number} @default
  */
@@ -146,12 +148,26 @@ export const LINE_OF_SIGHT = 8;
 export const RANGE_TYPE_NONE = 0;
 
 export const MOVEMENT_TYPE_NONE = 0;
-//
-// Main movement notation
-//
+
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x01 = 0001
+ */
 export const MOVEMENT_DIRECTION_COLUMN = 0x01;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x02 = 0010
+ */
 export const MOVEMENT_DIRECTION_LINE = 0x02;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x04 = 0100
+ */
 export const MOVEMENT_DIRECTION_DIAGONAL = 0x04;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x08 = 1000
+ */
 export const MOVEMENT_DIRECTION_L = 0x08;
 //
 // Segemented movement notation
