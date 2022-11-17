@@ -1,35 +1,4 @@
 /**
- * Multidimensional Array
- *
- * Ex.: [
- *          [CONTENT1, CONTENT2],
- *          [CONTENT3, CONTENT4],
- *      ]
- * @typedef {Array[]} ArrayOfArray
- */
-
-/**
- * Array of fixed string types
- *
- * Ex.: Array ["value", "other value"]
- * @typedef {Array} ArrayOfString
- */
-
-/**
- * Array of fixed numeric types
- *
- *  Ex.: Array [1, 4, 10, 20018]
- * @typedef {Array} ArrayOfNumber
- */
-
-/**
- * Array of characters types or strings with lenght 1 elements
- *
- *  Ex.: Array ['c', 'a', 'r', 'l']
- * @typedef {Array} ArrayOfChar
- */
-
-/**
  * A string with only uppercase characters
  * Commonly used on defines (consts)
  *
@@ -59,13 +28,4 @@
  * @typedef {number} bitwiseCumullativeFlag
  */
 
-export {
-  ArrayOfArray,
-  ArrayOfChar,
-  ArrayOfNumber,
-  ArrayOfString,
-  bitwiseCumullativeFlag,
-  camelCaseString,
-  lowerCaseString,
-  upperCaseString,
-};
+export default {};

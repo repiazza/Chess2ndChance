@@ -5,6 +5,8 @@
     "files.associations": {
         "timeb.h": "c",
         "stat.h": "c",
-        "process.h": "c"
+        "process.h": "c",
+        "string.h": "c",
+        "stdlib.h": "c"
     },
 }

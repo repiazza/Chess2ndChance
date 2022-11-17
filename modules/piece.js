@@ -1,10 +1,5 @@
-// import {
-//   ArrayOfArray,
-//   ArrayOfNumber,
-//   ArrayOfString,
-//   ArrayOfChar,
-//   bitwiseCumullativeFlag,
-// } from "./types.js";
+import "./types.js";
+
 import {
   SQUARE_RANGE,
   DOUBLE_SQUARE_RANGE,

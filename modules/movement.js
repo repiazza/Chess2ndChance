@@ -1,10 +1,4 @@
-// import {
-//   ArrayOfArray,
-//   ArrayOfNumber,
-//   ArrayOfString,
-//   ArrayOfChar,
-//   bitwiseCumullativeFlag,
-// } from "./types.js";
+import "./types.js";
 /**
  * @constant {number} @default
  */
@@ -90,17 +84,17 @@ export const SOUTH_WEST = [WEST, SOUTH];
  */
 export const SOUTH_EAST = [EAST, SOUTH];
 /**
- * @constant {Array of Array}
- * @default [ [ WEST ] [ WEST WEST ] [ WEST WEST WEST ] ]
+ * @constant {[][]}
+ * @default [ [ EAST ] [ EAST EAST ] [ EAST EAST EAST ] ]
  */
-export const LONG_CASTLE = [[WEST], [WEST, WEST], [WEST, WEST, WEST]];
+export const LONG_CASTLE = [[EAST], [EAST, EAST], [EAST, EAST, EAST]];
 /**
- * @constant {Array of Array}
- * @default [ [ EAST ] [ EAST EAST ] ]
+ * @constant {[][]}
+ * @default [ [ WEST ] [ WEST WEST ] ]
  */
-export const SHORT_CASTLE = [[EAST], [EAST, EAST]];
+export const SHORT_CASTLE = [[WEST], [WEST, WEST]];
 /**
- * @constant {Array of Array}
+ * @constant {[][]}
  * @default [ LONG_CASTLE SHORT_CASTLE ]
  */
 export const BOTH_CASTLE = [LONG_CASTLE, SHORT_CASTLE];

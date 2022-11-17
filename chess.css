@@ -123,6 +123,12 @@ img {
 .goldenroddark{
     background-color: rgba(218, 165, 32,1);
 }
+.enemymvhl{
+    background-color: rgb(188, 84, 75, 1);
+}
+.enemymvhldark{
+    background-color: rgb(144, 6, 3, 1);
+}
 .silverbuenao{
     background-color: rgba(192, 192, 192, 0.4);
 }

@@ -1,13 +1,18 @@
-highlightStyles 
- - estilos contidos em chess.css com intuito de destacar/colorir a casa.
+Atributos das casas:
 
-captureStyles
- - elenca quais estilos em highlightStyles sao referentes a captura
+° Posicionamento Cardinal Relativo
+  . Atributo da tag <square> que define qual o id da casa que encontra-se na coordenada.
+  .o valor é relativo ao square selection.
 
-specialPieceStyles
- - elenca quais estilos em highlightStyles sao referentes movimentos especiais
-
-bgBoardColors
- - estilos contidos em chess.css com as cores default do tabuleiro
-
+ - "nwsq": north west  
+ - "nesq": north east 
+ - "sesq": south east 
+ - "swsq": south west 
+ - "nsq" : north 
+ - "ssq" : south
+ - "wsq" : west
+ - "esq" : south
+ - "clm" : coluna
+ - "lndx": line index 
+ - "cstldst" : castledestination
 

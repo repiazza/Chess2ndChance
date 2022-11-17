@@ -11,6 +11,7 @@ import {
   bgBoardColors,
   columnArray,
   revColumn,
+  enemyRangeStyles,
   SQUARE_PIECE_COLOR_BLACK,
   SQUARE_PIECE_COLOR_WHITE,
   BLANK_SQUARE_COLOR,
@@ -173,6 +174,8 @@ import {
   PROMOTION_PIECES,
 } from "./modules/piece.js";
 
+import "./modules/types.js";
+
 import { setSupervisorDiv } from "./modules/supervisor.js";
 
 let capturedPieces = "";
@@ -277,7 +280,8 @@ function validateCastleFromSquare(elemSquare, possibleCastles = false) {
 
   if (sqType != SQUARE_TYPE_KING_PIECE && sqType != SQUARE_TYPE_ROOK_PIECE) return false;
 
-  if (kpos == null) {
+  // Somos o Rei
+  if (!kpos) {
     if (hasMoved(rookOne) && hasMoved(rookTwo)) return false;
 
     let i = 0;
@@ -309,7 +313,11 @@ function validateCastleFromSquare(elemSquare, possibleCastles = false) {
       return retCastleTypes;
     }
     return true;
-  } else if (hasMoved(document.getElementById(kpos))) return false;
+  } else if (
+    getSquareType(kpos) !== SQUARE_TYPE_KING_PIECE ||
+    hasMoved(document.getElementById(kpos))
+  )
+    return false;
 
   let cstlType = square.id[SQUARE_ALPHABETICAL_NDX] == "a" ? "lcstl" : "scstl";
   let isCleanPath = true;
@@ -369,7 +377,7 @@ function validateCastleRangeIsSafe(castleType, possibleCastles = false) {
     if (i >= 5) retCastleTypes |= LONG_CASTLE_TYPE;
     if (j >= 4) retCastleTypes |= SHORT_CASTLE_TYPE;
 
-    return retCastleTypes;
+    return retCastleTypes > 0 ? retCastleTypes : false;
   }
 
   return i < 5 && j < 4 ? false : true;
@@ -391,7 +399,6 @@ function validateIsOnRange(square) {
   // Possui movimento especial?
   if (matchMovementDirection(myMovType, SPECIAL_MOVEMENT_ALL)) {
     // Roques
-
     let castleTypes;
     if (
       matchMovementDirection(myMovType, SPECIAL_MOVEMENT_CASTLE) &&
@@ -538,6 +545,7 @@ function validateIsOnRange(square) {
   if (matchMovementDirection(myMovType, MOVEMENT_DIRECTION_L)) {
     getLSquaresFromSquare(selectedElem);
   }
+  alert(!validateIsMoveSquare(square));
   if (!validateIsMoveSquare(square) && !validateIsCaptureSquare(square)) {
     return false;
   }
@@ -560,6 +568,12 @@ function validateSquareSide(square) {
 }
 function validateIsSameSquare(square) {
   return getFirstSelectedElement().id == square.id;
+}
+function getSquareColor(square) {
+  let mySquare = getElementFromSquareOrSquareId(square);
+  if (mySquare.hasAttribute("sqcolor") && mySquare.getAttribute("sqcolor"))
+    return mySquare.getAttribute("sqcolor");
+  return false;
 }
 function isValidSquareIndex(squareIndex) {
   if (squareIndex < 1 || squareIndex > ROW_SQUARE_COUNT || isNaN(squareIndex))
@@ -625,7 +639,6 @@ function validateSquareColor(elemSquare, flag) {
   let square = getElementFromSquareOrSquareId(elemSquare);
   if (square == null) return false;
 
-  // alert(square.id[1]);
   if (flag === SQUARE_PIECE_COLOR_WHITE)
     return WHITEPIECE_INIT_ROWS.includes(square.id[1]);
   if (flag === SQUARE_PIECE_COLOR_BLACK)
@@ -705,15 +718,16 @@ function getSquareAfterMultipleMovements(originSq, movementArray) {
   if (Array.isArray(movementArray) == false) {
     return getSquare(originSq, movementArray);
   }
+
   let retSq = [];
   let destSq = getElementFromSquareOrSquareId(originSq);
   let wrkSq = destSq;
-  movementArray.map((direction) => {
+  movementArray.forEach((direction) => {
     wrkSq = getElementFromSquareOrSquareId(originSq);
 
     if (Array.isArray(direction)) {
       wrkSq = getElementFromSquareOrSquareId(originSq);
-      direction.map((subdir) => {
+      direction.forEach((subdir) => {
         destSq = getSquare(wrkSq, subdir);
         wrkSq = destSq;
       });
@@ -782,6 +796,7 @@ function setSpecialMovementAttributes() {
     }
   });
 }
+
 function movementMatchesAnyDirection(movementType) {
   return movementType & MOVEMENT_DIRECTION_ALL ? true : false;
 }
@@ -953,21 +968,21 @@ function getSquare(elemSquare, relativePosition) {
 
   let columnNotation = square.id[0];
   let indexNotation = Number(square.id[1]);
-  let WESTPos = -1;
-  let EASTPos = -1;
-  let NORTHPos = -1;
-  let SOUTHPos = -1;
+  let westPos = -1;
+  let eastPos = -1;
+  let northPos = -1;
+  let southPos = -1;
   //             l   r   t    b
   //             w   e   n    s
   let allPos = [-1, -1, -1, -1];
   if (columnArray[columnArray.indexOf(columnNotation) - 1] !== undefined)
-    WESTPos = columnArray[columnArray.indexOf(columnNotation) - 1];
+    westPos = columnArray[columnArray.indexOf(columnNotation) - 1];
   if (columnArray[columnArray.indexOf(columnNotation) + 1] !== undefined)
-    EASTPos = columnArray[columnArray.indexOf(columnNotation) + 1];
-  if (indexNotation + 1 < 9) NORTHPos = indexNotation + 1;
-  if (indexNotation - 1 > 0) SOUTHPos = indexNotation - 1;
+    eastPos = columnArray[columnArray.indexOf(columnNotation) + 1];
+  if (indexNotation + 1 < 9) northPos = indexNotation + 1;
+  if (indexNotation - 1 > 0) southPos = indexNotation - 1;
 
-  allPos = [WESTPos, EASTPos, NORTHPos, SOUTHPos];
+  allPos = [westPos, eastPos, northPos, southPos];
   // Square obtido por um par de deslocamento?
   //
   if (relativePosition.length !== undefined && relativePosition.length > 1) {
@@ -1157,6 +1172,8 @@ function getClassNameFromMovementDirection(baseMovementDirection) {
 }
 function getClassNameFromAttribute(square) {
   let mySquare = getElementFromSquareOrSquareId(square);
+  if (mySquare.hasAttribute("mvsl") && mySquare.getAttribute("mvsl") == "E")
+    return enemyRangeStyles[0];
   if (mySquare.hasAttribute("lmv"))
     return getClassNameFromMovementDirection(MOVEMENT_DIRECTION_LINE);
   if (mySquare.hasAttribute("cmv"))
@@ -1187,13 +1204,18 @@ function selectSquare(square) {
   );
 }
 
-function isLetter(letter) {
-  return !!letter.length && /[a-z]/i.test(letter);
-  //letter.match(/[a-z]/i);
-}
-
-// Seta os atributos nativos de cada square.
-// Inicialmente o ID eh composto de
+/**
+ * @param {string} squareId - O ID é composto de uma letra e um numero.
+ *
+ * @param {string} myInner  - Opcional, conteudo da casa.
+ *
+ * Seta os atributos nativos de cada casa(square).
+ * O tabuleiro(board) possui dimensão 8x8, de a1 até h8.
+ *
+ * Pela perspectiva das brancas a torre da ala da Dama inicia na casa a1.
+ *
+ * Pela perspectiva das negras  a torre da ala da Dama inicia na casa a8.
+ */
 function drawSquare(squareId, myInner = "") {
   let divSquare = document.createElement("div");
   divSquare.id = squareId;
@@ -1242,6 +1264,7 @@ function saveSquareCoreAttrOnLocalStorage(square) {
   let divToReplace = square.outerHTML.split("pc")[0];
   if (divToReplace.includes("</div>") == false) divToReplace += "></div>";
 }
+
 function saveCoreAttrOnLocalStorage(square) {
   let wrkDiv;
   let piecePrefix = "";
@@ -1302,7 +1325,7 @@ function setupMovement(orgsq, destsq) {
     let myDirection = relativeDirection.split("dr")[1];
     if (rookDestElem.getAttribute("lmv") == myDirection) kingDir = EAST;
 
-    kingDestinationElem = document.getElementById(getSquare(rookDestElem, kingDir));
+    let kingDestinationElem = document.getElementById(getSquare(rookDestElem, kingDir));
     movementChain.push([rookElem, rookDestElem]);
     movementChain.push([rookKingElem, kingDestinationElem]);
   } else if (
@@ -1398,8 +1421,11 @@ function doMoveToDestination(orgsq, destsq) {
   saveCoreAttrOnLocalStorage(newOrigSquare);
 }
 function validateCastleDestinationSquare(mySquare) {
-  // alert((validateCastleFriendDestinationSquare(mySquare)
-  // || validateCastleBlankDestinationSquare(mySquare) ))
+  // debugger;
+  // alert(
+  //   validateCastleFriendDestinationSquare(mySquare) ||
+  //     validateCastleBlankDestinationSquare(mySquare)
+  // );
   return (
     validateCastleFriendDestinationSquare(mySquare) ||
     validateCastleBlankDestinationSquare(mySquare)
@@ -1450,14 +1476,23 @@ function hasAnySquareDrew() {
 }
 function validateIsSafeSquare(mySquare) {
   if (getSquareType(getFirstSelectedElement()) == SQUARE_TYPE_KING_PIECE) {
-    return !isSquareIsOnEnemyRange(mySquare);
+    if (getSquareType(mySquare) == SQUARE_TYPE_ROOK_PIECE) return true;
+    else return !isSquareIsOnEnemyRange(mySquare);
   }
   return true;
 }
 function validateIsPinPiece() {}
 function moveSquare(square) {
   let mySquare = getElementFromSquareOrSquareId(square);
-
+  alert(
+    isValidSquare(mySquare) &&
+      validateIsSelected() &&
+      validateIsSafeSquare(mySquare) &&
+      //  && !validateIsPinPiece()
+      (validateIsBlank(mySquare) || validateCastleDestinationSquare(mySquare)) &&
+      !validateEnPassantDestSquare(mySquare) &&
+      validateIsOnRange(mySquare)
+  );
   return (
     isValidSquare(mySquare) &&
     validateIsSelected() &&
@@ -1477,6 +1512,12 @@ function changeSelectedSquare(square) {
   );
 }
 function captureSquare(square) {
+  alert(
+    validateIsSelected() &&
+      (validateEnemyPieceSquare(square) || validateEnPassantDestSquare(square)) &&
+      validateIsOnRange(square) &&
+      validateIsCaptureSquare(square)
+  );
   return (
     validateIsSelected() &&
     (validateEnemyPieceSquare(square) || validateEnPassantDestSquare(square)) &&
@@ -1624,7 +1665,8 @@ function updateMajorRelativePositions(movChain) {
 function squareHandler(event) {
   event.preventDefault();
   let captureSq = false;
-
+  let oldelem = false;
+  // debugger;
   /**
    * @todo : Pegar outros sons de squares, por enquanto somente
    * temos e2.wav e e4.wav
@@ -1652,7 +1694,7 @@ function squareHandler(event) {
     moveSquare(event.target) ||
     (captureSq = captureSquare(event.target)) != false
   ) {
-    let oldelem = getFirstSelectedElement();
+    oldelem = getFirstSelectedElement();
     if (captureSq) {
       capturedPieces += setupCapture(event);
       document.getElementById("captured").innerHTML = capturedPieces;
@@ -1669,22 +1711,25 @@ function squareHandler(event) {
     //
     // Preparacao
     //
-    let movementChain = setupMovement(oldelem, event.target);
+    let movementChain = false;
+    if (oldelem != false) movementChain = setupMovement(oldelem, event.target);
     //
     // Deslocamento
     //
-    movementChain.map((chain) => {
-      doMoveToDestination(
-        chain[MOVEMENT_CHAIN_ORIGIN],
-        chain[MOVEMENT_CHAIN_DESTINATION]
-      );
-    });
-    //
-    // Desdobramento
-    //
-    setSpecialMovementStatus(movementChain[0]);
-    updateMajorRelativePositions(movementChain);
-    clearAllElementSelection();
+    if (movementChain != false) {
+      movementChain.map((chain) => {
+        doMoveToDestination(
+          chain[MOVEMENT_CHAIN_ORIGIN],
+          chain[MOVEMENT_CHAIN_DESTINATION]
+        );
+      });
+      //
+      // Desdobramento
+      //
+      setSpecialMovementStatus(movementChain[0]);
+      updateMajorRelativePositions(movementChain);
+      clearAllElementSelection();
+    }
     //
     // Passar Turno
     //
@@ -1720,6 +1765,7 @@ function readyHandler(event) {
   if (document.getElementById("a1") != null) return;
 
   //drawBoardSquares(GAME_CONTEXT_INITIAL, null);
+
   // drawBoardSquares(GAME_CONTEXT_SKIP_PIECES, [
   //   SQUARE_TYPE_BISHOP_PIECE,
   //   SQUARE_TYPE_KNIGHT_PIECE,
@@ -1919,19 +1965,17 @@ function setWindRoseCoordinates(drawingSquare) {
   drawingSquare.squareElem.setAttribute("wsq", drawingSquare.westSquare);
   drawingSquare.squareElem.setAttribute("esq", drawingSquare.eastSquare);
 }
-//
 /**
  * Cria as casas(squares) do tabuleiro(board);
- * @constructor
  * @param {number} context - Se houver um contexto, sera aplicado.
  *                           Os contextos estão cadastrados no modulo board.js
  *                           Exemplo: Desenhar comeco de jogo ou sem peças laterais, etc.
- * @param  @type {Array of Array}  - Opcional, para caso de contexto livre, onde cada peça eh selecionada a parte.
+ * @param  @type {[][]}  - Opcional, para caso de contexto livre, onde cada peça eh selecionada a parte.
  */
 function drawBoardSquares(context, extraArg = null) {
   const board = document.getElementById("board");
   let storageSquares = [];
-  let marginLeft = 0;
+  let marginLeft = 80;
   let marginTop = 0;
   let supervisormarginTop = 40;
   let supervisoridCtr = 0;
@@ -1944,25 +1988,19 @@ function drawBoardSquares(context, extraArg = null) {
   for (let rowNdx = 1; rowNdx < 9; rowNdx++) {
     columnArray.map(function (clmAlpha, clmNdx) {
       try {
-        /**
-         * @todo: Melhorar isto
-         */
         var squareColorSeq = DARK_BGCOLOR;
         columnAlpha = clmAlpha;
-        // columnAlpha = revColumn[clmNdx];
+        // Desenhamos de cima para baixo, por isso fazemos a inversao
+        // caso sejamos brancas.
         if (playerColor == avaliableColors[WHITE_COLOR]) {
           squareColorSeq = LIGHT_BGCOLOR;
           rowNdx = 9 - rowNdx;
         }
-        /**
-         * @todo: FIM
-         */
+        // Alternancia de cores do board (usando paridade da coluna mod 2)
         squareColorSeq = setSquareColorSeq(squareColorSeq, clmNdx, rowColorToggle);
 
         let candidateElem = drawSquare(columnAlpha + rowNdx, "");
         const newsquare = createSquare(candidateElem);
-        // Incrementamos de 80 em 80 px a cada linha(row), temos um board 8x8 de 640px
-        marginLeft += 80;
 
         // Setamos nosso posicionamento e estilos
         setSquareStyle(newsquare.squareElem, marginLeft, marginTop, squareColorSeq);
@@ -1992,30 +2030,21 @@ function drawBoardSquares(context, extraArg = null) {
         newsquare.squareElem.setAttribute("sqcolor", newsquare.squareColor);
         // Setar posicoes inicial dos Reis.
         // Se somos brancas, o rei aliado estará na linha 1, se nao 8.
-
-        let friendlyKingSq = "";
-        let enemyKingSq = "";
-        if (validateIsNotBlank(newsquare.squareElem)) {
-          friendlyKingSq = "e8";
-          enemyKingSq = "e1";
+        if (validateSquareColor(newsquare, SQUARE_PIECE_COLOR_WHITE)) {
+          newsquare.squareElem.setAttribute("frkpos", "e1");
+          newsquare.squareElem.setAttribute("enkpos", "e8");
+        } else if (validateSquareColor(newsquare, SQUARE_PIECE_COLOR_BLACK)) {
+          newsquare.squareElem.setAttribute("frkpos", "e8");
+          newsquare.squareElem.setAttribute("enkpos", "e1");
         }
 
-        if (
-          validateFriendlyPieceSquare(newsquare.squareElem) &&
-          playerColor == avaliableColors[WHITE_COLOR]
-        ) {
-          friendlyKingSq = "e1";
-          enemyKingSq = "e8";
-        }
-
-        newsquare.squareElem.setAttribute("frkpos", friendlyKingSq);
-        newsquare.squareElem.setAttribute("enkpos", enemyKingSq);
         // Casa para promover?
         if (newsquare.prRow > 0)
           newsquare.squareElem.setAttribute("prow", newsquare.prRow);
 
         // marcamos nossa vizinhança
         getMovementDirectionFromSquareType(newsquare.squareType).map((mvdr) => {
+          if (mvdr.toString() == "-1") return;
           newsquare.squareElem.setAttribute("mv" + mvdr.toString(), "1");
         });
         // Aproveitamos para adicionar o range, pode ser util...
@@ -2047,12 +2076,25 @@ function drawBoardSquares(context, extraArg = null) {
       if (playerColor == avaliableColors[WHITE_COLOR]) {
         rowNdx = 9 - rowNdx;
       }
+
+      // Incrementamos marginLeft de 80 em 80 px a cada coluna.
+      marginLeft += 80;
     }); // columnArray.map
 
+    // Temos um board 8x8 de 640px. Cada linha possui 8 squares.
+    // Para simular a quebra de linha:
+    //  - Setamos marginLeft para 80(primeiro square da nova linha)
+    //    (CR - retorno de carro)
+    //  - Adicionamos 80 px a marginTop
+    //    (LF - linefeed)
     marginTop += 80;
-    marginLeft = 0;
+    marginLeft = 80;
+    // O rowColorToggle serve para controlar o inicio da linha:
+    //   - a1 e a8 iniciam com uma casa de tom escuro, obrigatoriamente
+    //   - Para que o "quadriculado, alem de altenancia de tom,
+    //   - tenha a alterancia no inicio do padrao utilizamos um alternador diferente de columnIndex%2"
     rowColorToggle = !rowColorToggle;
-  } // for rowNdx
+  } // -- fim for rowNdx (linhas)
 
   // Fazemos trabalho adicional em caso de movimentos especiais, tipo Roque
   setSpecialMovementAttributes();
@@ -2080,6 +2122,8 @@ function destroySquares() {
 }
 
 function togglePlayerColor() {
+  // Avaliable colors contem "WHITEPIECE" na posicao 0
+  // e "BLACKPIECE" na posicao 1
   playerColor = avaliableColors.indexOf(playerColor)
     ? avaliableColors[WHITE_COLOR]
     : avaliableColors[BLACK_COLOR];
