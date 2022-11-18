@@ -1,4 +1,7 @@
 #include <string.h>
+#include "util.h"
+
+
 char* pStrCpy(char *pDst, int iBytesDst, char* pOrg, const char* pDlms)
 {
   if ( iBytesDst < 1 )
@@ -13,4 +16,14 @@ char* pSkpDlm(char* pOrg, char* pDlms)
 {
   for ( ;  *pOrg && strchr(pDlms, *pOrg) != NULL;  pOrg++ );
   return pOrg;
+}
+int bStrIsEmpty(const char *sz)
+{
+  if ( sz == NULL )
+    return TRUE;
+  for ( ;  *sz;  sz++ ) {
+    if ( strchr(" \n\r\t", *sz) == NULL )
+      return FALSE;
+  }
+  return TRUE;
 }

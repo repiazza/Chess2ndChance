@@ -52,10 +52,12 @@
     border: purple solid 0.5px;
 }
 .linemovhldark{
-    background-color: rgba(240, 128, 128, 0.6);
+    background-color: rgba(130, 59, 0, 0.8);
+    /* background-color: rgba(240, 128, 128, 0.6); */
 }
 .linemovhl{
-    background-color: rgba(240, 128, 128, 0.3);
+    background-color:rgba(255, 115, 0, 0.4);
+    /* background-color: rgba(240, 128, 128, 0.3); */
 }
 .columnmovhldark{
     background-color: rgba(127, 255, 212, 0.8);

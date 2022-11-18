@@ -1,11 +1,98 @@
 import {
+  highlightSelection,
+  getDirectionFromSquare,
+  setSelection,
+  clearAllElementSelection,
+  hasAnySquareDrew,
+} from "../mainboard.js";
+import {
+  TOTAL_PIECE_COUNT,
+  PLAYER_PIECE_COUNT,
+  ROW_SQUARE_COUNT,
+  COLUMN_SQUARE_ROW,
+  DARK_BGCOLOR,
+  LIGHT_BGCOLOR,
+  highlightStyles,
+  captureStyles,
+  specialPieceStyles,
+  bgBoardColors,
+  columnArray,
+  revColumn,
+  enemyRangeStyles,
+  SQUARE_PIECE_COLOR_BLACK,
+  SQUARE_PIECE_COLOR_WHITE,
+  BLANK_SQUARE_COLOR,
+  PAWN_INIT_ROWS,
+  HIGHVALUE_INIT_ROWS,
+  WHITEPIECE_INIT_ROWS,
+  BLACKPIECE_INIT_ROWS,
+  BLANKSQUARE_INIT_ROWS,
+  GAME_CONTEXT_INITIAL,
+  GAME_CONTEXT_PLAYING,
+  GAME_CONTEXT_SKIP_PIECES,
+  GAME_CONTEXT_SKIP_SIDEPIECES,
   VISIBILITY_VISIBLE,
   VISIBILITY_HIDDEN,
   SQUARE_TYPE_PAWN_PIECE,
-  SQUARE_PIECE_COLOR_WHITE,
-  SQUARE_PIECE_COLOR_BLACK,
+  SQUARE_TYPE_HIGHVALUE_PIECE,
+  SQUARE_TYPE_KNIGHT_PIECE,
+  SQUARE_TYPE_BISHOP_PIECE,
+  SQUARE_TYPE_QUEEN_PIECE,
+  SQUARE_TYPE_KING_PIECE,
+  SQUARE_TYPE_ROOK_PIECE,
+  SQUARE_TYPE_BLANK,
   SQUARE_ALPHABETICAL_NDX,
+  SQUARE_NUMERIC_NDX,
+  LONG_CASTLE_INIT_SQUARES,
+  SHORT_CASTLE_INIT_SQUARES,
+  LONG_CASTLE_ROOK_SQUARES,
+  SHORT_CASTLE_ROOK_SQUARES,
+  LONG_CASTLE_KING_SQUARES,
+  SHORT_CASTLE_KING_SQUARES,
+  LONG_CASTLE_COLUMNS,
+  SHORT_CASTLE_COLUMNS,
+  LONG_CASTLE_NDX,
+  SHORT_CASTLE_NDX,
+  CASTLE_INIT_SQUARES,
 } from "./board.js";
+import {
+  ROOK_INITIAL_MOVEMENT,
+  ROOK_CASTLED_MOVEMENT,
+  ROOK_MOVEMENT_RANGE,
+  KNIGHT_INITIAL_MOVEMENT,
+  KNIGHT_MOVEMENT_RANGE,
+  BISHOP_INITIAL_MOVEMENT,
+  BISHOP_MOVEMENT_RANGE,
+  QUEEN_INITIAL_MOVEMENT,
+  QUEEN_MOVEMENT_RANGE,
+  KING_INITIAL_MOVEMENT,
+  KING_CASTLED_MOVEMENT,
+  KING_MOVEMENT_RANGE,
+  PAWN_INITIAL_MOVEMENT,
+  PAWN_PASSE_MOVEMENT,
+  PAWN_INITIAL_RANGE,
+  PAWN_MOVED_RANGE,
+  THE_PIECE,
+  PIECE_TYPE_ROOK,
+  PIECE_TYPE_KNIGHT,
+  PIECE_TYPE_BISHOP,
+  PIECE_TYPE_QUEEN,
+  PIECE_TYPE_KING,
+  PIECE_TYPE_PAWN,
+  PIECE_TYPE_NONE,
+  pieceColumnLookup,
+  pieceTypeByColumn,
+  FRIENDLY_SIDE,
+  ENEMY_SIDE,
+  BLANK_SIDE,
+  PLAYER_SIDES,
+  ALL_SIDES,
+  EMBEDDED_CASTLE_PIECES,
+  WHITE_COLOR,
+  BLACK_COLOR,
+  avaliableColors,
+  PROMOTION_PIECES,
+} from "./piece.js";
 import {
   MAIN_DIAGONAL_DIRECTION,
   OPPOSITE_DIAGONAL_DIRECTION,
@@ -45,7 +132,7 @@ export function setSupervisorDiv(divId, mgNORTH) {
   document.getElementById("container").appendChild(supervisor);
 }
 
-function setDirectionFromSelect(e) {
+export function setDirectionFromSelect(e) {
   clearAllElementSelection();
 
   if (e.target.value == -1 && e.target.checked == false) {
@@ -56,8 +143,7 @@ function setDirectionFromSelect(e) {
   let drawDiag = document.getElementById("spsbdiagonaldir").checked;
   let drawColumn = document.getElementById("spsbcolumndir").checked;
   let drawLine = document.getElementById("spsblinedir").checked;
-
-  setSelection(document.getElementById(mySquare.value));
+  setSelection(mySquare);
   if (drawDiag == true) {
     getDirectionFromSquare(
       mySquare,
@@ -81,11 +167,13 @@ function setDirectionFromSelect(e) {
   highlightSelection();
 }
 
-function drawDirectionSelect() {
+export function drawDirectionSelect() {
   // Select do square a partir do qual serao highlitadas as direcoes
 
   let directionSelected = false;
   let selectElem = document.getElementById("spsbdirectionhlselect");
+  let lblDirColumn;
+  let lblDirLine;
   if (selectElem != null) {
     directionSelected = selectElem.value;
     document.getElementById("container").removeChild(selectElem);
@@ -220,7 +308,7 @@ function drawDirectionSelect() {
   document.getElementById("container").appendChild(lblDirLine);
 }
 
-function setIntervalSeconds() {
+export function setIntervalSeconds() {
   let seconds = document.getElementById("spsbtextelem").value;
   if (Number(seconds) > 1 && Number(seconds) < 20 && seconds != intervalSeconds) {
     intervalSeconds = seconds;
@@ -229,19 +317,19 @@ function setIntervalSeconds() {
     myInterval = window.setInterval(setSupervisorPatrol, intervalTime);
   }
 }
-function setSupervisorListVisibility(visibilityStatus) {
+export function setSupervisorListVisibility(visibilityStatus) {
   document.querySelectorAll("[id^=slp]").forEach((element) => {
     element.style.visibility = visibilityStatus;
   });
 }
 
-function destroySupervisorFrame() {
+export function destroySupervisorFrame() {
   document.querySelectorAll("[id^=spsb]").forEach((element) => {
     document.getElementById("container").removeChild(element);
   });
   setSupervisorListVisibility(VISIBILITY_HIDDEN);
 }
-function drawIntervalTimeSet() {
+export function drawIntervalTimeSet() {
   document.querySelectorAll('[id*="textelem"]').forEach((element) => {
     document.getElementById("container").removeChild(element);
   });
@@ -274,13 +362,13 @@ function drawIntervalTimeSet() {
   document.getElementById("container").appendChild(buttonText);
 }
 
-function setSupervisorPatrol() {
+export function setSupervisorPatrol() {
   if (!hasAnySquareDrew()) return;
 
-  drawSquareDetails();
+  // drawSquareDetails();
   // fixSquareTypeProprierties();
 }
-function drawSquareDetails() {
+export function drawSquareDetails() {
   if (supervisorMode == false) {
     destroySupervisorFrame();
     return;
@@ -357,7 +445,7 @@ function drawSquareDetails() {
     }
   });
 }
-function matchColumnIntervalExcludingInterval(
+export function matchColumnIntervalExcludingInterval(
   initialColumn,
   endColumn = null,
   initialInterval = null,
@@ -378,7 +466,7 @@ function matchColumnIntervalExcludingInterval(
   return $(querySelectorAllRegex(re, "id"));
 }
 
-function matchLineIntervalExcludingInterval(
+export function matchLineIntervalExcludingInterval(
   initialLine,
   endLine = null,
   initialInterval = null,
@@ -399,7 +487,7 @@ function matchLineIntervalExcludingInterval(
   return $(querySelectorAllRegex(re, "id"));
 }
 
-function fixSquareTypeProprierties() {
+export function fixSquareTypeProprierties() {
   selector = "[class*='square'][sqtype='BLANK']";
   document.querySelectorAll(selector).forEach((element) => {
     if (element != null) {
@@ -424,12 +512,12 @@ function fixSquareTypeProprierties() {
       element.setAttribute("sqcolor", SQUARE_PIECE_COLOR_WHITE);
   });
 }
-function toggleSupervisor() {
+export function toggleSupervisor() {
   supervisorMode = !supervisorMode;
   drawSquareDetails();
 }
 
-function drawSupervisorSelect() {
+export function drawSupervisorSelect() {
   let radioElem = [-1, -1];
   let radioLbl = [-1, -1];
   let selectColumn = -1;
@@ -530,7 +618,7 @@ function drawSupervisorSelect() {
   document.querySelectorAll('[id="spsblblrdwhite"]').forEach((element) => {
     document.getElementById("container").removeChild(element);
   });
-  document.querySelectorAll('[id="spsblblrdblack"WEST]').forEach((element) => {
+  document.querySelectorAll('[id="spsblblrdblack"]').forEach((element) => {
     document.getElementById("container").removeChild(element);
   });
   document.querySelectorAll('[id="spsbrdboth"]').forEach((element) => {
@@ -611,6 +699,8 @@ function drawSupervisorSelect() {
   let initialOffset = 1075;
   let marginTop = -2;
   let virgAdd = "";
+  let labelSelected;
+  let checkSelected;
   for (var i = 0; i < 5; i++) {
     typeValue = 0;
     pieceTypeChkbox[i] = document.getElementById("spsbchkboxtype" + i);
