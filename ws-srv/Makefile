@@ -31,6 +31,7 @@ OBJS += \
   chess-srv.o \
   util.o \
   wssv.o \
+  trace.o \
 
 
 chess-srv: $(OBJS)

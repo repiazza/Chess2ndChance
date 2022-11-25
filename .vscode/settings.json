@@ -7,6 +7,9 @@
         "stat.h": "c",
         "process.h": "c",
         "string.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "chess-srv.h": "c",
+        "stdio.h": "c",
+        "util.h": "c"
     },
 }

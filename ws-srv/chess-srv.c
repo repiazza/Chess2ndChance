@@ -6,14 +6,23 @@
 #include <stdint.h>
 #include <stdint.h>
 #include <sys/socket.h>
-
-#include "wsserver/ws.h"
+#include <wsserver/ws.h>
+#include "chess-srv.h"
 #include "chess.h"
 #include "wssv.h"
 #include "util.h"
+#include "trace.h"
 
 int iMoveMatrix[8][8];
-char *pszGetNextSquare(int iMvType,int iMyRange, int iOrRow, int iOrCol, int iDestRow, int iDestCol, char *pch);
+char *pszGetNextSquare(
+    int iMvType,
+    int iMyRange, 
+    int iOrRow, 
+    int iOrCol, 
+    int iDestRow, 
+    int iDestCol, 
+    char *pch
+);
 
 typedef struct STRUCT_CHESSDATA{
     int iPieceType;
@@ -22,7 +31,9 @@ typedef struct STRUCT_CHESSDATA{
     int iRow;
     int iX;
     int iY;
-}STRUCT_CHESSDATA;
+} 
+STRUCT_CHESSDATA;
+
 
 
 int bMatchMovementDirection(int iPcMvType, int iMvType){
@@ -32,6 +43,7 @@ int bMatchMovementDirection(int iPcMvType, int iMvType){
 int iProcessLayer(char *pszLayer){
     return 0;
 }
+
 // info depth 1 seldepth 1 multipv 1 score cp 30 nodes 20 nps 20000 tbhits 0 time 1 pv e2e4
 // info depth 2 seldepth 2 multipv 1 score cp 84 nodes 45 nps 45000 tbhits 0 time 1 pv e2e4 a7a6
 // info depth 3 seldepth 3 multipv 1 score cp 37 nodes 191 nps 95500 tbhits 0 time 2 pv c2c4 a7a6 e2e4
@@ -55,32 +67,59 @@ int iProcessLayer(char *pszLayer){
 // info depth 21 seldepth 29 multipv 1 score cp 44 nodes 2170638 nps 724753 hashfull 747 tbhits 0 time 2995 pv d2d4 d7d5 g1f3 g8f6 c2c4 d5c4 e2e3 e7e6 f1c4 c7c5 e1g1 a7a6 d4c5 d8d1 f1d1 f8c5 b1c3 b8d7 c4e2 b7b5
 // info depth 22 seldepth 30 multipv 1 score cp 51 lowerbound nodes 2354287 nps 723061 hashfull 785 tbhits 0 time 3256 pv d2d4
 
-char *pszNextMove(char *szActualPos){
+char gszNextMoveLines[5096];
+int iGetNextMoveLines(char *szActualPositionChain, int iMode){
     FILE *pfStockFish;
     FILE *pfInput;
     char szCmd[256];
     char szLine[1024];
-    char *pszTitle = "input.txt"
+    char *pszTitle = "input.txt";
 
-    if ( bStrIsEmpty(szActualPos) )
-        return NULL;
-        
+    vTrace("iGetNextMoveLines begin");
+
+    if ( bStrIsEmpty(szActualPositionChain) )
+        return -1;
+
+    vTraceStr("iGetNextMoveLines actual position chain:", szActualPositionChain);
+
     if ( (pfInput = fopen(pszTitle, "w")) == NULL )
-        return NULL;
-
-    fprintf(pfInput, "%s", szActualPos);
+        return -1;
+    
+    fprintf(pfInput, 
+  "uci\n"
+  "ucinewgame\n"
+  "position %s %s\n"
+  "go depth 10\n"
+  "ucinewgame\n"
+  "quit\n",
+        iMode == MODE_FEN ? "fen" : "startpos moves",
+        szActualPositionChain
+    );
     fclose(pfInput);
 
     sprintf(szCmd, 
-"cat %s | stockfish | cut -d " " -f20,21,23,24,25,26,27,28,29,30,31,32",
+"cat %s | stockfish | cut -d \" \" -f20,21,23,24,25,26,27,28,29,30,31,32",
       pszTitle);
 
     if ( (pfStockFish = popen(szCmd, "r")) == NULL )
-        return NULL;
+        return -1;
 
+    vTrace("OK");
+    memset(gszNextMoveLines,0, sizeof(gszNextMoveLines));
+    memset(szLine,0, sizeof(szLine));
     while ( fgets(szLine, sizeof(szLine), pfStockFish ) ){
-        
+        vTraceStr("Line ", szLine);
+        vTrace("\n");
+        if ( !bStrIsEmpty(szLine) && strstr(szLine, "uciok") == NULL ){
+            strcat(gszNextMoveLines, szLine);
+            strcat(gszNextMoveLines, "|");
+        }
+        memset(szLine, 0, sizeof(szLine));
     }
+    
+    pclose(pfStockFish);
+    
+    return 0;
 }
 
 int iParseMessage(char *pszMsg, int iSz, ws_cli_conn_t *client){
@@ -89,6 +128,8 @@ int iParseMessage(char *pszMsg, int iSz, ws_cli_conn_t *client){
     char szLayer[1024];
     char szRet[2048];
     int iMvType, iMyRange, iOrRow, iOrCol, iDestRow, iDestCol;
+    
+    vTrace("iParseMessage Begin");
     if ( iSz <= 0 ){
         ws_sendframe_txt(client, "ERR|CMDNTSPP");
         return -1;
@@ -97,14 +138,23 @@ int iParseMessage(char *pszMsg, int iSz, ws_cli_conn_t *client){
       return 0;
     }
     if ( !memcmp(pszMsg, "STK", 3) ){
-      char *szCurrPos;
-      pTok = strchr(pszMsg, '|');
-      pTok++;
-      szCurrPos = (char *) malloc(strlen(pTok) + 8);
-      pStrCpy(szCurrPos, sizeof(szCurrPos), pszMsg, "|");
-      pTok = pszNextMove(szCurrPos);
-      free(szCurrPos);
-      ws_sendframe_txt(pTok);
+      char *pszCurrPos;
+      char szMode[16];
+
+      vTraceStr("iParseMessage received msg:", pszMsg);
+      pTok = strchr(pszMsg, '|'); pTok++;
+      pStrCpy(szMode, sizeof(szMode), pTok, "|");
+      pTok = strchr(pTok, '|'); pTok++;
+      vTraceStr("pTok=", pTok);
+      pszCurrPos = (char *) malloc(strlen(pTok) + 8);
+      pStrCpy(pszCurrPos, strlen(pTok), pTok, "|");
+      if ( iGetNextMoveLines(pszCurrPos, MODE_FEN) < 0 )
+        return -1;
+      
+      free(pszCurrPos);
+      vTraceStr("iParseMessage lines:", gszNextMoveLines);
+      ws_sendframe_txt(client, gszNextMoveLines);
+      
       return 0;
     }
 

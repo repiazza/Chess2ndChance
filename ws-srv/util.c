@@ -1,7 +1,6 @@
 #include <string.h>
 #include "util.h"
 
-
 char* pStrCpy(char *pDst, int iBytesDst, char* pOrg, const char* pDlms)
 {
   if ( iBytesDst < 1 )
@@ -11,7 +10,6 @@ char* pStrCpy(char *pDst, int iBytesDst, char* pOrg, const char* pDlms)
   *pDst = 0;
   return pOrg;
 }
-
 char* pSkpDlm(char* pOrg, char* pDlms)
 {
   for ( ;  *pOrg && strchr(pDlms, *pOrg) != NULL;  pOrg++ );

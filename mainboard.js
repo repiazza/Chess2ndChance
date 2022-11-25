@@ -49,6 +49,8 @@ import {
   CASTLE_INIT_SQUARES,
 } from "./modules/board.js";
 
+import { FEN_MODE, START_POSITION_MODE } from "./modules/uci.js";
+
 import {
   MOVEMENT_CHAIN_ORIGIN,
   MOVEMENT_CHAIN_DESTINATION,
@@ -139,11 +141,11 @@ import {
   ROOK_INITIAL_MOVEMENT,
   ROOK_CASTLED_MOVEMENT,
   ROOK_MOVEMENT_RANGE,
-  KNIGHT_INITIAL_MOVEMENT,
+  KNIGHT_MOVEMENT,
   KNIGHT_MOVEMENT_RANGE,
-  BISHOP_INITIAL_MOVEMENT,
+  BISHOP_MOVEMENT,
   BISHOP_MOVEMENT_RANGE,
-  QUEEN_INITIAL_MOVEMENT,
+  QUEEN_MOVEMENT,
   QUEEN_MOVEMENT_RANGE,
   KING_INITIAL_MOVEMENT,
   KING_CASTLED_MOVEMENT,
@@ -172,34 +174,44 @@ import {
   BLACK_COLOR,
   avaliableColors,
   PROMOTION_PIECES,
+  getKingPieceLocation,
 } from "./modules/piece.js";
 
 import "./modules/types.js";
 
-import { setSupervisorDiv, toggleSupervisor } from "./modules/supervisor.js";
+import { sendWSMessage, sockConn } from "./modules/socket.js";
+
+// import { setSupervisorDiv, toggleSupervisor } from "./modules/supervisor.js";
 
 let capturedPieces = "";
-let playerColor = "WHITEPIECE";
+export let playerColor = "WHITEPIECE";
+export let lastColor = "";
 let blankFrameStr = 'sqtype="BLANK" sqcolor="0"></div>';
-let LSquares = [];
 let enemyScan = false;
+let isOnCheck = false;
 
-const TURN_WHITE = 0;
-const TURN_BLACK = 1;
+const ALLY_TURN = 0;
+const ENEMY_TURN = 1;
 
-let TURN_CONTROL = TURN_WHITE;
+let TURN_CONTROL = ALLY_TURN;
 
 const SUBTITLE_HORIZONTAL = 1;
 const SUBTITLE_VERTICAL = 2;
 const SUBTITLE_BOTH = 3;
 
-function playSquareName(elemSquare) {
-  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+/**
+ * Toca um áudio com o nome da casa.
+ * @todo Pegar em uma origem como o google translate as demais.
+ * Hoje temos e2 e e4, ficam localizados no diretorio ./sounds
+ * @param {string|HTMLObjectElement} sqObjElem
+ */
+function playSquareNameSound(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   var audio = new Audio();
   audio.src = "sounds/" + mySquare.id + ".wav";
   audio.play();
 }
-function getFrameByTypeAndColor(sqType, sqColor) {
+function generateFrame(sqType, sqColor) {
   return (
     'sqtype="' +
     sqType +
@@ -268,8 +280,8 @@ function matchCastleType(castleType, squareCastleType) {
 // O rei não pode estar em xeque, e também não pode ficar em xeque depois do roque;
 // Nenhuma das casas onde o rei passar ou ficar deverá estar no raio de ação de uma peça adversária.
 // Isto não se aplica à torre envolvida.
-function validateCastleFromSquare(elemSquare, possibleCastles = false) {
-  let square = getElementFromSquareOrSquareId(elemSquare);
+function validateCastleFromSquare(sqObjElem, possibleCastles = false) {
+  let square = getElementFromSquareOrSquareId(sqObjElem);
   let kpos = square.getAttribute("kpos");
   let sqType = getSquareType(square);
   let rookOne = document.getElementById(columnArray[0] + square.id[SQUARE_NUMERIC_NDX]);
@@ -281,6 +293,7 @@ function validateCastleFromSquare(elemSquare, possibleCastles = false) {
 
   if (sqType != SQUARE_TYPE_KING_PIECE && sqType != SQUARE_TYPE_ROOK_PIECE) return false;
 
+  let cstlType;
   // Somos o Rei
   if (!kpos) {
     if (hasMoved(rookOne) && hasMoved(rookTwo)) return false;
@@ -314,13 +327,17 @@ function validateCastleFromSquare(elemSquare, possibleCastles = false) {
       return retCastleTypes;
     }
     return true;
-  } else if (
-    getSquareType(kpos) !== SQUARE_TYPE_KING_PIECE ||
-    hasMoved(document.getElementById(kpos))
-  )
-    return false;
+  } else {
+    cstlType = square.id[SQUARE_ALPHABETICAL_NDX] == "a" ? "lcstl" : "scstl";
+    let cstlID = cstlType == "lcstl" ? LONG_CASTLE_TYPE : SHORT_CASTLE_TYPE;
+    if (
+      getSquareType(kpos) !== SQUARE_TYPE_KING_PIECE ||
+      hasMoved(document.getElementById(kpos)) ||
+      validateCastleRangeIsSafe(cstlID) == false
+    )
+      return false;
+  }
 
-  let cstlType = square.id[SQUARE_ALPHABETICAL_NDX] == "a" ? "lcstl" : "scstl";
   let isCleanPath = true;
 
   square
@@ -384,6 +401,7 @@ function validateCastleRangeIsSafe(castleType, possibleCastles = false) {
 
   return i < 5 && j < 4 ? false : true;
 }
+
 function validateIsOnRange(square) {
   let selectedElem = getFirstSelectedElement();
   let myPieceType = getSquareType(selectedElem);
@@ -397,8 +415,6 @@ function validateIsOnRange(square) {
     getPieceTypeFromSquareType(myPieceType),
     moved
   );
-  // debugger;
-  // alert("PieceType:" + myPieceType + "MoveType:" + myMovType + "MoveRange:" + myMovRange);
   // Possui movimento especial?
   if (matchMovementDirection(myMovType, SPECIAL_MOVEMENT_ALL)) {
     // Roques
@@ -551,7 +567,6 @@ function validateIsOnRange(square) {
   if (!validateIsMoveSquare(square) && !validateIsCaptureSquare(square)) {
     return false;
   }
-
   return true;
 }
 function validateEnemyPieceSquare(square) {
@@ -588,42 +603,40 @@ function isValidSquareAlpha(sqAlpha) {
 
   return true;
 }
-function isValidSquare(elemSquare) {
-  if (elemSquare == null) return false;
+function isValidSquare(sqObjElem) {
+  if (sqObjElem == null) return false;
 
-  if (typeof elemSquare === "object") elemSquare = elemSquare.id;
+  if (typeof sqObjElem === "object") sqObjElem = sqObjElem.id;
 
   if (
-    isValidSquareAlpha(elemSquare[SQUARE_ALPHABETICAL_NDX]) &&
-    isValidSquareIndex(elemSquare[SQUARE_NUMERIC_NDX])
+    isValidSquareAlpha(sqObjElem[SQUARE_ALPHABETICAL_NDX]) &&
+    isValidSquareIndex(sqObjElem[SQUARE_NUMERIC_NDX])
   )
     return true;
 
   return false;
 }
-function areSquaresFromOpositeSides(orgsqcolor, destsqcolor) {
+function areSquaresFromOpositeSides(sqObjElem1, sqObjElem2) {
+  let mySquare1 = getElementFromSquareOrSquareId(sqObjElem1);
+  let mySquare2 = getElementFromSquareOrSquareId(sqObjElem2);
+  let sq1color = mySquare1.getAttribute("sqcolor");
+  let sq2color = mySquare2.getAttribute("sqcolor");
+
   return (
-    (orgsqcolor == "BLACKPIECE" && destsqcolor == "WHITEPIECE") ||
-    (orgsqcolor == "WHITEPIECE" && destsqcolor == "BLACKPIECE")
+    (sq1color == "BLACKPIECE" && sq2color == "WHITEPIECE") ||
+    (sq1color == "WHITEPIECE" && sq2color == "BLACKPIECE")
   );
 }
-function validateAndSetCaptureSquare(elemSquare) {
-  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+function validateAndSetCaptureSquare(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   let playerPiece = getFirstSelectedElement();
 
-  // Descontinuei esta parada, nao entendi direito o porque dela,
-  // nao me lembro tmb
-  // let playerPiece = document.querySelector("[pmv]");
+  if (!playerPiece) return false;
 
   playerPiece = getElementFromSquareOrSquareId(playerPiece, true);
-  if (
-    areSquaresFromOpositeSides(
-      playerPiece.getAttribute("sqcolor"),
-      mySquare.getAttribute("sqcolor")
-    ) &&
-    !enemyScan
-  ) {
-    if (playerPiece.getAttribute("sqcolor")) setCaptureSquare(mySquare);
+  if (areSquaresFromOpositeSides(playerPiece, mySquare) && !enemyScan) {
+    // if (playerPiece.getAttribute("sqcolor"))
+    setCaptureSquare(mySquare);
     highlightCapture(mySquare);
   }
 }
@@ -641,8 +654,8 @@ function validateSquareType(square, flag) {
 
   return false;
 }
-function validateSquareColor(elemSquare, flag) {
-  let square = getElementFromSquareOrSquareId(elemSquare);
+function validateSquareColor(sqObjElem, flag) {
+  let square = getElementFromSquareOrSquareId(sqObjElem);
   if (square == null) return false;
 
   if (flag === SQUARE_PIECE_COLOR_WHITE)
@@ -656,22 +669,21 @@ function validateSquareColor(elemSquare, flag) {
 //
 // End Validation block
 //
-
-function setCaptureSquare(elemSquare) {
-  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+function setCaptureSquare(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   mySquare.setAttribute("cpt", "1");
 }
-function clearCaptureSelection(elemSquare) {
-  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+function clearCaptureSelection(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   mySquare.removeAttribute("cpt");
 }
-export function setSelection(elemSquare) {
-  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+export function setSelection(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   mySquare.setAttribute("sltd", "1");
   mySquare.innerHTML = "<b>" + mySquare.innerHTML + "</b>";
 }
-function clearSelection(elemSquare) {
-  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+function clearSelection(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   mySquare.removeAttribute("sltd");
 
   if (mySquare.innerHTML.indexOf("<b>") === -1) return;
@@ -681,11 +693,11 @@ function clearSelection(elemSquare) {
   mySquare.innerHTML = myInner;
 }
 function setMoveSelection(
-  elemSquare,
+  sqObjElem,
   direction,
   specialMoveNmbr = DEFAULT_MOVEMENT_SELECTION
 ) {
-  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   if (!isValidSquare(mySquare)) return;
   if (
     mySquare.hasAttribute("mvsl") &&
@@ -693,21 +705,30 @@ function setMoveSelection(
   ) {
     specialMoveNmbr = mySquare.getAttribute("mvsl");
   }
-  if (enemyScan) specialMoveNmbr = "E";
+  if (enemyScan) {
+    specialMoveNmbr = "E";
+    let thrtattr = "";
+    if (mySquare.hasAttribute("thrby")) thrtattr = mySquare.getAttribute("thrby") + "|";
+
+    // if (mySquare.id == "e2" && (enemyScan == "d8" || enemyScan == "e7"))
+
+    if (!thrtattr.includes(enemyScan) && areSquaresFromOpositeSides(enemyScan, mySquare))
+      mySquare.setAttribute("thrby", thrtattr + enemyScan);
+  }
 
   mySquare.setAttribute("mvsl", specialMoveNmbr);
   setDirectionSelection(mySquare, direction);
 }
-function clearDirectionSelection(elemSquare) {
-  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+function clearDirectionSelection(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   mySquare.removeAttribute("lmv");
   mySquare.removeAttribute("cmv");
   mySquare.removeAttribute("dmv");
   mySquare.removeAttribute("kmv");
   mySquare.removeAttribute("pmv");
 }
-function setMovedElem(elemSquare) {
-  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+function setMovedElem(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   mySquare.setAttribute("mvd", "1");
 }
 function hasMoved(squareId) {
@@ -715,10 +736,10 @@ function hasMoved(squareId) {
 
   return document.getElementById(mySquare.id).hasAttribute("mvd");
 }
-function clearMoveSelection(elemSquare) {
-  let mySquare = getElementFromSquareOrSquareId(elemSquare);
+function clearMoveSelection(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   mySquare.removeAttribute("mvsl");
-  clearDirectionSelection(elemSquare);
+  clearDirectionSelection(sqObjElem);
 }
 function getSquareAfterMultipleMovements(originSq, movementArray) {
   if (Array.isArray(movementArray) == false) {
@@ -750,7 +771,7 @@ function getCastleSquaresFromSquare(square, ignoreColision = false) {
   return validateCastleFromSquare(square, GET_POSSIBLE_TYPES);
 }
 function getLSquaresFromSquare(square, ignoreColision = false) {
-  LSquares = [];
+  let LSquares = [];
   L_ROTATE.map((quadrant) => {
     let retSq = getSquareAfterMultipleMovements(square, quadrant);
     if (Array.isArray(retSq)) {
@@ -806,8 +827,8 @@ function setSpecialMovementAttributes() {
 function movementMatchesAnyDirection(movementType) {
   return movementType & MOVEMENT_DIRECTION_ALL ? true : false;
 }
-function getSquareType(elemSquare) {
-  let square = getElementFromSquareOrSquareId(elemSquare);
+function getSquareType(sqObjElem) {
+  let square = getElementFromSquareOrSquareId(sqObjElem);
 
   if (square == null) return false;
 
@@ -815,7 +836,6 @@ function getSquareType(elemSquare) {
 
   return false;
 }
-
 function getPieceTypeFromSquareType(type) {
   if (type == SQUARE_TYPE_PAWN_PIECE) return PIECE_TYPE_PAWN;
   else if (type == SQUARE_TYPE_ROOK_PIECE) return PIECE_TYPE_ROOK;
@@ -886,21 +906,20 @@ function getMovementDirectionFromSquareType(value) {
 function getMovementTypeFromPieceType(value, moved = false) {
   switch (value) {
     case PIECE_TYPE_BISHOP:
-      return BISHOP_INITIAL_MOVEMENT;
+      return BISHOP_MOVEMENT;
     case PIECE_TYPE_KING:
       return moved ? KING_CASTLED_MOVEMENT : KING_INITIAL_MOVEMENT;
     case PIECE_TYPE_PAWN:
       return PAWN_INITIAL_MOVEMENT;
     case PIECE_TYPE_KNIGHT:
-      return KNIGHT_INITIAL_MOVEMENT;
+      return KNIGHT_MOVEMENT;
     case PIECE_TYPE_ROOK:
       return moved ? ROOK_CASTLED_MOVEMENT : ROOK_INITIAL_MOVEMENT;
     case PIECE_TYPE_QUEEN:
-      return QUEEN_INITIAL_MOVEMENT;
+      return QUEEN_MOVEMENT;
   }
   return MOVEMENT_TYPE_NONE;
 }
-
 function createSquare(square) {
   let sqType = 0;
   let sqColor = 0;
@@ -968,8 +987,8 @@ function createSquare(square) {
 
   return pieceObject;
 }
-function getSquare(elemSquare, relativePosition) {
-  let square = getElementFromSquareOrSquareId(elemSquare);
+function getSquare(sqObjElem, relativePosition) {
+  let square = getElementFromSquareOrSquareId(sqObjElem);
   if (square == null) return false;
 
   let columnNotation = square.id[0];
@@ -1078,7 +1097,6 @@ function setDirectionSelection(square, direction) {
   else if (direction == MOVEMENT_DIRECTION_L) mySquare.setAttribute("kmv", direction);
   else if (direction == THE_PIECE) mySquare.setAttribute("pmv", direction);
 }
-
 export function highlightSelection() {
   document.querySelectorAll("[mvsl]").forEach((elm) => {
     let myClass = getClassNameFromAttribute(elm);
@@ -1097,7 +1115,6 @@ export function highlightSelection() {
     }
   });
 }
-
 export function getDirectionFromSquare(
   square,
   direction,
@@ -1148,7 +1165,6 @@ export function getDirectionFromSquare(
         !ignoreColision
       )
     ) {
-      // if ( validateIsSafeSquare(nextSqElem.id) )
       setMoveSelection(nextSqElem.id, direction);
     } else if (
       !(direction == NORTH_WEST_DIRECTION || direction == NORTH_EAST_DIRECTION)
@@ -1167,7 +1183,6 @@ export function getDirectionFromSquare(
 
   return true;
 }
-
 // O array de highlight as 4 primeiras posicoes sao as classes
 // os nossos movimentos sao 4 bits de um byte, na mesma sequencia da respectiva classe
 // entao fazemos um shift right bem maroto.
@@ -1194,15 +1209,12 @@ function getClassNameFromAttribute(square) {
 
   return false;
 }
-
 function highlightSquares(square) {
   validateIsOnRange(square);
 }
-
 function selectSameSquare(square) {
   return validateIsSelected() && validateIsSameSquare(square);
 }
-
 function selectSquare(square) {
   return (
     !validateIsSelected() &&
@@ -1210,7 +1222,6 @@ function selectSquare(square) {
     validateFriendlyPieceSquare(square)
   );
 }
-
 /**
  * @param {string} squareId - O ID é composto de uma letra e um numero.
  *
@@ -1236,7 +1247,6 @@ function drawSquare(squareId, myInner = "") {
 
   return divSquare;
 }
-
 function querySelectorAllRegex(regex, attributeToSearch) {
   const output = [];
   if (attributeToSearch) {
@@ -1266,12 +1276,10 @@ function querySelectorAllRegex2(regex, DomElem) {
 
   return output;
 }
-
 function saveSquareCoreAttrOnLocalStorage(square) {
   let divToReplace = square.outerHTML.split("pc")[0];
   if (divToReplace.includes("</div>") == false) divToReplace += "></div>";
 }
-
 function saveCoreAttrOnLocalStorage(square) {
   let wrkDiv;
   let piecePrefix = "";
@@ -1292,7 +1300,7 @@ function saveCoreAttrOnLocalStorage(square) {
 function removeNonRelevantAttributesFromSquare(square) {
   clearMoveSelection(square.id);
 }
-function validateProtionDestinationSquare(prow, destId) {
+function validatePromotionDestinationSquare(prow, destId) {
   if (destId[SQUARE_NUMERIC_NDX] == prow) return true;
 
   return false;
@@ -1302,18 +1310,21 @@ function validateProtionDestinationSquare(prow, destId) {
 //
 function setupMovement(orgsq, destsq) {
   let movementChain = [];
-  if (!hasMoved(orgsq) && validateCastleDestinationSquare(destsq)) {
+
+  if (
+    !hasMoved(orgsq) &&
+    validateCastleDestinationSquare(destsq) &&
+    validateCastleFromSquare(orgsq)
+  ) {
     // Roque
     // Irao ser gerados dois movimentos
     let rookDestElem;
     let rookKingElem;
     let kingDir = WEST;
     let rookElem;
-    let relativeDirection = "drrsq";
     if (orgsq.hasAttribute("cstldst")) {
       // Partindo de uma torre
       rookElem = orgsq;
-      relativeDirection = "drlsq";
     } else if (destsq.hasAttribute("cstldst")) {
       // Partindo de um rei para uma torre
       rookElem = destsq;
@@ -1343,7 +1354,7 @@ function setupMovement(orgsq, destsq) {
     movementChain.push([rookKingElem, kingDestinationElem]);
   } else if (
     orgsq.hasAttribute("prow") &&
-    validateProtionDestinationSquare(orgsq.getAttribute("prow"), destsq.id)
+    validatePromotionDestinationSquare(orgsq.getAttribute("prow"), destsq.id)
   ) {
     // Promover peao, sera utilizada a escolha previa
     // ou apresentado um menu de selecao
@@ -1382,7 +1393,7 @@ function setupMovement(orgsq, destsq) {
       'initsq="' +
       orgsq.getAttribute("initsq") +
       '" ';
-    divToReplace += getFrameByTypeAndColor(
+    divToReplace += generatePieceFrame(
       pieceTypeByColumn[promChoice],
       orgsq.getAttribute("sqcolor")
     );
@@ -1434,11 +1445,6 @@ function doMoveToDestination(orgsq, destsq) {
   saveCoreAttrOnLocalStorage(newOrigSquare);
 }
 function validateCastleDestinationSquare(mySquare) {
-  // debugger;
-  // alert(
-  //   validateCastleFriendDestinationSquare(mySquare) ||
-  //     validateCastleBlankDestinationSquare(mySquare)
-  // );
   return (
     validateCastleFriendDestinationSquare(mySquare) ||
     validateCastleBlankDestinationSquare(mySquare)
@@ -1459,11 +1465,11 @@ function validateCastleFriendDestinationSquare(square) {
   return false;
 }
 function validateEnPassantDestSquare(square) {
-  let elemSquare = getElementFromSquareOrSquareId(square, true);
+  let sqObjElem = getElementFromSquareOrSquareId(square, true);
 
-  if (elemSquare == null) return false;
+  if (sqObjElem == null) return false;
 
-  return elemSquare.hasAttribute("epdst");
+  return sqObjElem.hasAttribute("epdst");
 }
 function validateCastleBlankDestinationSquare(square) {
   let originSelection = getFirstSelectedElement();
@@ -1594,7 +1600,7 @@ function setSpecialMovementStatus(chain) {
     }
     if (
       destElem.hasAttribute("prow") &&
-      validateProtionDestinationSquare(destElem.getAttribute("prow"), destElem.id)
+      validatePromotionDestinationSquare(destElem.getAttribute("prow"), destElem.id)
     ) {
       var objSquare = JSON.parse(window.localStorage.getItem("promPiece"));
       destElem.removeEventListener("click", squareHandler);
@@ -1640,10 +1646,11 @@ function updateMajorRelativePositions(movChain) {
       document.querySelectorAll('[sqColor="' + enemyColor + '"]').forEach((element) => {
         element.setAttribute("enkpos", kingSqId);
       });
-      // $('[sqColor="' + playerColor + '"]').attr("frkpos", kingSqId);
-      // $('[sqColor="' + enemyColor + '"]').attr("enkpos", kingSqId);
     }
   });
+}
+function getCheckSavingMoves() {
+  let threatenOrgSquares = getCheckOriginSquares();
 }
 /**
  * Funcao de tratamento do clique na casa (square).
@@ -1731,31 +1738,29 @@ function squareHandler(event) {
     //
     // Passar Turno
     //
-    // changeTurn();
+    changeTurn();
   } else if (selectSameSquare(event.target)) {
     clearAllElementSelection();
   }
   //drawSquareDetails();
 }
 function toggleTurnValue() {
-  TURN_CONTROL = TURN_CONTROL == TURN_BLACK ? TURN_WHITE : TURN_BLACK;
-
-  return TURN_CONTROL;
+  return TURN_CONTROL == ALLY_TURN ? ENEMY_TURN : ALLY_TURN;
 }
 function changeTurn() {
-  // toggleTurnValue();
+  TURN_CONTROL = toggleTurnValue();
 
-  // togglePlayerColor();
+  playerColor = togglePlayerColor();
 
-  // toggleTimer()
+  // toggleTimer();
 
   if (isPlayerOnCheck()) alert("Check");
 }
+
 function isPlayerOnCheck() {
-  let kElem = document.querySelector(
-    '[sqtype="KINGPIECE"][sqcolor="' + playerColor + '"]'
-  );
-  return isSquareIsOnEnemyRange(kElem);
+  if (isKingOnEnemyRange(FRIENDLY_SIDE, IGNORE_COLISION)) isOnCheck = true;
+
+  return isOnCheck;
 }
 function readyHandler(event) {
   event.preventDefault();
@@ -1769,10 +1774,7 @@ function readyHandler(event) {
   //   SQUARE_TYPE_KNIGHT_PIECE,
   //   SQUARE_TYPE_QUEEN_PIECE,
   // ]);
-  // drawBoardSquares(
-  //                   GAME_CONTEXT_SKIP_SIDE,
-  //                   ENEMY_SIDE
-  //                 );
+  // drawBoardSquares(GAME_CONTEXT_SKIP_SIDE, ENEMY_SIDE);
   // drawBoardSquares(GAME_CONTEXT_SKIP_SIDEPIECES, [
   //   [
   //     [
@@ -1787,29 +1789,18 @@ function readyHandler(event) {
   // ]);
 
   drawSubtitles(SUBTITLE_BOTH);
+  let fenMsg =
+    "STK|" + FEN_MODE + "|2k4r/1p1nb2p/p5p1/2P1P1P1/1P3B2/P7/6PP/R6K w - - 0 26";
+  sendWSMessage(fenMsg);
 }
-function isKingOnEnemyRangeIgnoringColision(square) {
-  let mySquare = getElementFromSquareOrSquareId(square);
-  let enemyColor =
-    playerColor == avaliableColors[BLACK_COLOR]
-      ? avaliableColors[WHITE_COLOR]
-      : avaliableColors[BLACK_COLOR];
-  document.querySelectorAll('[sqcolor="' + enemyColor + '"]').forEach((elem) => {
-    let elemRange = elem.getAttribute("range");
-    ALL_DIRECTION.map((direction) => {
-      let attrDir = "mv" + direction;
-      elem.hasAttribute(attrDir)
-        ? getDirectionFromSquare(elem, direction, elemRange, IGNORE_COLISION)
-        : "";
-    });
-  });
-  document.querySelector("[mvsl][kpos]");
+function isKingOnEnemyRange(kingSide, ignoreColision = FALSE) {
+  let kElem = getKingPieceLocation(kingSide);
 
-  clearAllElementSelection();
-
-  return retSts;
+  // alert(kElem.id);
+  return isSquareIsOnEnemyRange(kElem.id, ignoreColision);
 }
-function isSquareIsOnEnemyRange(square) {
+
+function isSquareIsOnEnemyRange(square, ignoreColision = false) {
   let mySquare = getElementFromSquareOrSquareId(square);
   let enemyColor =
     playerColor == avaliableColors[BLACK_COLOR]
@@ -1820,17 +1811,15 @@ function isSquareIsOnEnemyRange(square) {
   enemyScan = true;
   document.querySelectorAll('[sqcolor="' + enemyColor + '"]').forEach((elem) => {
     let elemRange = elem.getAttribute("range");
+    enemyScan = elem.id;
     ALL_DIRECTION.map((direction) => {
       let attrDir = "mv" + direction;
       elem.hasAttribute(attrDir)
-        ? getDirectionFromSquare(elem, direction, elemRange, CONSIDER_COLISION)
+        ? getDirectionFromSquare(elem, direction, elemRange, ignoreColision)
         : "";
     });
   });
   enemyScan = false;
-
-  // lowlightElement(getFirstSelectedElement())
-  // clearElementSelection(getFirstSelectedElement());
 
   if (document.querySelector('[mvsl="E"][id="' + mySquare.id + '"]') != null) {
     isDangerSquare = true;
@@ -1839,7 +1828,7 @@ function isSquareIsOnEnemyRange(square) {
   if (document.querySelector('[cpt][id="' + mySquare.id + '"]') != null) {
     isDangerSquare = true;
   }
-  // clearAllElementSelection();
+
   return isDangerSquare;
 }
 function drawHorizontalSubtitles() {
@@ -2055,9 +2044,9 @@ function drawBoardSquares(context, extraArg = null) {
          * Rotina do Supervisor
          * @todo: Modularizar mais
          */
-        setSupervisorDiv(supervisoridCtr, supervisormarginTop);
-        supervisoridCtr++;
-        supervisormarginTop += 20;
+        // setSupervisorDiv(supervisoridCtr, supervisormarginTop);
+        // supervisoridCtr++;
+        // supervisormarginTop += 20;
 
         // Salvamos o square no local storage
         saveCoreAttrOnLocalStorage(newsquare.squareElem);
@@ -2092,21 +2081,19 @@ function drawBoardSquares(context, extraArg = null) {
 
   // Fazemos trabalho adicional em caso de movimentos especiais, tipo Roque
   setSpecialMovementAttributes();
-  // Tudo pronto, salvamos o Board todo.
+  // Tudo pronto, salvamos o Board.
   window.localStorage.removeItem("gameBoard");
   window.localStorage.setItem("gameBoard", JSON.stringify({ ...storageSquares }));
 }
-
 function drawInitialBoard(boardId, buttonreadyHandler) {
   const createbtn = document.getElementById(boardId);
   createbtn.addEventListener("click", buttonreadyHandler);
-  setSupervisorListener();
+  // setSupervisorListener();
 }
 function setToggleColor(toggleId, buttonreadyHandler) {
   const createbtn = document.getElementById(toggleId);
   createbtn.addEventListener("click", buttonreadyHandler);
 }
-
 function destroySquares() {
   document.querySelectorAll("[square]").forEach((element) => {
     element.remove();
@@ -2115,15 +2102,11 @@ function destroySquares() {
     element.remove();
   });
 }
-
 function togglePlayerColor() {
-  // Avaliable colors contem "WHITEPIECE" na posicao 0
-  // e "BLACKPIECE" na posicao 1
-  playerColor = avaliableColors.indexOf(playerColor)
+  return avaliableColors.indexOf(playerColor)
     ? avaliableColors[WHITE_COLOR]
     : avaliableColors[BLACK_COLOR];
 }
-
 function togglePlayerColorAndRedrawBoard(event) {
   if (!confirm("ATENÇÃO! Inverter as cores? (todo progresso será perdido)")) return;
 
@@ -2132,14 +2115,14 @@ function togglePlayerColorAndRedrawBoard(event) {
   destroySquares();
   readyHandler(event);
 }
-
 // $(document).ready(function () {
 //
 // });
 
 drawInitialBoard("boardcreate", readyHandler);
 setToggleColor("togglecolor", togglePlayerColorAndRedrawBoard);
-function setSupervisorListener() {
-  const createbtn = document.getElementById("togglesupervisor");
-  createbtn.addEventListener("click", toggleSupervisor);
-}
+
+// function setSupervisorListener() {
+//   const createbtn = document.getElementById("togglesupervisor");
+//   createbtn.addEventListener("click", toggleSupervisor);
+// }

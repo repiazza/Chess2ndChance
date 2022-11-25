@@ -48,7 +48,7 @@ export const GET_POSSIBLE_TYPES = true;
  */
 export const CONSIDER_COLISION = false;
 /**
- * @constant {boolean} @default false
+ * @constant {boolean} @default true
  */
 export const IGNORE_COLISION = true;
 /**
@@ -145,57 +145,124 @@ export const MOVEMENT_TYPE_NONE = 0;
 
 /**
  * @constant @type {bitwiseCumullativeFlag}
- * @default 0x01 = 0001
+ * @default 0x01 (= 0001)
  */
 export const MOVEMENT_DIRECTION_COLUMN = 0x01;
 /**
  * @constant @type {bitwiseCumullativeFlag}
- * @default 0x02 = 0010
+ * @default 0x02 (= 0010)
  */
 export const MOVEMENT_DIRECTION_LINE = 0x02;
 /**
  * @constant @type {bitwiseCumullativeFlag}
- * @default 0x04 = 0100
+ * @default 0x04 (= 0100)
  */
 export const MOVEMENT_DIRECTION_DIAGONAL = 0x04;
 /**
  * @constant @type {bitwiseCumullativeFlag}
- * @default 0x08 = 1000
+ * @default 0x08 (= 1000)
  */
 export const MOVEMENT_DIRECTION_L = 0x08;
+
 //
-// Segemented movement notation
+// Notacao de Diagonais segmentadas.
+// Algumas peças necessitam mover-se ou
+// "conhecer" apenas parte das diagonais.
+// Como é o caso da captura do Peão.
+// Apenas conhece as partes superiores das
+// diagonais principal e oposta.
 //
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x10 (= 0001 0000)
+ */
 export const SUBTYPE_DIAG_MAIN_BEGIN = 0x10;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x20 (= 0010 0000)
+ */
 export const SUBTYPE_DIAG_MAIN_END = 0x20;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x40 (= 0100 0000)
+ */
 export const SUBTYPE_DIAG_OPPOSITE_BEGIN = 0x40;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x80 (= 1000 0000)
+ */
 export const SUBTYPE_DIAG_OPPOSITE_END = 0x80;
 
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x400 (= 0100 0000 0000)
+ */
+export const SUBTYPE_COLUMN_NORTH = 0x400;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x800 (= 1000 0000 0000)
+ */
+export const SUBTYPE_COLUMN_SOUTH = 0x800;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x1000 (= 0001 0000 0000 0000)
+ */
+export const SUBTYPE_LINE_WEST = 0x1000;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x2000 (= 0010 0000 0000 0000)
+ */
+export const SUBTYPE_LINE_EAST = 0x2000;
+//
+// Notação dos movimentos especiais do xadrez:
+// - Roque
+// - En Passant
+// - Promoção de peça
+//
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x4000 (= 0100 0000 0000 0000)
+ */
+export const SPECIAL_MOVEMENT_CASTLE = 0x4000;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x8000 (= 1000 0000 0000 0000)
+ */
+export const SPECIAL_MOVEMENT_EN_PASSANT = 0x8000;
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default 0x10000 (= 0001 0000 0000 0000 0000)
+ */
+export const SPECIAL_MOVEMENT_PROMOTE = 0x10000;
+
+export const MOVEMENT_CASTLE_SHORT = 1;
+export const MOVEMENT_CASTLE_LONG = 2;
+export const MOVEMENT_CASTLE_BOTH = 3;
+//
+// Notação de movimentos compostos.
+// Junção de um ou mais movimentos especificos
+//
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ * @default SPECIAL_MOVEMENT_CASTLE | SPECIAL_MOVEMENT_EN_PASSANT | SPECIAL_MOVEMENT_PROMOTE
+ * ou 0x1C000 (= 0001 1100 0000 0000 0000)
+ */
+export const SPECIAL_MOVEMENT_ALL =
+  SPECIAL_MOVEMENT_CASTLE | SPECIAL_MOVEMENT_EN_PASSANT | SPECIAL_MOVEMENT_PROMOTE;
+
+/**
+ * @constant @type {bitwiseCumullativeFlag}
+ *
+ * Todas as subdiagonais
+ *
+ * @default 0xF0 (= 1111 0000)
+ */
 export const SUBTYPE_DIAG_ALL =
   SUBTYPE_DIAG_MAIN_BEGIN |
   SUBTYPE_DIAG_MAIN_END |
   SUBTYPE_DIAG_OPPOSITE_BEGIN |
   SUBTYPE_DIAG_OPPOSITE_END;
 
-export const SUBTYPE_COLUMN_NORTH = 1024;
-export const SUBTYPE_COLUMN_SOUTH = 2048;
-export const SUBTYPE_LINE_WEST = 4096;
-export const SUBTYPE_LINE_EAST = 8192;
-//
-// Special movement notation
-//
-export const SPECIAL_MOVEMENT_CASTLE = 16384;
-export const SPECIAL_MOVEMENT_EN_PASSANT = 32768;
-export const SPECIAL_MOVEMENT_PROMOTE = 65536;
-export const SPECIAL_MOVEMENT_ALL =
-  SPECIAL_MOVEMENT_CASTLE | SPECIAL_MOVEMENT_EN_PASSANT | SPECIAL_MOVEMENT_PROMOTE;
-
-export const MOVEMENT_CASTLE_SHORT = 1;
-export const MOVEMENT_CASTLE_LONG = 2;
-export const MOVEMENT_CASTLE_BOTH = 3;
-//
-// Compount movement notation
-//
 export const MAIN_DIAGONAL = SUBTYPE_DIAG_MAIN_BEGIN | SUBTYPE_DIAG_MAIN_END;
 export const OPPOSITE_DIAGONAL = SUBTYPE_DIAG_OPPOSITE_BEGIN | SUBTYPE_DIAG_OPPOSITE_END;
 //
@@ -249,9 +316,3 @@ export const CROSS_DIRECTION = LINE_DIRECTION.concat(COLUMN_DIRECTION);
 export const STAR_DIRECTION = CROSS_DIRECTION.concat(MAIN_DIAGONAL_DIRECTION).concat(
   OPPOSITE_DIAGONAL_DIRECTION
 );
-
-let LSquares = [];
-
-//
-//
-//////////////////////////////////////////////////////////

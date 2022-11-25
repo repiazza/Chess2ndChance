@@ -1,6 +1,7 @@
-#ifndef POKEMOVE_H_INCLUDED
-#define POKEMOVE_H_INCLUDED
+#ifndef CHESS_SRV_H_INCLUDED
+#define CHESS_SRV_H_INCLUDED
 
-int iParseMessage(char *pszMsg, int iSz);
+#define MODE_FEN      1
+#define MODE_STARTPOS 2
 
 #endif

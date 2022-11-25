@@ -1,6 +1,6 @@
 var sockConn;
 
-sockConn = new WebSocket("ws://localhost:8000");
+sockConn = new WebSocket("ws://localhost:8080");
 sockConn.onopen = function (event) {
   console.log(event);
   console.log("WS connected");
