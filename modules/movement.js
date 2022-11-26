@@ -127,7 +127,6 @@ export const FOURTH_L_QUADRANT = [
   [SOUTH_WEST, WEST],
   [NORTH_WEST, WEST],
 ];
-
 export const L_ROTATE = [
   FIRST_L_QUADRANT,
   SECOND_L_QUADRANT,

@@ -85,7 +85,8 @@ export const ROOK_CASTLED_MOVEMENT = ROOK_INITIAL_MOVEMENT ^ SPECIAL_MOVEMENT_CA
  * Em outras palavras, move-se enqunato nao encontrar paredes ou inimigos
  * Ou ainda: Caso puder, move-se o maximo possivel, 8 casas
  *
- * @default LINE_OF_SIGHT (=8 sqmax)
+ * @default LINE_OF_SIGHT
+ * (=8 sqmax)
  */
 export const ROOK_MOVEMENT_RANGE = LINE_OF_SIGHT;
 
@@ -107,8 +108,9 @@ export const ROOK_MOVEMENT_RANGE = LINE_OF_SIGHT;
 export const KNIGHT_MOVEMENT = MOVEMENT_DIRECTION_L;
 /**
  * @constant @type {bitwiseCumullativeFlag}
- * @default L_RANGE (=4 sq)
- * Dado que LL = destino final e NN origem, temos :
+ *
+ * Dado que LL = destinos possiveis e NN origem, temos :
+ *
  * sq LL sq LL sq                          LL sq LL
  * LL sq sq sq LL        ou             LL    sq    LL
  * sq sq NN sq sq  simplificadamente :  sq sq NN sq sq
@@ -119,8 +121,14 @@ export const KNIGHT_MOVEMENT = MOVEMENT_DIRECTION_L;
  *       LL
  * NN sq sq
  *       LL
+ *
+ * Dois movimentos expressados em 4 quadrantes
+ *
+ * @default L_RANGE
+ * (=4 sq)
+ *
  */
-export const KNIGHT_MOVEMENT_RANGE = L_RANGE; // 2 movements 4way expressed
+export const KNIGHT_MOVEMENT_RANGE = L_RANGE;
 
 ////////////////////////////////
 //
@@ -153,7 +161,8 @@ export const BISHOP_MOVEMENT = MOVEMENT_DIRECTION_DIAGONAL;
  * Em outras palavras, move-se enqunato nao encontrar paredes ou inimigos
  * Ou ainda: Caso puder, move-se o maximo possivel, 8 casas
  *
- * @default LINE_OF_SIGHT (=8 sqmax)
+ * @default LINE_OF_SIGHT
+ * (=8 sqmax)
  */
 export const BISHOP_MOVEMENT_RANGE = LINE_OF_SIGHT;
 
@@ -182,7 +191,17 @@ export const BISHOP_MOVEMENT_RANGE = LINE_OF_SIGHT;
 export const QUEEN_MOVEMENT =
   MOVEMENT_DIRECTION_COLUMN | MOVEMENT_DIRECTION_LINE | MOVEMENT_DIRECTION_DIAGONAL;
 /**
- * @constant @type {bitwiseCumullativeFlag} @default
+ * @constant @type {bitwiseCumullativeFlag}
+ *
+ * Alcance(range) do movimento da dama.
+ *
+ * Seu alcance limita-se aos lugares que não pode ver.
+ * Em outras palavras, move-se enqunato nao encontrar paredes ou inimigos
+ * Ou ainda: Caso puder, move-se o maximo possivel, 8 casas
+ *
+ * @default LINE_OF_SIGHT
+ *
+ * (=8 sqmax)
  */
 export const QUEEN_MOVEMENT_RANGE = LINE_OF_SIGHT;
 
@@ -190,7 +209,7 @@ export const QUEEN_MOVEMENT_RANGE = LINE_OF_SIGHT;
 /**
  * @constant @type {bitwiseCumullativeFlag}
  *
- *   Movimento do Rei.
+ *   Movimento inical do Rei.
  *
  * Possui o movimento em todas as direções e
  * pode mover-se no sentido Estrela(STAR_DIRECTION):
@@ -204,6 +223,7 @@ export const QUEEN_MOVEMENT_RANGE = LINE_OF_SIGHT;
  *  - Diagonal pricipal (NW - SE)
  *  - Diagonal oposta(SW - NE)
  *  - Não pode mover-se para uma casa sob ataque do inimigo
+ *  - Pode mover-se em todos os sentidos
  *  - Roque:
  *    º Linha ou W - E.
  *    º Move-se ao mesmo tempo da torre(move duas peças com um lance).
@@ -215,8 +235,8 @@ export const QUEEN_MOVEMENT_RANGE = LINE_OF_SIGHT;
  *    º Não pode ser executado se as casas que o rei irá cruzar estiverem sobre ataque.
  *    º Só pode ser executado uma vez no jogo, dado que, ao se mover, este efeito encerra.
  *
- *  @default SPECIAL_MOVEMENT_CASTLE | MOVEMENT_DIRECTION_COLUMN | MOVEMENT_DIRECTION_LINE | MOVEMENT_DIRECTION_DIAGONAL
- *  ou  0x01 | 0x02 | 0x04 | 0x4000
+ *  @default MOVEMENT_DIRECTION_COLUMN | MOVEMENT_DIRECTION_LINE | MOVEMENT_DIRECTION_DIAGONAL | SPECIAL_MOVEMENT_CASTLE
+ *  ou  0x01 | 0x02 | 0x04 | 0x4000 (= 0x4007) (= 0100 0000 0000 0111)
  */
 export const KING_INITIAL_MOVEMENT =
   MOVEMENT_DIRECTION_COLUMN |
@@ -225,11 +245,30 @@ export const KING_INITIAL_MOVEMENT =
   SPECIAL_MOVEMENT_CASTLE;
 /**
  * @constant @type {bitwiseCumullativeFlag}
- * @default
+ *
+ *  Movimento do Rei sem a condição de executar o roque.
+ *
+ * Move-se nas direções:
+ *  - Linha(W - E)
+ *  - Coluna(S - N)
+ *  - Diagonal pricipal (NW - SE)
+ *  - Diagonal oposta(SW - NE)
+ *  - Não pode mover-se para uma casa sob ataque do inimigo
+ *  - Pode mover-se em todos os sentidos
+ *
+ * @default KING_INITIAL_MOVEMENT ^ SPECIAL_MOVEMENT_CASTLE
+ * ou 0x4007 ^ 0x4000 (= 0x07) (= 0111)
  */
 export const KING_CASTLED_MOVEMENT = KING_INITIAL_MOVEMENT ^ SPECIAL_MOVEMENT_CASTLE;
 /**
- * @constant @type {bitwiseCumullativeFlag} @default
+ * @constant @type {bitwiseCumullativeFlag}
+ *
+ *  Alcance(range) do movimento do Rei.
+ *
+ *  Move-se apenas 1 casa;
+ *
+ * @default SQUARE_RANGE
+ * (=1 sq)
  */
 export const KING_MOVEMENT_RANGE = SQUARE_RANGE;
 

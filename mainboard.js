@@ -1,8 +1,5 @@
 import {
-  TOTAL_PIECE_COUNT,
-  PLAYER_PIECE_COUNT,
   ROW_SQUARE_COUNT,
-  COLUMN_SQUARE_ROW,
   DARK_BGCOLOR,
   LIGHT_BGCOLOR,
   highlightStyles,
@@ -11,7 +8,6 @@ import {
   bgBoardColors,
   columnArray,
   revColumn,
-  enemyRangeStyles,
   SQUARE_PIECE_COLOR_BLACK,
   SQUARE_PIECE_COLOR_WHITE,
   BLANK_SQUARE_COLOR,
@@ -21,11 +17,7 @@ import {
   BLACKPIECE_INIT_ROWS,
   BLANKSQUARE_INIT_ROWS,
   GAME_CONTEXT_INITIAL,
-  GAME_CONTEXT_PLAYING,
-  GAME_CONTEXT_SKIP_PIECES,
   GAME_CONTEXT_SKIP_SIDEPIECES,
-  VISIBILITY_VISIBLE,
-  VISIBILITY_HIDDEN,
   SQUARE_TYPE_PAWN_PIECE,
   SQUARE_TYPE_HIGHVALUE_PIECE,
   SQUARE_TYPE_KNIGHT_PIECE,
@@ -36,8 +28,6 @@ import {
   SQUARE_TYPE_BLANK,
   SQUARE_ALPHABETICAL_NDX,
   SQUARE_NUMERIC_NDX,
-  LONG_CASTLE_INIT_SQUARES,
-  SHORT_CASTLE_INIT_SQUARES,
   LONG_CASTLE_ROOK_SQUARES,
   SHORT_CASTLE_ROOK_SQUARES,
   LONG_CASTLE_KING_SQUARES,
@@ -49,18 +39,15 @@ import {
   CASTLE_INIT_SQUARES,
 } from "./modules/board.js";
 
-import { FEN_MODE, START_POSITION_MODE } from "./modules/uci.js";
+import { FEN_MODE } from "./modules/uci.js";
 
 import {
   MOVEMENT_CHAIN_ORIGIN,
   MOVEMENT_CHAIN_DESTINATION,
   DEFAULT_MOVEMENT_SELECTION,
   CASTLE_MOVEMENT_SELECTION,
-  EN_PASSANT_MOVEMENT_SELECTION,
-  PROMOTION_MOVEMENT_SELECTION,
   SHORT_CASTLE_TYPE,
   LONG_CASTLE_TYPE,
-  BOTH_CASTLE_TYPE,
   GET_BOOLEAN_POSSIBILITY,
   GET_POSSIBLE_TYPES,
   CONSIDER_COLISION,
@@ -75,20 +62,11 @@ import {
   SOUTH_EAST,
   LONG_CASTLE,
   SHORT_CASTLE,
-  BOTH_CASTLE,
   DIRECTION_VERTICAL,
   DIRECTION_HORIZONTAL,
-  DIRECTION_DIAGONAL,
-  FIRST_L_QUADRANT,
-  SECOND_L_QUADRANT,
-  THIRD_L_QUADRANT,
-  FOURTH_L_QUADRANT,
   L_ROTATE,
   SQUARE_RANGE,
-  DOUBLE_SQUARE_RANGE,
-  L_RANGE,
   LINE_OF_SIGHT,
-  RANGE_TYPE_NONE,
   MOVEMENT_TYPE_NONE,
   MOVEMENT_DIRECTION_COLUMN,
   MOVEMENT_DIRECTION_LINE,
@@ -105,20 +83,9 @@ import {
   SUBTYPE_LINE_EAST,
   SPECIAL_MOVEMENT_CASTLE,
   SPECIAL_MOVEMENT_EN_PASSANT,
-  SPECIAL_MOVEMENT_PROMOTE,
   SPECIAL_MOVEMENT_ALL,
-  MOVEMENT_CASTLE_SHORT,
-  MOVEMENT_CASTLE_LONG,
-  MOVEMENT_CASTLE_BOTH,
-  MAIN_DIAGONAL,
-  OPPOSITE_DIAGONAL,
-  MOVEMENT_DIAGONAL_X,
-  MOVEMENT_DIRECTION_ALL,
   MOVEMENT_COLUMN_ALL,
   MOVEMENT_LINE_ALL,
-  MOVEMENT_MAIN_ALL,
-  MOVEMENT_DIRECTION_SUBTYPE_ALL,
-  MOVEMENT_TYPE_ALL,
   NORTH_EAST_DIRECTION,
   NORTH_WEST_DIRECTION,
   SOUTH_EAST_DIRECTION,
@@ -131,10 +98,7 @@ import {
   COLUMN_DIRECTION,
   MAIN_DIAGONAL_DIRECTION,
   OPPOSITE_DIAGONAL_DIRECTION,
-  DIAGONAL_DIRECTION,
   ALL_DIRECTION,
-  CROSS_DIRECTION,
-  STAR_DIRECTION,
 } from "./modules/movement.js";
 
 import {
@@ -151,7 +115,6 @@ import {
   KING_CASTLED_MOVEMENT,
   KING_MOVEMENT_RANGE,
   PAWN_INITIAL_MOVEMENT,
-  PAWN_PASSE_MOVEMENT,
   PAWN_INITIAL_RANGE,
   PAWN_MOVED_RANGE,
   THE_PIECE,
@@ -167,9 +130,6 @@ import {
   FRIENDLY_SIDE,
   ENEMY_SIDE,
   BLANK_SIDE,
-  PLAYER_SIDES,
-  ALL_SIDES,
-  EMBEDDED_CASTLE_PIECES,
   WHITE_COLOR,
   BLACK_COLOR,
   avaliableColors,
@@ -179,7 +139,7 @@ import {
 
 import "./modules/types.js";
 
-import { sendWSMessage, sockConn } from "./modules/socket.js";
+import { sendWSMessage, sockConn, SOCKET_OPEN } from "./modules/socket.js";
 
 // import { setSupervisorDiv, toggleSupervisor } from "./modules/supervisor.js";
 
@@ -401,12 +361,16 @@ function validateCastleRangeIsSafe(castleType, possibleCastles = false) {
 
   return i < 5 && j < 4 ? false : true;
 }
-
-function validateIsOnRange(square) {
+/**
+ *
+ * @param {string|HTMLObjectElement} sqObjElem
+ * Pode ser o id da casa ou o objeto que contenha a div desta.
+ * @returns
+ */
+function validatePieceMovementAndRange(sqObjElem) {
   let selectedElem = getFirstSelectedElement();
   let myPieceType = getSquareType(selectedElem);
   let moved = hasMoved(selectedElem.id);
-
   let myMovType = getMovementTypeFromPieceType(
     getPieceTypeFromSquareType(myPieceType),
     moved
@@ -415,6 +379,7 @@ function validateIsOnRange(square) {
     getPieceTypeFromSquareType(myPieceType),
     moved
   );
+
   // Possui movimento especial?
   if (matchMovementDirection(myMovType, SPECIAL_MOVEMENT_ALL)) {
     // Roques
@@ -564,37 +529,31 @@ function validateIsOnRange(square) {
   if (matchMovementDirection(myMovType, MOVEMENT_DIRECTION_L)) {
     getLSquaresFromSquare(selectedElem);
   }
-  if (!validateIsMoveSquare(square) && !validateIsCaptureSquare(square)) {
+  if (!validateIsMoveSquare(sqObjElem) && !validateIsCaptureSquare(sqObjElem)) {
     return false;
   }
   return true;
 }
-function validateEnemyPieceSquare(square) {
-  return validateSquareSide(square) == ENEMY_SIDE;
+function validateEnemyPieceSquare(sqObjElem) {
+  return validateSquareSide(sqObjElem) == ENEMY_SIDE;
 }
-function validateFriendlyPieceSquare(square) {
-  return validateSquareSide(square) == FRIENDLY_SIDE;
+function validateFriendlyPieceSquare(sqObjElem) {
+  return validateSquareSide(sqObjElem) == FRIENDLY_SIDE;
 }
-function validateSquareSide(square) {
-  let mySquare = getElementFromSquareOrSquareId(square);
+function validateSquareSide(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   if (!isValidSquare(mySquare)) return false;
 
   if (validateIsBlank(mySquare)) return BLANK_SIDE;
 
   return mySquare.getAttribute("sqcolor") == playerColor ? FRIENDLY_SIDE : ENEMY_SIDE;
 }
-function validateIsSameSquare(square) {
-  return getFirstSelectedElement().id == square.id;
+function validateIsSameSquare(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
+  return getFirstSelectedElement().id == mySquare.id;
 }
-function getSquareColor(square) {
-  let mySquare = getElementFromSquareOrSquareId(square);
-  if (mySquare.hasAttribute("sqcolor") && mySquare.getAttribute("sqcolor"))
-    return mySquare.getAttribute("sqcolor");
-  return false;
-}
-function isValidSquareIndex(squareIndex) {
-  if (squareIndex < 1 || squareIndex > ROW_SQUARE_COUNT || isNaN(squareIndex))
-    return false;
+function isValidSquareIndex(sqIndex) {
+  if (sqIndex < 1 || sqIndex > ROW_SQUARE_COUNT || isNaN(sqIndex)) return false;
 
   return true;
 }
@@ -640,29 +599,31 @@ function validateAndSetCaptureSquare(sqObjElem) {
     highlightCapture(mySquare);
   }
 }
-function validateSquareType(square, flag) {
-  if (square === undefined) return false;
-  if (flag === SQUARE_TYPE_PAWN_PIECE) return PAWN_INIT_ROWS.includes(square.id[1]);
+function validateSquareType(sqObjElem, flag) {
+  if (sqObjElem === undefined) return false;
+
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
+  if (flag === SQUARE_TYPE_PAWN_PIECE) return PAWN_INIT_ROWS.includes(mySquare.id[1]);
   if (flag === SQUARE_TYPE_HIGHVALUE_PIECE)
-    return HIGHVALUE_INIT_ROWS.includes(square.id[1]);
+    return HIGHVALUE_INIT_ROWS.includes(mySquare.id[1]);
   if (flag === SQUARE_TYPE_BLANK) {
     return (
-      !validateSquareType(square, SQUARE_TYPE_PAWN_PIECE) &&
-      !validateSquareType(square, SQUARE_TYPE_HIGHVALUE_PIECE)
+      !validateSquareType(mySquare, SQUARE_TYPE_PAWN_PIECE) &&
+      !validateSquareType(mySquare, SQUARE_TYPE_HIGHVALUE_PIECE)
     );
   }
 
   return false;
 }
 function validateSquareColor(sqObjElem, flag) {
-  let square = getElementFromSquareOrSquareId(sqObjElem);
-  if (square == null) return false;
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
+  if (mySquare == null) return false;
 
   if (flag === SQUARE_PIECE_COLOR_WHITE)
-    return WHITEPIECE_INIT_ROWS.includes(square.id[1]);
+    return WHITEPIECE_INIT_ROWS.includes(mySquare.id[1]);
   if (flag === SQUARE_PIECE_COLOR_BLACK)
-    return BLACKPIECE_INIT_ROWS.includes(square.id[1]);
-  if (flag === SQUARE_TYPE_BLANK) return BLANKSQUARE_INIT_ROWS.includes(square.id[1]);
+    return BLACKPIECE_INIT_ROWS.includes(mySquare.id[1]);
+  if (flag === SQUARE_TYPE_BLANK) return BLANKSQUARE_INIT_ROWS.includes(mySquare.id[1]);
 
   return false;
 }
@@ -731,8 +692,8 @@ function setMovedElem(sqObjElem) {
   let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   mySquare.setAttribute("mvd", "1");
 }
-function hasMoved(squareId) {
-  let mySquare = getElementFromSquareOrSquareId(squareId);
+function hasMoved(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
 
   return document.getElementById(mySquare.id).hasAttribute("mvd");
 }
@@ -741,19 +702,19 @@ function clearMoveSelection(sqObjElem) {
   mySquare.removeAttribute("mvsl");
   clearDirectionSelection(sqObjElem);
 }
-function getSquareAfterMultipleMovements(originSq, movementArray) {
+function getSquareAfterMultipleMovements(origSqObj, movementArray) {
   if (Array.isArray(movementArray) == false) {
-    return getSquare(originSq, movementArray);
+    return getSquare(origSqObj, movementArray);
   }
 
   let retSq = [];
-  let destSq = getElementFromSquareOrSquareId(originSq);
+  let destSq = getElementFromSquareOrSquareId(origSqObj);
   let wrkSq = destSq;
   movementArray.forEach((direction) => {
-    wrkSq = getElementFromSquareOrSquareId(originSq);
+    wrkSq = getElementFromSquareOrSquareId(origSqObj);
 
     if (Array.isArray(direction)) {
-      wrkSq = getElementFromSquareOrSquareId(originSq);
+      wrkSq = getElementFromSquareOrSquareId(origSqObj);
       direction.forEach((subdir) => {
         destSq = getSquare(wrkSq, subdir);
         wrkSq = destSq;
@@ -767,13 +728,10 @@ function getSquareAfterMultipleMovements(originSq, movementArray) {
   });
   return retSq;
 }
-function getCastleSquaresFromSquare(square, ignoreColision = false) {
-  return validateCastleFromSquare(square, GET_POSSIBLE_TYPES);
-}
-function getLSquaresFromSquare(square, ignoreColision = false) {
+function getLSquaresFromSquare(sqObjElem, ignoreColision = false) {
   let LSquares = [];
   L_ROTATE.map((quadrant) => {
-    let retSq = getSquareAfterMultipleMovements(square, quadrant);
+    let retSq = getSquareAfterMultipleMovements(sqObjElem, quadrant);
     if (Array.isArray(retSq)) {
       retSq.map((sq) => {
         if (!ignoreColision && isValidSquare(sq) && !validateFriendlyPieceSquare(sq)) {
@@ -787,7 +745,6 @@ function getLSquaresFromSquare(square, ignoreColision = false) {
 
   highlightSelection();
 }
-
 function setSpecialMovementAttributes() {
   let castlesquare = [];
   let i = 0;
@@ -823,16 +780,12 @@ function setSpecialMovementAttributes() {
     }
   });
 }
-
-function movementMatchesAnyDirection(movementType) {
-  return movementType & MOVEMENT_DIRECTION_ALL ? true : false;
-}
 function getSquareType(sqObjElem) {
-  let square = getElementFromSquareOrSquareId(sqObjElem);
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
 
-  if (square == null) return false;
+  if (mySquare == null) return false;
 
-  if (square.hasAttribute("sqtype")) return square.getAttribute("sqtype");
+  if (mySquare.hasAttribute("sqtype")) return mySquare.getAttribute("sqtype");
 
   return false;
 }
@@ -871,7 +824,6 @@ function getMovementRangeFromSquareType(value) {
 }
 function getMovementDirectionFromSquareType(value) {
   let retDirs = [];
-  // alert(retDirs.length)
   let myMovType = getMovementTypeFromSquareType(value, 0);
   if (matchMovementDirection(myMovType, MOVEMENT_DIRECTION_COLUMN)) {
     retDirs.push(NORTH_DIRECTION);
@@ -948,8 +900,6 @@ function createSquare(square) {
     sqColor = SQUARE_PIECE_COLOR_WHITE;
   if (validateSquareColor(square, SQUARE_TYPE_BLANK)) sqColor = BLANK_SQUARE_COLOR;
 
-  // alert(sqColor);
-
   if (validateSquareType(square, SQUARE_TYPE_PAWN_PIECE)) {
     promotionRow = validateSquareColor(square, SQUARE_PIECE_COLOR_WHITE)
       ? ROW_SQUARE_COUNT
@@ -988,11 +938,11 @@ function createSquare(square) {
   return pieceObject;
 }
 function getSquare(sqObjElem, relativePosition) {
-  let square = getElementFromSquareOrSquareId(sqObjElem);
-  if (square == null) return false;
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
+  if (mySquare == null) return false;
 
-  let columnNotation = square.id[0];
-  let indexNotation = Number(square.id[1]);
+  let columnNotation = mySquare.id[0];
+  let indexNotation = Number(mySquare.id[1]);
   let westPos = -1;
   let eastPos = -1;
   let northPos = -1;
@@ -1058,15 +1008,15 @@ function lowlightCapture() {
     element.classList.add(bgcAttr);
   });
 }
-function lowlightElement(element) {
+function lowlightSquare(sqObjElem) {
   highlightStyles.forEach((myClass) => {
-    element.classList.remove(myClass);
+    sqObjElem.classList.remove(myClass);
   });
-  let bgcAttr = element.getAttribute("bgc");
-  element.classList.add(bgcAttr);
+  let bgcAttr = sqObjElem.getAttribute("bgc");
+  sqObjElem.classList.add(bgcAttr);
 }
-function highlightCapture(elm) {
-  let mySquare = getElementFromSquareOrSquareId(elm);
+function highlightCapture(sqObjElem) {
+  let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   let bgcAttr = mySquare.getAttribute("bgc");
   highlightStyles.forEach((myClass) => {
     mySquare.classList.remove(myClass);
@@ -1210,7 +1160,7 @@ function getClassNameFromAttribute(square) {
   return false;
 }
 function highlightSquares(square) {
-  validateIsOnRange(square);
+  validatePieceMovementAndRange(square);
 }
 function selectSameSquare(square) {
   return validateIsSelected() && validateIsSameSquare(square);
@@ -1417,8 +1367,8 @@ function doMoveToDestination(orgsq, destsq) {
   let setAsBlank = false;
   let newDestSquare = document.getElementById(destsq.id);
   let newOrigSquare = document.getElementById(orgsq.id);
-  lowlightElement(newDestSquare);
-  lowlightElement(newOrigSquare);
+  lowlightSquare(newDestSquare);
+  lowlightSquare(newOrigSquare);
   if (newDestSquare.outerHTML.indexOf("BLANK") === -1) {
     squareStr = newDestSquare.outerHTML.split("pc")[0];
     setAsBlank = true;
@@ -1510,7 +1460,7 @@ function moveSquare(square) {
     //  && !validateIsPinPiece()
     (validateIsBlank(mySquare) || validateCastleDestinationSquare(mySquare)) &&
     !validateEnPassantDestSquare(mySquare) &&
-    validateIsOnRange(mySquare)
+    validatePieceMovementAndRange(mySquare)
   );
 }
 function changeSelectedSquare(square) {
@@ -1525,7 +1475,7 @@ function captureSquare(square) {
   return (
     validateIsSelected() &&
     (validateEnemyPieceSquare(square) || validateEnPassantDestSquare(square)) &&
-    validateIsOnRange(square) &&
+    validatePieceMovementAndRange(square) &&
     validateIsCaptureSquare(square)
   );
 }
@@ -1756,16 +1706,18 @@ function changeTurn() {
 
   if (isPlayerOnCheck()) alert("Check");
 }
-
 function isPlayerOnCheck() {
   if (isKingOnEnemyRange(FRIENDLY_SIDE, IGNORE_COLISION)) isOnCheck = true;
 
   return isOnCheck;
 }
+
 function readyHandler(event) {
   event.preventDefault();
 
   if (document.getElementById("a1") != null) return;
+
+  // Daqui pra baixo , podemos desenhar, pois nao foi feito ainda
 
   drawBoardSquares(GAME_CONTEXT_INITIAL, null);
 
@@ -1789,9 +1741,11 @@ function readyHandler(event) {
   // ]);
 
   drawSubtitles(SUBTITLE_BOTH);
-  let fenMsg =
-    "STK|" + FEN_MODE + "|2k4r/1p1nb2p/p5p1/2P1P1P1/1P3B2/P7/6PP/R6K w - - 0 26";
-  sendWSMessage(fenMsg);
+  if (sockConn.readyState == SOCKET_OPEN) {
+    let fenMsg =
+      "STK|" + FEN_MODE + "|2k4r/1p1nb2p/p5p1/2P1P1P1/1P3B2/P7/6PP/R6K w - - 0 26";
+    sendWSMessage(fenMsg);
+  }
 }
 function isKingOnEnemyRange(kingSide, ignoreColision = FALSE) {
   let kElem = getKingPieceLocation(kingSide);
@@ -1799,7 +1753,6 @@ function isKingOnEnemyRange(kingSide, ignoreColision = FALSE) {
   // alert(kElem.id);
   return isSquareIsOnEnemyRange(kElem.id, ignoreColision);
 }
-
 function isSquareIsOnEnemyRange(square, ignoreColision = false) {
   let mySquare = getElementFromSquareOrSquareId(square);
   let enemyColor =
@@ -2053,7 +2006,7 @@ function drawBoardSquares(context, extraArg = null) {
 
         storageSquares[i++] = newsquare.squareElem;
       } catch (err) {
-        alert(err.message);
+        console.log("Erro ao desenhar tabuleiro: [" + err + "]");
       }
 
       if (playerColor == avaliableColors[WHITE_COLOR]) {
@@ -2115,12 +2068,10 @@ function togglePlayerColorAndRedrawBoard(event) {
   destroySquares();
   readyHandler(event);
 }
-// $(document).ready(function () {
-//
-// });
-
-drawInitialBoard("boardcreate", readyHandler);
-setToggleColor("togglecolor", togglePlayerColorAndRedrawBoard);
+document.addEventListener("DOMContentLoaded", function () {
+  drawInitialBoard("boardcreate", readyHandler);
+  setToggleColor("togglecolor", togglePlayerColorAndRedrawBoard);
+});
 
 // function setSupervisorListener() {
 //   const createbtn = document.getElementById("togglesupervisor");
