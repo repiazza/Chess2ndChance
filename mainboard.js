@@ -17,7 +17,12 @@ import {
   BLACKPIECE_INIT_ROWS,
   BLANKSQUARE_INIT_ROWS,
   GAME_CONTEXT_INITIAL,
+  GAME_CONTEXT_PLAYING,
+  GAME_CONTEXT_SKIP_PIECES,
   GAME_CONTEXT_SKIP_SIDEPIECES,
+  GAME_CONTEXT_SKIP_COLOR,
+  GAME_CONTEXT_CUSTOM,
+  PRESET_CONTEXT_SKIP_SIDEPIECES,
   SQUARE_TYPE_PAWN_PIECE,
   SQUARE_TYPE_HIGHVALUE_PIECE,
   SQUARE_TYPE_KNIGHT_PIECE,
@@ -99,6 +104,7 @@ import {
   MAIN_DIAGONAL_DIRECTION,
   OPPOSITE_DIAGONAL_DIRECTION,
   ALL_DIRECTION,
+  ALL_OPOSITE_EQUIVALENT,
 } from "./modules/movement.js";
 
 import {
@@ -386,30 +392,30 @@ function validatePieceMovementAndRange(sqObjElem) {
     let castleTypes;
     if (
       matchMovementDirection(myMovType, SPECIAL_MOVEMENT_CASTLE) &&
-      (castleTypes = validateCastleFromSquare(square, GET_POSSIBLE_TYPES)) != false &&
+      (castleTypes = validateCastleFromSquare(sqObjElem, GET_POSSIBLE_TYPES)) != false &&
       (castleTypes = validateCastleRangeIsSafe(castleTypes, GET_POSSIBLE_TYPES)) != false
     ) {
       if (matchCastleType(SHORT_CASTLE_TYPE, castleTypes)) {
         let sCastleSquares;
-        if (getSquareType(square) == SQUARE_TYPE_KING_PIECE) {
+        if (getSquareType(sqObjElem) == SQUARE_TYPE_KING_PIECE) {
           sCastleSquares = document
             .getElementById(
-              columnArray[columnArray.length - 1] + square.id[SQUARE_NUMERIC_NDX]
+              columnArray[columnArray.length - 1] + sqObjElem.id[SQUARE_NUMERIC_NDX]
             )
             .getAttribute("scstl");
           // Minha Torre
           setMoveSelection(
             document.getElementById(
-              columnArray[columnArray.length - 1] + square.id[SQUARE_NUMERIC_NDX]
+              columnArray[columnArray.length - 1] + sqObjElem.id[SQUARE_NUMERIC_NDX]
             ),
             WEST_DIRECTION,
             CASTLE_MOVEMENT_SELECTION
           );
         } else {
-          sCastleSquares = square.getAttribute("scstl");
+          sCastleSquares = sqObjElem.getAttribute("scstl");
           // Meu Rei
           setMoveSelection(
-            document.getElementById(square.getAttribute("kpos")),
+            document.getElementById(sqObjElem.getAttribute("kpos")),
             WEST_DIRECTION,
             CASTLE_MOVEMENT_SELECTION
           );
@@ -419,25 +425,25 @@ function validatePieceMovementAndRange(sqObjElem) {
           setMoveSelection(sq, WEST_DIRECTION, CASTLE_MOVEMENT_SELECTION);
         });
         // Eu mesmo
-        setMoveSelection(square, WEST_DIRECTION, CASTLE_MOVEMENT_SELECTION);
+        setMoveSelection(sqObjElem, WEST_DIRECTION, CASTLE_MOVEMENT_SELECTION);
       }
       if (matchCastleType(LONG_CASTLE_TYPE, castleTypes)) {
         let lCastleSquares;
-        if (getSquareType(square) == SQUARE_TYPE_KING_PIECE) {
+        if (getSquareType(sqObjElem) == SQUARE_TYPE_KING_PIECE) {
           lCastleSquares = document
-            .getElementById(columnArray[0] + square.id[SQUARE_NUMERIC_NDX])
+            .getElementById(columnArray[0] + sqObjElem.id[SQUARE_NUMERIC_NDX])
             .getAttribute("lcstl");
           // Minha Torre
           setMoveSelection(
-            document.getElementById(columnArray[0] + square.id[SQUARE_NUMERIC_NDX]),
+            document.getElementById(columnArray[0] + sqObjElem.id[SQUARE_NUMERIC_NDX]),
             EAST_DIRECTION,
             CASTLE_MOVEMENT_SELECTION
           );
         } else {
-          lCastleSquares = square.getAttribute("lcstl");
+          lCastleSquares = sqObjElem.getAttribute("lcstl");
           // Meu Rei
           setMoveSelection(
-            document.getElementById(square.getAttribute("kpos")),
+            document.getElementById(sqObjElem.getAttribute("kpos")),
             EAST_DIRECTION,
             CASTLE_MOVEMENT_SELECTION
           );
@@ -447,7 +453,7 @@ function validatePieceMovementAndRange(sqObjElem) {
           setMoveSelection(sq, EAST_DIRECTION, CASTLE_MOVEMENT_SELECTION);
         });
         // Eu mesmo
-        setMoveSelection(square, EAST_DIRECTION, CASTLE_MOVEMENT_SELECTION);
+        setMoveSelection(sqObjElem, EAST_DIRECTION, CASTLE_MOVEMENT_SELECTION);
       }
       // highlightSelection();
     }
@@ -456,7 +462,7 @@ function validatePieceMovementAndRange(sqObjElem) {
       matchMovementDirection(myMovType, SPECIAL_MOVEMENT_EN_PASSANT) &&
       validatePassableEnemies(selectedElem, GET_BOOLEAN_POSSIBILITY)
     ) {
-      if (validateEnPassantDestSquare(square)) return true;
+      if (validateEnPassantDestSquare(sqObjElem)) return true;
       let enPassantDirection = validatePassableEnemies(selectedElem, GET_POSSIBLE_TYPES);
       let captSq = getSquare(selectedElem, enPassantDirection);
       setCaptureSquare(captSq);
@@ -1702,6 +1708,7 @@ function changeTurn() {
 
   playerColor = togglePlayerColor();
 
+  setWindRoseCoordinates;
   // toggleTimer();
 
   if (isPlayerOnCheck()) alert("Check");
@@ -1717,28 +1724,33 @@ function readyHandler(event) {
 
   if (document.getElementById("a1") != null) return;
 
-  // Daqui pra baixo , podemos desenhar, pois nao foi feito ainda
+  // Daqui pra baixo, podemos desenhar, pois nao foi feito ainda
+  // drawBoardSquares(GAME_CONTEXT_INITIAL, null);
 
-  drawBoardSquares(GAME_CONTEXT_INITIAL, null);
-
+  // Todas as peças de um tipo especifico, aliadas ou inimigas
   // drawBoardSquares(GAME_CONTEXT_SKIP_PIECES, [
   //   SQUARE_TYPE_BISHOP_PIECE,
   //   SQUARE_TYPE_KNIGHT_PIECE,
   //   SQUARE_TYPE_QUEEN_PIECE,
   // ]);
-  // drawBoardSquares(GAME_CONTEXT_SKIP_SIDE, ENEMY_SIDE);
+  //
+  // Todas as peças de um lado(brancas ou negras)
+  // drawBoardSquares(GAME_CONTEXT_SKIP_COLOR, ENEMY_SIDE);
+  //
+  // As peças aliadas nao pertencentes ao Roque.
+  drawBoardSquares(GAME_CONTEXT_SKIP_SIDEPIECES, [
+    PRESET_CONTEXT_SKIP_SIDEPIECES,
+    [[SQUARE_TYPE_PAWN_PIECE, SQUARE_TYPE_KNIGHT_PIECE], [ENEMY_SIDE]],
+  ]);
   // drawBoardSquares(GAME_CONTEXT_SKIP_SIDEPIECES, [
-  //   [
-  //     [
-  //       SQUARE_TYPE_BISHOP_PIECE,
-  //       SQUARE_TYPE_KNIGHT_PIECE,
-  //       SQUARE_TYPE_QUEEN_PIECE,
-  //       SQUARE_TYPE_PAWN_PIECE,
-  //     ],
-  //     [FRIENDLY_SIDE],
-  //   ],
+  //   PRESET_CONTEXT_SKIP_SIDEPIECES,
   //   [[SQUARE_TYPE_PAWN_PIECE, SQUARE_TYPE_KNIGHT_PIECE], [ENEMY_SIDE]],
   // ]);
+
+  // drawBoardSquares(GAME_CONTEXT_CUSTOM, [
+  //  [[SQUARE_TYPE_PAWN_PIECE , SQUARE_TYPE_KNIGHT_PIECE], [FRIENDLY_SIDE]],
+  //  [[SQUARE_TYPE_QUEEN_PIECE, SQUARE_TYPE_KNIGHT_PIECE], [ENEMY_SIDE]]
+  //]);
 
   drawSubtitles(SUBTITLE_BOTH);
   if (sockConn.readyState == SOCKET_OPEN) {
@@ -1839,37 +1851,64 @@ function drawSubtitles(whichSubs) {
   if (whichSubs == SUBTITLE_VERTICAL || whichSubs == SUBTITLE_BOTH)
     drawVerticalSubtitles();
 }
-function applyContext(context, extraArg, sqElem) {
-  // let myElem = document.getElementById(sqElem.id);
-
-  if (context == GAME_CONTEXT_SKIP_SIDEPIECES) {
-    var pieceArr = new Array();
-    var pieceSideArr = new Array();
-    extraArg.map((ctx) => {
-      pieceArr = ctx[0];
-      pieceSideArr = ctx[1];
-      pieceArr.map((pT) => {
-        if (
-          pT == sqElem.squareType &&
-          validateSquareSide(sqElem.squareElem) == pieceSideArr[0]
-        ) {
-          sqElem.squareElem.removeAttribute(
-            "pc" + getPieceTypeFromSquareType(sqElem.squareType)
-          );
-          sqElem.squareElem.removeAttribute("initsq");
-          sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
-          sqElem.squareElem.setAttribute("sqcolor", "0");
-          sqElem.squareElem.innerHTML = "";
-        }
-      });
+/** Aplica o layout especifico para testes com Roque
+ *  SidePieces porque sao as peças ao redor do rei, com exceção das torres.
+ *
+ * @param {[][]} extraArg  - Desenho das peças do tabuleiro de acordo com o contexto
+ *                           escolhido
+ *
+ * @param {Object} sqElem - Este parâmetro não é um HTMLObjectElement, ele é composto
+ *                          e contém também a div em questão, pois desenhamos peça a peça,
+ *                          por isso o contexto é aplicado elemento a elemento.
+ *
+ */
+function drawContextSkipSidePieces(extraArg, sqElem) {
+  var pieceArr = new Array();
+  var pieceSideArr = new Array();
+  extraArg.map((ctx) => {
+    pieceArr = ctx[0];
+    pieceSideArr = ctx[1];
+    pieceArr.map((pT) => {
+      if (
+        pT == sqElem.squareType &&
+        validateSquareSide(sqElem.squareElem) == pieceSideArr[0]
+      ) {
+        sqElem.squareElem.removeAttribute(
+          "pc" + getPieceTypeFromSquareType(sqElem.squareType)
+        );
+        sqElem.squareElem.removeAttribute("initsq");
+        sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
+        sqElem.squareElem.setAttribute("sqcolor", "0");
+        sqElem.squareElem.innerHTML = "";
+      }
     });
-    // if ( validateSquareSide(sqElem.squareElem) == pieceSideArr[0] ){
-    //     sqElem.squareElem.removeAttribute(("pc"+getPieceTypeFromSquareType(sqElem.squareType)));
-    //     sqElem.squareElem.removeAttribute("initsq");
-    //     sqElem.squareElem.setAttribute("sqcolor", "0");
-    //     sqElem.squareElem.setAttribute("sqtype", SQUARE_TYPE_BLANK);
-    //     sqElem.squareElem.innerHTML = ""
-    // }
+  });
+}
+
+function applyContext(context, extraArg, sqElem) {
+  switch (context) {
+    case GAME_CONTEXT_INITIAL:
+      // drawContextInitial(extraArg, sqElem);
+      break;
+    case GAME_CONTEXT_PLAYING:
+    case GAME_CONTEXT_CUSTOM:
+      // Fallthrough pois a mecanica será a mesma.
+      // A diferença básica é que:
+      //  - GAME_CONTEXT_PLAYING é um custom anteriormente existente
+      //  - GAME_CONTEXT_CUSTOM  é verdadeiramente a gosto do freguês
+      // drawContextCustomBoard(extraArg, sqElem);
+      break;
+    case GAME_CONTEXT_SKIP_PIECES:
+      // drawContextSkipPieces(extraArg, sqElem);
+      break;
+    case GAME_CONTEXT_SKIP_COLOR:
+      // drawContextSkipPlayerSide(extraArg, sqElem);
+      break;
+    case GAME_CONTEXT_SKIP_SIDEPIECES:
+      drawContextSkipSidePieces(extraArg, sqElem);
+      break;
+    default:
+      break;
   }
 }
 function setSquareStyle(
@@ -1891,6 +1930,15 @@ function setSquareColorSeq(sqColor, columnIndex, rowToggle) {
   }
   return sqColor;
 }
+function setTmpCoordinates() {
+  ALL_DIRECTION.map((coordAttrName) => {
+    document.querySelectorAll(`[${coordAttrName}]`).forEach((element) => {
+      tmpattr = element.getAttribute(coordAttrName);
+      element.setAttribute("tmp" + ALL_OPOSITE_DIRECTION[coordAttrName], tmpattr);
+    });
+  });
+}
+function toggleWindRoseCoordinates(drawingSquare) {}
 function setWindRoseCoordinates(drawingSquare) {
   drawingSquare.squareElem.setAttribute("nwsq", drawingSquare.northWestSquare);
   drawingSquare.squareElem.setAttribute("nesq", drawingSquare.northEastSquare);
@@ -1902,11 +1950,17 @@ function setWindRoseCoordinates(drawingSquare) {
   drawingSquare.squareElem.setAttribute("esq", drawingSquare.eastSquare);
 }
 /**
- * Cria as casas(squares) do tabuleiro(board);
+ * Cria as casas do tabuleiro;
  * @param {number} context - Se houver um contexto, sera aplicado.
  *                           Os contextos estão cadastrados no modulo board.js
- *                           Exemplo: Desenhar comeco de jogo ou sem peças laterais, etc.
- * @param  @type {[][]}  - Opcional, para caso de contexto livre, onde cada peça eh selecionada a parte.
+ *                           Exemplo:
+ *                              - Desenhar comeco de jogo
+ *                              - Sem peças laterais
+ *                              - Somente peoes
+ * @param {[][]} extraArg  - Opcional, para caso de contexto livre(custom),
+ *                         onde o tabuleiro será desenhado de maneira totalmente
+ *                         personalizada.
+ *
  */
 function drawBoardSquares(context, extraArg = null) {
   const board = document.getElementById("board");
@@ -2066,9 +2120,11 @@ function togglePlayerColorAndRedrawBoard(event) {
   togglePlayerColor();
 
   destroySquares();
+
   readyHandler(event);
 }
 document.addEventListener("DOMContentLoaded", function () {
+  console.log(ALL_OPOSITE_EQUIVALENT);
   drawInitialBoard("boardcreate", readyHandler);
   setToggleColor("togglecolor", togglePlayerColorAndRedrawBoard);
 });
