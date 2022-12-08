@@ -1,5 +1,26 @@
 import "./types.js";
 
+/**
+ * @constant {string} @default
+ */
+export const FRIENDLY_SIDE = "FRIENDLY";
+/**
+ * @constant {string} @default
+ */
+export const ENEMY_SIDE = "ENEMY";
+/**
+ * @constant {string} @default
+ */
+export const BLANK_SIDE = "NEUTRAL";
+/**
+ * @constant {Array} @default
+ */
+export const PLAYER_SIDES = [FRIENDLY_SIDE, ENEMY_SIDE];
+/**
+ * @constant {Array} @default
+ */
+export const ALL_SIDES = [FRIENDLY_SIDE, ENEMY_SIDE, BLANK_SIDE];
+
 // Board Composition
 //  - Dimensions (sqxsq)
 //  - Rows       (indexed by number (1-8))
@@ -140,57 +161,7 @@ export const BLANKSQUARE_INIT_ROWS = ["3", "4", "5", "6"];
 /**
  * @constant {number} @default 0
  */
-export const GAME_CONTEXT_INITIAL = 0;
-/**
- * @constant {number} @default 1
- */
-export const GAME_CONTEXT_PLAYING = 1;
-/**
- * @constant {number} @default 2
- */
-export const GAME_CONTEXT_SKIP_PIECES = 2;
-/**
- * @constant {number} @default 3
- */
-export const GAME_CONTEXT_SKIP_SIDEPIECES = 3;
-/**
- * @constant {number} @default 4
- */
-export const GAME_CONTEXT_SKIP_COLOR = 4;
-/**
- * @constant {number} @default 5
- */
-export const GAME_CONTEXT_CUSTOM = 5;
-/**
- *  Preset para remoção das peças aliadas ao lado do Rei
- *  Com exceção das torres (Rooks)
- *  Este setup é normalmente utilizado para testar
- *  o movimento Roque.
- *
- * @constant {[][]}
- *
- * @default
- * [
- *  SQUARE_TYPE_BISHOP_PIECE,
- *  SQUARE_TYPE_KNIGHT_PIECE,
- *  SQUARE_TYPE_QUEEN_PIECE,
- *  SQUARE_TYPE_PAWN_PIECE,
- * ],
- * [
- *  FRIENDLY_SIDE
- * ],
- *
- *
- */
-export const PRESET_CONTEXT_SKIP_SIDEPIECES = [
-  [
-    SQUARE_TYPE_BISHOP_PIECE,
-    SQUARE_TYPE_KNIGHT_PIECE,
-    SQUARE_TYPE_QUEEN_PIECE,
-    SQUARE_TYPE_PAWN_PIECE,
-  ],
-  [FRIENDLY_SIDE],
-];
+
 /**
  * @constant {string} @default
  */
@@ -295,3 +266,54 @@ export const SHORT_CASTLE_NDX = 1;
  *
  */
 export const CASTLE_INIT_SQUARES = [LONG_CASTLE_INIT_SQUARES, SHORT_CASTLE_INIT_SQUARES];
+export const GAME_CONTEXT_INITIAL = 0;
+/**
+ * @constant {number} @default 1
+ */
+export const GAME_CONTEXT_PLAYING = 1;
+/**
+ * @constant {number} @default 2
+ */
+export const GAME_CONTEXT_SKIP_PIECES = 2;
+/**
+ * @constant {number} @default 3
+ */
+export const GAME_CONTEXT_SKIP_SIDEPIECES = 3;
+/**
+ * @constant {number} @default 4
+ */
+export const GAME_CONTEXT_SKIP_COLOR = 4;
+/**
+ * @constant {number} @default 5
+ */
+export const GAME_CONTEXT_CUSTOM = 5;
+/**
+ *  Preset para remoção das peças aliadas ao lado do Rei
+ *  Com exceção das torres (Rooks)
+ *  Este setup é normalmente utilizado para testar
+ *  o movimento Roque.
+ *
+ * @constant {[][]}
+ *
+ * @default
+ * [
+ *  SQUARE_TYPE_BISHOP_PIECE,
+ *  SQUARE_TYPE_KNIGHT_PIECE,
+ *  SQUARE_TYPE_QUEEN_PIECE,
+ *  SQUARE_TYPE_PAWN_PIECE,
+ * ],
+ * [
+ *  FRIENDLY_SIDE
+ * ],
+ *
+ *
+ */
+export const PRESET_CONTEXT_SKIP_SIDEPIECES = [
+  [
+    SQUARE_TYPE_BISHOP_PIECE,
+    SQUARE_TYPE_KNIGHT_PIECE,
+    SQUARE_TYPE_QUEEN_PIECE,
+    SQUARE_TYPE_PAWN_PIECE,
+  ],
+  [FRIENDLY_SIDE],
+];

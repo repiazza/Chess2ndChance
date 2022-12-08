@@ -1,5 +1,4 @@
 // const TIMER_SETUPS = [60, 180, 300, 600]
-
 // const TIMER_MINUTE = 0;
 // const TIMER_THREE_MINUTES = 1;
 // const TIMER_FIVE_MINUTES = 2;
@@ -48,7 +47,6 @@
 //         // document.getElementById('btinput').checked = true;
 //         return true;
 //     }
-
 //     // alert(document.getElementById('btinput').checked)
 //     // alert(document.getElementById('wtinput').checked)
 //     window.clearInterval(bPTInterval);
@@ -65,7 +63,6 @@
 //         // document.getElementById('wtinput').checked = true;
 //         return true;
 //     }
-
 //     window.clearInterval(wPTInterval);
 //     document.getElementById('btinput').checked = !document.getElementById('btinput').checked;
 //     document.getElementById('wtinput').checked = false;
@@ -79,13 +76,13 @@
 //         document.querySelectorAll('[id*=timer]').forEach(element => {
 //             element.classList.remove("sethidden")
 //             element.classList.add("setvisible")
-//         });   
+//         });
 //     }
 //     if ( visibilityStatus == VISIBILITY_HIDDEN ) {
 //         document.querySelectorAll('[id*=timer]').forEach(element => {
 //             element.classList.add("sethidden")
 //             element.classList.remove("setvisible")
-//         });   
+//         });
 //     }
 // }
 // function setClock(){

@@ -42,6 +42,9 @@ import {
   LONG_CASTLE_NDX,
   SHORT_CASTLE_NDX,
   CASTLE_INIT_SQUARES,
+  FRIENDLY_SIDE,
+  ENEMY_SIDE,
+  BLANK_SIDE,
 } from "./modules/board.js";
 
 import { FEN_MODE } from "./modules/uci.js";
@@ -133,9 +136,6 @@ import {
   PIECE_TYPE_NONE,
   pieceColumnLookup,
   pieceTypeByColumn,
-  FRIENDLY_SIDE,
-  ENEMY_SIDE,
-  BLANK_SIDE,
   WHITE_COLOR,
   BLACK_COLOR,
   avaliableColors,
@@ -1725,7 +1725,7 @@ function readyHandler(event) {
   if (document.getElementById("a1") != null) return;
 
   // Daqui pra baixo, podemos desenhar, pois nao foi feito ainda
-  // drawBoardSquares(GAME_CONTEXT_INITIAL, null);
+  drawBoardSquares(GAME_CONTEXT_INITIAL, null);
 
   // Todas as peças de um tipo especifico, aliadas ou inimigas
   // drawBoardSquares(GAME_CONTEXT_SKIP_PIECES, [
@@ -1738,10 +1738,10 @@ function readyHandler(event) {
   // drawBoardSquares(GAME_CONTEXT_SKIP_COLOR, ENEMY_SIDE);
   //
   // As peças aliadas nao pertencentes ao Roque.
-  drawBoardSquares(GAME_CONTEXT_SKIP_SIDEPIECES, [
-    PRESET_CONTEXT_SKIP_SIDEPIECES,
-    [[SQUARE_TYPE_PAWN_PIECE, SQUARE_TYPE_KNIGHT_PIECE], [ENEMY_SIDE]],
-  ]);
+  // drawBoardSquares(GAME_CONTEXT_SKIP_SIDEPIECES, [
+  //   PRESET_CONTEXT_SKIP_SIDEPIECES,
+  //   [[SQUARE_TYPE_PAWN_PIECE, SQUARE_TYPE_KNIGHT_PIECE], [ENEMY_SIDE]],
+  // ]);
   // drawBoardSquares(GAME_CONTEXT_SKIP_SIDEPIECES, [
   //   PRESET_CONTEXT_SKIP_SIDEPIECES,
   //   [[SQUARE_TYPE_PAWN_PIECE, SQUARE_TYPE_KNIGHT_PIECE], [ENEMY_SIDE]],

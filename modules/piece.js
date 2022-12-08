@@ -357,26 +357,6 @@ export const pieceTypeByColumn = [
   SQUARE_TYPE_ROOK_PIECE, // h
 ];
 /**
- * @constant {string} @default
- */
-export const FRIENDLY_SIDE = "FRIENDLY";
-/**
- * @constant {string} @default
- */
-export const ENEMY_SIDE = "ENEMY";
-/**
- * @constant {string} @default
- */
-export const BLANK_SIDE = "NEUTRAL";
-/**
- * @constant {Array} @default
- */
-export const PLAYER_SIDES = [FRIENDLY_SIDE, ENEMY_SIDE];
-/**
- * @constant {Array} @default
- */
-export const ALL_SIDES = [FRIENDLY_SIDE, ENEMY_SIDE, BLANK_SIDE];
-/**
  * @constant {Array} @default
  */
 export const EMBEDDED_CASTLE_PIECES = [SQUARE_TYPE_KING_PIECE, SQUARE_TYPE_ROOK_PIECE];
