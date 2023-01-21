@@ -25,6 +25,7 @@ import {
   SQUARE_TYPE_QUEEN_PIECE,
   SQUARE_TYPE_KING_PIECE,
   SQUARE_TYPE_ROOK_PIECE,
+  FRIENDLY_SIDE,
 } from "./board.js";
 
 import { playerColor } from "../mainboard.js";
@@ -344,7 +345,10 @@ export const pieceColumnLookup = [
   PIECE_TYPE_NONE,
 ];
 /**
- * @constant {Array} @default
+ * @constant {Array} 
+ * @default {SQUARE_TYPE_ROOK_PIECE,   SQUARE_TYPE_KNIGHT_PIECE, SQUARE_TYPE_BISHOP_PIECE,
+             SQUARE_TYPE_QUEEN_PIECE,  SQUARE_TYPE_KING_PIECE,   SQUARE_TYPE_BISHOP_PIECE,
+             SQUARE_TYPE_KNIGHT_PIECE, SQUARE_TYPE_ROOK_PIECE, }
  */
 export const pieceTypeByColumn = [
   SQUARE_TYPE_ROOK_PIECE, // a

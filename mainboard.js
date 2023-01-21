@@ -145,7 +145,12 @@ import {
 
 import "./modules/types.js";
 
-import { sendWSMessage, sockConn, SOCKET_OPEN } from "./modules/socket.js";
+import {
+  sendWSMessage,
+  sockConn,
+  SOCKET_OPEN,
+  SOCKET_MESSAGE_TYPE_COMMAND,
+} from "./modules/socket.js";
 
 // import { setSupervisorDiv, toggleSupervisor } from "./modules/supervisor.js";
 
@@ -155,6 +160,7 @@ export let lastColor = "";
 let blankFrameStr = 'sqtype="BLANK" sqcolor="0"></div>';
 let enemyScan = false;
 let isOnCheck = false;
+let stockfishLayout = FEN_MODE;
 
 const ALLY_TURN = 0;
 const ENEMY_TURN = 1;
@@ -555,6 +561,7 @@ function validateSquareSide(sqObjElem) {
   return mySquare.getAttribute("sqcolor") == playerColor ? FRIENDLY_SIDE : ENEMY_SIDE;
 }
 function validateIsSameSquare(sqObjElem) {
+  console.debug(sqObjElem);
   let mySquare = getElementFromSquareOrSquareId(sqObjElem);
   return getFirstSelectedElement().id == mySquare.id;
 }
@@ -672,6 +679,9 @@ function setMoveSelection(
   ) {
     specialMoveNmbr = mySquare.getAttribute("mvsl");
   }
+  /**
+   * @todo: Fix EnemyScan
+   */
   if (enemyScan) {
     specialMoveNmbr = "E";
     let thrtattr = "";
@@ -911,7 +921,7 @@ function createSquare(square) {
       ? ROW_SQUARE_COUNT
       : 1;
   }
-
+  // Mapeando a vizinhança
   swSquare = getSquare(square, SOUTH_WEST);
   seSquare = getSquare(square, SOUTH_EAST);
   nwSquare = getSquare(square, NORTH_WEST);
@@ -1718,7 +1728,6 @@ function isPlayerOnCheck() {
 
   return isOnCheck;
 }
-
 function readyHandler(event) {
   event.preventDefault();
 
@@ -1753,11 +1762,26 @@ function readyHandler(event) {
   //]);
 
   drawSubtitles(SUBTITLE_BOTH);
-  if (sockConn.readyState == SOCKET_OPEN) {
-    let fenMsg =
-      "STK|" + FEN_MODE + "|2k4r/1p1nb2p/p5p1/2P1P1P1/1P3B2/P7/6PP/R6K w - - 0 26";
-    sendWSMessage(fenMsg);
+}
+function generateFENMessage() {
+  // let fenMsg = generateFENStrFromBoard();
+  let fenMsg =
+    "STK|" + FEN_MODE + "2k4r/1p1nb2p/p5p1/2P1P1P1/1P3B2/P7/6PP/R6K w - - 0 26";
+  return fenMsg;
+}
+function sendActualPosition(msgLayout = FEN_MODE) {
+  var wsMessage = generateActualBoardStatus(msgLayout ? msgLayout : FEN_MODE);
+  if (wsMessage == "") return false;
+
+  return sendWSMessage(wsMessage);
+}
+function generateActualBoardStatus(msgLayout) {
+  if (msgLayout == FEN_MODE) {
+    return generateFENMessage();
+  } else if (msgLayout == START_POSITION_MODE) {
+    return generateStartPositionMessage();
   }
+  return "";
 }
 function isKingOnEnemyRange(kingSide, ignoreColision = FALSE) {
   let kElem = getKingPieceLocation(kingSide);
@@ -2091,6 +2115,8 @@ function drawBoardSquares(context, extraArg = null) {
   // Tudo pronto, salvamos o Board.
   window.localStorage.removeItem("gameBoard");
   window.localStorage.setItem("gameBoard", JSON.stringify({ ...storageSquares }));
+
+  if (sendActualPosition() == false) console.log("Error sending actual position");
 }
 function drawInitialBoard(boardId, buttonreadyHandler) {
   const createbtn = document.getElementById(boardId);
@@ -2118,13 +2144,13 @@ function togglePlayerColorAndRedrawBoard(event) {
   if (!confirm("ATENÇÃO! Inverter as cores? (todo progresso será perdido)")) return;
 
   togglePlayerColor();
-
   destroySquares();
 
   readyHandler(event);
 }
+
 document.addEventListener("DOMContentLoaded", function () {
-  console.log(ALL_OPOSITE_EQUIVALENT);
+  // console.log(ALL_OPOSITE_EQUIVALENT);
   drawInitialBoard("boardcreate", readyHandler);
   setToggleColor("togglecolor", togglePlayerColorAndRedrawBoard);
 });

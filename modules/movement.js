@@ -1,4 +1,5 @@
 import "./types.js";
+
 /**
  * @constant {number} @default
  */

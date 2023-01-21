@@ -121,7 +121,11 @@ int iGetNextMoveLines(char *szActualPositionChain, int iMode){
     
     return 0;
 }
-
+/**
+ * Protocolo
+ * CMD|MSG 
+ * 
+*/
 int iParseMessage(char *pszMsg, int iSz, ws_cli_conn_t *client){
     char *pTok;
     char szFld[128];
