@@ -82,11 +82,11 @@ import {
   PIECE_TYPE_NONE,
   pieceColumnLookup,
   pieceTypeByColumn,
-  FRIENDLY_SIDE,
-  ENEMY_SIDE,
-  BLANK_SIDE,
-  PLAYER_SIDES,
-  ALL_SIDES,
+  // FRIENDLY_SIDE,
+  // ENEMY_SIDE,
+  // BLANK_SIDE,
+  // PLAYER_SIDES,
+  // ALL_SIDES,
   EMBEDDED_CASTLE_PIECES,
   WHITE_COLOR,
   BLACK_COLOR,
@@ -208,6 +208,7 @@ export function drawDirectionSelect() {
   });
   let labelElem = document.createElement("label");
   labelElem.id = "spsblbldiagonalselect";
+  labelElem.setAttribute("for", "spsbdiagonaldir");
   labelElem.innerHTML = "Diagonal";
   labelElem.style.position = "absolute";
   labelElem.style.marginTop = "10px";
@@ -237,7 +238,7 @@ export function drawDirectionSelect() {
     document.getElementById("container").removeChild(element);
   });
   lblDirColumn = document.createElement("label");
-  lblDirColumn.for = "spsbcolumndir";
+  lblDirColumn.setAttribute("for", "spsbcolumndir");
   lblDirColumn.id = "spsblblcolumndir";
   lblDirColumn.innerHTML = "Coluna";
   lblDirColumn.style.position = "absolute";
@@ -270,7 +271,7 @@ export function drawDirectionSelect() {
     document.getElementById("container").removeChild(element);
   });
   lblDirLine = document.createElement("label");
-  lblDirLine.for = "spsblinedir";
+  lblDirLine.setAttribute("for", "spsblinedir");
   lblDirLine.id = "spsblbllinedir";
   lblDirLine.innerHTML = "Linha";
   lblDirLine.style.position = "absolute";
@@ -630,7 +631,7 @@ export function drawSupervisorSelect() {
 
   // White Label
   radioLbl[0] = document.createElement("label");
-  radioLbl[0].for = "spsbrdwhite";
+  radioLbl[0].setAttribute("for", "spsbrdwhite");
   radioLbl[0].id = "spsblblrdwhite";
   radioLbl[0].innerHTML = "White:";
   radioLbl[0].style.position = "absolute";
@@ -651,7 +652,7 @@ export function drawSupervisorSelect() {
 
   // Black Label
   radioLbl[1] = document.createElement("label");
-  radioLbl[1].for = "spsbrdblack";
+  radioLbl[1].setAttribute("for", "spsbrdblack");
   radioLbl[1].id = "spsblblrdblack";
   radioLbl[1].innerHTML = "Black:";
   radioLbl[1].style.position = "absolute";
@@ -672,7 +673,7 @@ export function drawSupervisorSelect() {
 
   // Label Ambos
   radioLbl[2] = document.createElement("label");
-  radioLbl[2].for = "spsbrdboth";
+  radioLbl[2].setAttribute("for", "spsbrdboth");
   radioLbl[2].id = "spsblblrdboth";
   radioLbl[2].innerHTML = "Tudo:";
   radioLbl[2].style.position = "absolute";
@@ -718,7 +719,7 @@ export function drawSupervisorSelect() {
     });
 
     labelType[i] = document.createElement("label");
-    labelType[i].for = "spsbchkboxtype" + i;
+    labelType[i].setAttribute("for", "spsbchkboxtype" + i);
     labelType[i].id = "spsblbltype" + i;
     labelType[i].innerHTML = pieceTypeByColumn[i].split("PIECE")[0] + ":";
     labelType[i].style.position = "absolute";
@@ -746,7 +747,7 @@ export function drawSupervisorSelect() {
   }
   typeValue = 0;
   labelType[i] = document.createElement("label");
-  labelType[i].for = "spsbchkboxtype" + i;
+  labelType[i].setAttribute("for", "spsbchkboxtype" + i);
   labelType[i].id = "spsblbltype" + i;
   labelType[i].innerHTML = SQUARE_TYPE_PAWN_PIECE.split("PIECE")[0] + ":";
   labelType[i].style.position = "absolute";
@@ -778,7 +779,7 @@ export function drawSupervisorSelect() {
 
   // Label seleção
   labelSelected = document.createElement("label");
-  labelSelected.for = "spsbcheckslt";
+  labelSelected.setAttribute("for", "spsbcheckslt");
   labelSelected.id = "spsblblcheck";
   labelSelected.innerHTML = "Seleção:";
   labelSelected.style.position = "absolute";

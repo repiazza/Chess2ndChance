@@ -145,12 +145,13 @@ import {
 
 import "./modules/types.js";
 
-import {
-  sendWSMessage,
-  sockConn,
-  SOCKET_OPEN,
-  SOCKET_MESSAGE_TYPE_COMMAND,
-} from "./modules/socket.js";
+// import {
+//   connect2WS,
+//   sendWSMessage,
+//   sockConn,
+//   SOCKET_OPEN,
+//   SOCKET_MESSAGE_TYPE_COMMAND,
+// } from "./modules/socket.js";
 
 // import { setSupervisorDiv, toggleSupervisor } from "./modules/supervisor.js";
 
@@ -1704,7 +1705,7 @@ function squareHandler(event) {
     //
     // Passar Turno
     //
-    changeTurn();
+    //changeTurn();
   } else if (selectSameSquare(event.target)) {
     clearAllElementSelection();
   }
@@ -1732,6 +1733,8 @@ function readyHandler(event) {
   event.preventDefault();
 
   if (document.getElementById("a1") != null) return;
+
+  // connect2WS();
 
   // Daqui pra baixo, podemos desenhar, pois nao foi feito ainda
   drawBoardSquares(GAME_CONTEXT_INITIAL, null);
@@ -1769,12 +1772,12 @@ function generateFENMessage() {
     "STK|" + FEN_MODE + "2k4r/1p1nb2p/p5p1/2P1P1P1/1P3B2/P7/6PP/R6K w - - 0 26";
   return fenMsg;
 }
-function sendActualPosition(msgLayout = FEN_MODE) {
-  var wsMessage = generateActualBoardStatus(msgLayout ? msgLayout : FEN_MODE);
-  if (wsMessage == "") return false;
-
-  return sendWSMessage(wsMessage);
-}
+// function sendActualPosition(msgLayout = FEN_MODE) {
+//   var wsMessage = generateActualBoardStatus(msgLayout ? msgLayout : FEN_MODE);
+//   if (wsMessage == "") return false;
+//
+//   return sendWSMessage(wsMessage);
+// }
 function generateActualBoardStatus(msgLayout) {
   if (msgLayout == FEN_MODE) {
     return generateFENMessage();
@@ -2074,10 +2077,11 @@ function drawBoardSquares(context, extraArg = null) {
         /**
          * Rotina do Supervisor
          * @todo: Modularizar mais
-         */
-        // setSupervisorDiv(supervisoridCtr, supervisormarginTop);
-        // supervisoridCtr++;
-        // supervisormarginTop += 20;
+         *
+         setSupervisorDiv(supervisoridCtr, supervisormarginTop);
+         supervisoridCtr++;
+         supervisormarginTop += 20;
+        */
 
         // Salvamos o square no local storage
         saveCoreAttrOnLocalStorage(newsquare.squareElem);
@@ -2116,7 +2120,7 @@ function drawBoardSquares(context, extraArg = null) {
   window.localStorage.removeItem("gameBoard");
   window.localStorage.setItem("gameBoard", JSON.stringify({ ...storageSquares }));
 
-  if (sendActualPosition() == false) console.log("Error sending actual position");
+  // if (sendActualPosition() == false) console.log("Error sending actual position");
 }
 function drawInitialBoard(boardId, buttonreadyHandler) {
   const createbtn = document.getElementById(boardId);

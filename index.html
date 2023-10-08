@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,20 +12,19 @@
     <div>
         <div class="container" id="container">
             <div id="btdiv" class="buttons">
-                <button id="boardcreate" >create</button>
-                <button id="togglecolor" >Alterar Cor</button>
-                <button id="togglesupervisor">Alternar Supervisor</button>
+                <button type="button" id="boardcreate" >create</button>
+                <button type="button" id="togglecolor" >Alterar Cor</button>
+                <button type="button" id="togglesupervisor">Alternar Supervisor</button>
                 <p id="captured"></p>
             </div>
             
             <div class="board" id="board"></div>
-            
-            <label id="whitetimer" class="label-checkbox sethidden">
-                <input type="checkbox" id="wtinput">
+            <label for="wtinput" id="whitetimer" class="label-checkbox sethidden">
+                <input title="wtinpchk" type="checkbox" id="wtinput">
                 <span id="wspntmr">&nbsp;</span>
             </label>
-            <label id="blacktimer" class="label-checkbox sethidden">
-                <input type="checkbox" id="btinput">
+            <label id="blacktimer" for="btinput" class="label-checkbox sethidden">
+                <input title="btinputchk" type="checkbox" id="btinput">
                 <span id="bspntmr">&nbsp;</span>
             </label>
         </div>        
@@ -36,7 +35,7 @@
     <!-- <script src="./modules/supervisor.js" type="module"></script> -->
     <script src="./modules/uci.js" type="module"></script>
     <script src="./modules/types.js" type="module"></script>
-    <script src="./modules/socket.js" type="module"></script>
+    <!-- <script src="./modules/socket.js" type="module"></script> -->
     <script src="./mainboard.js" type="module"></script>
 </body>
 </html>

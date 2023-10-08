@@ -12,43 +12,35 @@ const SOCKET_MESSAGE_TYPE_COMMAND = 1;
 const SOCKET_MESSAGE_TYPE_OTHER = 2;
 
 var connOK = true;
-// fetch(wsURL)
-//   .then(function (response) {
-//     if (response.ok) {
-//       connOK = true;
-//       console.log("WS OK.");
-//     } else {
-//       console.log("WS NOK.");
-//     }
-//   })
-//   .catch(function (error) {
-//     console.log("WS NOK.: " + error.message);
-//   });
-
-if (connOK) {
-  try {
-    sockConn = new WebSocket(wsURL);
-  } catch (error) {
-    console.log(" erro ao fazer conexao", error);
+function connect2WS() {
+  if (connOK) {
+    try {
+      sockConn = new WebSocket(wsURL);
+    } catch (error) {
+      console.log(
+        " erro ao fazer conexao",
+        error + " rdystt[" + sockConn.readyState + "]"
+      );
+    }
+    sockConn.onopen = function (event) {
+      console.log(event);
+      console.log("WS connected");
+    };
+    sockConn.onerror = function (error) {
+      console.clear();
+      console.log("Erro Websocket:", error + " rdystt[" + sockConn.readyState + "]");
+    };
+    sockConn.onmessage = function (event) {
+      console.log("RCV:");
+      console.log(event.data + " rdystt[" + sockConn.readyState + "]");
+      return event.data;
+    };
+    sockConn.onclose = function (event) {
+      console.log("CLOSED:");
+      console.log(event.data + " rdystt[" + sockConn.readyState + "]");
+      return event.data;
+    };
   }
-
-  sockConn.onopen = function (event) {
-    console.log(event);
-    console.log("WS connected");
-  };
-  sockConn.onerror = function (error) {
-    console.log("Erro Websocket:", error);
-  };
-  sockConn.onmessage = function (event) {
-    console.log("RCV:");
-    console.log(event.data);
-    return event.data;
-  };
-  sockConn.onclose = function (event) {
-    console.log("RCV:");
-    console.log(event.data);
-    return event.data;
-  };
 }
 function makeWSURL(ip, port = false) {
   console.log("makeWSURL ip[", ip, "] port[", port, "]");
@@ -58,7 +50,8 @@ function makeWSURL(ip, port = false) {
 }
 
 function sendWSMessage(msg, msgType = SOCKET_MESSAGE_TYPE_COMMAND) {
-  if (!sockConn) return false;
+  if (!sockConn || sockConn.readyState != SOCKET_OPEN) return false;
+
   let msgToSend = "CMD|";
   if (msgType != SOCKET_MESSAGE_TYPE_COMMAND) {
     msgToSend = msgType;
@@ -69,6 +62,7 @@ function sendWSMessage(msg, msgType = SOCKET_MESSAGE_TYPE_COMMAND) {
   console.log(msgToSend);
   traceSocketMsg(msgToSend);
   sockConn.send(msgToSend);
+  // return true;
 }
 
 function traceSocketMsg(msg) {
@@ -95,6 +89,7 @@ function traceSocketMsg(msg) {
 }
 
 export {
+  connect2WS,
   sendWSMessage,
   sockConn,
   SOCKET_OPEN,
