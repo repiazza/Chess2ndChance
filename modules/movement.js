@@ -53,35 +53,35 @@ export const CONSIDER_COLISION = false;
  */
 export const IGNORE_COLISION = true;
 /**
- * @constant {number} @default
+ * @constant {number} @default 0
  */
 export const WEST = 0;
 /**
- * @constant {number} @default
+ * @constant {number} @default 1
  */
 export const EAST = 1;
 /**
- * @constant {number} @default
+ * @constant {number} @default 2
  */
 export const NORTH = 2;
 /**
- * @constant {number} @default
+ * @constant {number} @default 3
  */
 export const SOUTH = 3;
 /**
- * @constant {Array} @default
+ * @constant {Array} @default [ WEST NORTH ]
  */
 export const NORTH_WEST = [WEST, NORTH];
 /**
- * @constant {Array} @default
+ * @constant {Array} @default [ EAST NORTH ]
  */
 export const NORTH_EAST = [EAST, NORTH];
 /**
- * @constant {Array} @default
+ * @constant {Array} @default [ WEST SOUTH ]
  */
 export const SOUTH_WEST = [WEST, SOUTH];
 /**
- * @constant {Array} @default
+ * @constant {Array} @default [ EAST SOUTH ]
  */
 export const SOUTH_EAST = [EAST, SOUTH];
 /**
@@ -104,30 +104,44 @@ export const BOTH_CASTLE = [LONG_CASTLE, SHORT_CASTLE];
  */
 export const DIRECTION_VERTICAL = [NORTH, SOUTH];
 /**
- * @constant {Array} @default
+ * @constant {Array} @default [ WEST EAST ]
  */
 export const DIRECTION_HORIZONTAL = [WEST, EAST];
 /**
- * @constant {Array} @default
+ * @constant {Array} @default [ NORTH_EAST NORTH_WEST SOUTH_WEST SOUTH_EAST ]
  */
 export const DIRECTION_DIAGONAL = [NORTH_EAST, NORTH_WEST, SOUTH_WEST, SOUTH_EAST];
-
+/**
+ * @constant {Array} @default [ [ NORTH_WEST NORTH ] [ NORTH_EAST NORTH ] ]
+ */
 export const FIRST_L_QUADRANT = [
   [NORTH_WEST, NORTH],
   [NORTH_EAST, NORTH],
 ];
+/**
+ * @constant {Array} @default [ [ NORTH_EAST EAST ] [ SOUTH_EAST EAST ] ]
+ */
 export const SECOND_L_QUADRANT = [
   [NORTH_EAST, EAST],
   [SOUTH_EAST, EAST],
 ];
+/**
+ * @constant {Array} @default [ [ SOUTH_EAST SOUTH ] [ SOUTH_WEST SOUTH ] ]
+ */
 export const THIRD_L_QUADRANT = [
   [SOUTH_EAST, SOUTH],
   [SOUTH_WEST, SOUTH],
 ];
+/**
+ * @constant {Array} @default [ [ SOUTH_WEST WEST ] [ NORTH_WEST, WEST ] ]
+ */
 export const FOURTH_L_QUADRANT = [
   [SOUTH_WEST, WEST],
   [NORTH_WEST, WEST],
 ];
+/**
+ * @constant {Array} @default [ [ SOUTH_EAST SOUTH ] [ SOUTH_WEST SOUTH ] ]
+ */
 export const L_ROTATE = [
   FIRST_L_QUADRANT,
   SECOND_L_QUADRANT,

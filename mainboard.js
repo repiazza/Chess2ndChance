@@ -1911,7 +1911,6 @@ function drawContextSkipSidePieces(extraArg, sqElem) {
     });
   });
 }
-
 function applyContext(context, extraArg, sqElem) {
   switch (context) {
     case GAME_CONTEXT_INITIAL:
@@ -2152,7 +2151,6 @@ function togglePlayerColorAndRedrawBoard(event) {
 
   readyHandler(event);
 }
-
 document.addEventListener("DOMContentLoaded", function () {
   // console.log(ALL_OPOSITE_EQUIVALENT);
   drawInitialBoard("boardcreate", readyHandler);
